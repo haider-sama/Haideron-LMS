@@ -68,7 +68,7 @@ export const loginWithGoogle = async (req: Request, res: Response) => {
             success: true,
             message: 'Logged in with Google',
             user: {
-                _id: user.id,
+                id: user.id,
                 email: user.email,
                 avatarURL: user.avatarURL,
                 role: user.role,

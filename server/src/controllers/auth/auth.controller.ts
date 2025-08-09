@@ -224,7 +224,7 @@ export async function login(req: Request, res: Response) {
         const accessToken = await generateToken(res, user.id);
 
         res.status(OK).json({
-            _id: user.id,
+            id: user.id,
             email: user.email,
             accessToken,
         });

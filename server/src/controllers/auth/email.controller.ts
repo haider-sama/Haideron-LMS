@@ -71,7 +71,7 @@ export async function verifyEmail(req: Request, res: Response) {
                 success: true,
                 message: "Email is already verified.",
                 user: {
-                    _id: user.id,
+                    id: user.id,
                     email: user.email,
                     isEmailVerified: true,
                 },
@@ -101,7 +101,7 @@ export async function verifyEmail(req: Request, res: Response) {
             success: true,
             message: "Email verified successfully!",
             user: {
-                _id: updatedUser[0].id,
+                id: updatedUser[0].id,
                 email: updatedUser[0].email,
                 isEmailVerified: updatedUser[0].isEmailVerified,
             },
@@ -359,7 +359,7 @@ export const verifyEmailChange = async (req: Request, res: Response) => {
             success: true,
             message: "Email successfully updated",
             user: {
-                _id: user.id,
+                id: user.id,
                 email: user.email,
                 isEmailVerified: user.isEmailVerified,
             },
