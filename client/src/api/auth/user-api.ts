@@ -1,4 +1,4 @@
-import { UserType } from "../../../../server/src/shared/types";
+import { User } from "../../../../server/src/shared/interfaces";
 import { API_BASE_URL } from "../../constants";
 
 const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/auth` || "";
@@ -16,7 +16,7 @@ export const fetchUserProfile = async () => {
     return res.json();
 };
 
-export const updateUserProfile = async (userData: Partial<UserType>): Promise<UserType> => {
+export const updateUserProfile = async (userData: Partial<User>): Promise<User> => {
     const res = await fetch(`${LOCAL_BASE_URL}/update/profile`, {
         method: "PUT",
         credentials: "include",

@@ -1,7 +1,7 @@
 import { IconType } from 'react-icons';
 import { AudienceEnum } from '../../../server/src/shared/enums';
 import { FaHome, FaGraduationCap, FaFileAlt, FaBookOpen, FaChalkboardTeacher, FaUsersCog, FaComments } from "react-icons/fa";
-import { HiAcademicCap, HiOutlineChartBar, HiOutlineUserAdd } from "react-icons/hi";
+import { HiAcademicCap, HiOutlineUserAdd } from "react-icons/hi";
 import { MdAdminPanelSettings, MdDashboard, MdListAlt, MdManageAccounts, MdPersonAddAlt1, MdRateReview } from "react-icons/md";
 import { RiGraduationCapFill } from "react-icons/ri";
 import { FiBookOpen, FiUserCheck } from "react-icons/fi";
@@ -52,7 +52,6 @@ export const navLinks: NavLink[] = [
         subLinks: [
             { label: 'User Registration', href: '/admin/user-registration', icon: HiOutlineUserAdd, roles: [AudienceEnum.Admin] },
             { label: 'User Management', href: '/admin/user-management', icon: MdManageAccounts, roles: [AudienceEnum.Admin] },
-            { label: 'Statistics', href: '/admin/stats', icon: HiOutlineChartBar, roles: [AudienceEnum.Admin] },
         ],
     },
     {

@@ -3,9 +3,19 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '../../context/ToastContext';
 import { usePermissions } from '../usePermissions';
 import { updateUserProfile } from '../../api/auth/user-api';
-import { UserType } from '../../../../server/src/shared/types';
+import { TeacherInfo, User, UserWithRelations } from '../../../../server/src/shared/interfaces';
 import { DegreeEnum } from '../../../../server/src/shared/enums';
-import { TeacherQualification } from '../../constants/core/interfaces';
+import { TeacherQualification } from '../../../../server/src/shared/interfaces';
+
+interface EditFields {
+    firstName: string;
+    lastName: string;
+    fatherName: string;
+    city: string;
+    country: string;
+    address: string;
+    teacherInfo?: TeacherInfo & { qualifications: TeacherQualification[] };
+}
 
 export const useProfile = () => {
     const { user, isAdmin, isDepartmentHead, isDepartmentTeacher } = usePermissions();
@@ -16,16 +26,17 @@ export const useProfile = () => {
     const canEditBasicFields = isAdmin || isDepartmentHead;
     const canEditTeacherInfo = isDepartmentTeacher;
 
-    const [editFields, setEditFields] = useState(() => ({
+    const [editFields, setEditFields] = useState<EditFields>(() => ({
         firstName: user?.firstName || '',
         lastName: user?.lastName || '',
         fatherName: user?.fatherName || '',
         city: user?.city || '',
         country: user?.country || '',
         address: user?.address || '',
-        teacherInfo: isDepartmentTeacher
+        teacherInfo: user?.teacherInfo
             ? {
-                qualifications: user?.teacherInfo?.qualifications || [],
+                ...user.teacherInfo,
+                qualifications: user.teacherInfo.qualifications || [],
             }
             : undefined,
     }));
@@ -45,7 +56,10 @@ export const useProfile = () => {
             country: user.country || '',
             address: user.address || '',
             teacherInfo: user.teacherInfo
-                ? { qualifications: user.teacherInfo.qualifications || [] }
+                ? {
+                    ...user.teacherInfo, // spread the entire teacherInfo with all required fields
+                    qualifications: user.teacherInfo.qualifications || [], // override qualifications
+                }
                 : undefined,
         });
 
@@ -59,7 +73,7 @@ export const useProfile = () => {
     };
 
     const mutation = useMutation({
-        mutationFn: (updatedData: Partial<UserType>) => updateUserProfile(updatedData),
+        mutationFn: (updatedData: Partial<User>) => updateUserProfile(updatedData),
         onSuccess: () => {
             toast.success('Profile updated successfully!');
             queryClient.invalidateQueries({ queryKey: ['validateToken'] });
@@ -110,32 +124,41 @@ export const useProfile = () => {
     };
 
     const addQualification = () => {
-        setEditFields(prev => ({
-            ...prev,
-            teacherInfo: {
-                ...prev.teacherInfo!,
-                qualifications: [
-                    ...(prev.teacherInfo?.qualifications || []),
-                    {
-                        degree: DegreeEnum.BS,
-                        institutionName: '',
-                        passingYear: new Date().getFullYear(),
-                        majorSubjects: [],
-                    },
-                ],
-            },
-        }));
+        setEditFields(prev => {
+            if (!prev.teacherInfo) {
+                // handle no teacherInfo - either return prev or initialize it here
+                return prev; // or throw error, or initialize with defaults
+            }
+
+            return {
+                ...prev,
+                teacherInfo: {
+                    ...prev.teacherInfo,
+                    qualifications: [
+                        ...(prev.teacherInfo.qualifications || []),
+                        {
+                            id: crypto.randomUUID(),
+                            teacherInfoId: prev.teacherInfo.id,
+                            degree: DegreeEnum.BS,
+                            institutionName: '',
+                            passingYear: new Date().getFullYear(),
+                            majorSubjects: [],
+                        },
+                    ],
+                },
+            };
+        });
 
         setMajorSubjectsBuffer(prev => [...prev, '']);
     };
 
     const handleSave = () => {
-        if (!user?._id) {
+        if (!user?.id) {
             toast.error('User ID is not available.');
             return;
         }
 
-        const payload: Partial<UserType> = {};
+        const payload: Partial<UserWithRelations> = {};
 
         // Only include basic profile fields if the user has permission
         if (canEditBasicFields) {
@@ -149,13 +172,14 @@ export const useProfile = () => {
 
         // Only include teacherInfo if allowed
         if (canEditTeacherInfo && editFields.teacherInfo) {
-            const parsedQualifications = editFields.teacherInfo.qualifications.map((q, index) => ({
-                ...q,
-                majorSubjects: (majorSubjectsBuffer[index] || '')
-                    .split(',')
-                    .map((s) => s.trim())
-                    .filter(Boolean),
-            }));
+            const parsedQualifications = editFields.teacherInfo.qualifications
+                .map((q: TeacherQualification, index: number) => ({
+                    ...q,
+                    majorSubjects: (majorSubjectsBuffer[index] || '')
+                        .split(',')
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                }));
 
             payload.teacherInfo = {
                 qualifications: parsedQualifications,

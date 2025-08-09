@@ -1,10 +1,9 @@
-// RequestEmailPage.tsx
 import { useNavigate } from "react-router-dom";
 import { resendVerificationEmail } from "../../../../api/auth/auth-api";
 import { useState } from "react";
-import { getButtonClass } from "../../../../components/ui/ButtonClass";
 import { useToast } from "../../../../context/ToastContext";
 import { useAuth } from "../../../../hooks/auth/useAuth";
+import { Button } from "../../../../components/ui/Button";
 
 const RequestEmailVerification: React.FC = () => {
     const { user } = useAuth();
@@ -37,21 +36,12 @@ const RequestEmailVerification: React.FC = () => {
                 <p className="text-center text-gray-600 mb-6 dark:text-darkTextSecondary">
                     Verification unlocks your full experience. <br /> Let’s get your account ready.
                 </p>
-                <button
+                <Button isLoading={isSending} loadingText="Sending..." fullWidth={true}  
                     onClick={handleRequest}
-                    disabled={isSending}
-                    className={getButtonClass({
-                        bg: "bg-yellow-500",
-                        hoverBg: "hover:bg-white",
-                        text: "text-white",
-                        hoverText: "hover:text-gray-900",
-                        focusRing: "focus:ring-4 focus:ring-yellow-200",
-                        disabled: isSending,
-                        extra: "w-full text-sm px-5 py-2 transition-all duration-200 font-medium rounded border border-gray-200 dark:border-darkBorderLight",
-                    })}
+                    size="md" variant="yellow"
                 >
-                    {isSending ? "Sending..." : "Send Verification Email"}
-                </button>
+                    Send Verification Email
+                </Button>
             </div>
         </div>
 

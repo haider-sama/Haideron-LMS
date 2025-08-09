@@ -448,7 +448,7 @@ export async function fetchPaginatedUsers(req: Request, res: Response) {
         const totalUsers = Number(count);
 
         res.status(OK).json({
-            data: users,
+            data: usersList,
             page,
             totalPages: Math.ceil(totalUsers / limit),
             totalUsers,

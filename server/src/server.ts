@@ -40,10 +40,10 @@ const startServer = async () => {
 
         // Example: test DB query
         const firstUser = await db.select().from(users).limit(1);
-        console.log(
-            "Drizzle user model test:",
-            firstUser.length ? firstUser[0] : "No users found"
-        );
+        // console.log(
+        //     "Drizzle user model test:",
+        //     firstUser.length ? firstUser[0] : "No users found"
+        // );
 
         const server = app.listen(PORT, () => {
             console.log(`Server running on PORT: ${PORT}`);

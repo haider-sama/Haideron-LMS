@@ -75,3 +75,18 @@ export interface UserWithRelations extends User {
 export interface TeacherInfoWithQualifications extends TeacherInfo {
     qualifications?: TeacherQualification[];
 }
+
+export interface UserSession {
+    id: string; // UUID
+    userId: string; // UUID (foreign key to users)
+    ip?: string | null; // IP address, nullable
+    userAgent?: {
+        browser?: string;
+        os?: string;
+        device?: string;
+        raw?: string;
+    } | null;
+    lastUsed: Date;    // timestamp with timezone
+    createdAt: Date;   // timestamp with timezone
+    updatedAt: Date;   // timestamp with timezone
+}

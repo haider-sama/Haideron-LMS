@@ -2,24 +2,24 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import AppShell from "../pages/main/AppContainer";
 import ProtectedRoute from "../components/account/ProtectedRoute";
-import Register from "../pages/core/authentication/credentials/Register";
-import Login from "../pages/core/authentication/credentials/Login";
-import RequestEmailVerification from "../pages/core/authentication/verification/RequestEmailVerification";
-import ForgotPassword from "../pages/core/authentication/verification/ForgotPassword";
-import ResetPassword from "../pages/core/authentication/verification/ResetPassword";
+import Register from "../pages/core/auth/credentials/Register";
+import Login from "../pages/core/auth/credentials/Login";
+import RequestEmailVerification from "../pages/core/auth/verification/RequestEmailVerification";
+import ForgotPassword from "../pages/core/auth/verification/ForgotPassword";
+import ResetPassword from "../pages/core/auth/verification/ResetPassword";
 
 import UserRegistration from "../pages/core/admin/UserRegistration";
 import UserManagementTable from "../pages/core/admin/UserManagementTable";
 import NotFound from "../pages/forbidden/NotFound";
-import EmailVerification from "../pages/core/authentication/verification/EmailVerification";
+import EmailVerification from "../pages/core/auth/verification/EmailVerification";
 import Forbidden from "../pages/forbidden/Forbidden";
 import Unauthorized from "../pages/forbidden/Unauthorized";
 import InternalError from "../pages/forbidden/InternalError";
 import { AudienceEnum } from "../../../server/src/shared/enums";
 import HomePage from "../pages/main/HomePage";
 import { ALLOW_EMAIL_MIGRATION, ALLOW_PUBLIC_REGISTRATION } from "../constants";
-import RequestEmailChange from "../pages/core/authentication/verification/RequestEmailChange";
-import EmailChangeVerification from "../pages/core/authentication/verification/EmailChangeVerification";
+import RequestEmailChange from "../pages/core/auth/verification/RequestEmailChange";
+import EmailChangeVerification from "../pages/core/auth/verification/EmailChangeVerification";
 // import SocialShell from "../pages/main/SocialShell";
 
 interface AppRoutesProps {
@@ -53,41 +53,43 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                 />
             )}
 
-            <Route element={<AppShell />}>
-                <Route path="/" element={<HomePage />} />
-                {/* Auth Routes */}
-                <Route path="/request-email-verification"
+            <Route path="/request-email-verification"
+                element={
+                    <ProtectedRoute
+                        isAllowed={isLoggedIn}
+                        redirectTo="/unauthorized"
+                        element={<RequestEmailVerification />}
+                    />
+                }
+            />
+
+            {ALLOW_EMAIL_MIGRATION && (
+                <Route
+                    path="/request-email-change"
                     element={
                         <ProtectedRoute
                             isAllowed={isLoggedIn}
                             redirectTo="/unauthorized"
-                            element={<RequestEmailVerification />}
+                            element={<RequestEmailChange />}
                         />
                     }
                 />
-
-                {ALLOW_EMAIL_MIGRATION && (
-                    <Route
-                        path="/request-email-change"
-                        element={
-                            <ProtectedRoute
-                                isAllowed={isLoggedIn}
-                                redirectTo="/unauthorized"
-                                element={<RequestEmailChange />}
-                            />
-                        }
-                    />
-                )}
-                {ALLOW_EMAIL_MIGRATION && (
-                    <Route path="/verify-email-change" element={<EmailChangeVerification />} />
-                )}
-
+            )}
+            
+            {ALLOW_EMAIL_MIGRATION && (
                 <Route path="/verify-email-change" element={<EmailChangeVerification />} />
-                <Route path="/verify-email" element={<EmailVerification />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password/:token" element={<ResetPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
+            )}
 
+            <Route path="/verify-email-change" element={<EmailChangeVerification />} />
+            <Route path="/verify-email" element={<EmailVerification />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+
+
+            <Route element={<AppShell />}>
+                <Route path="/" element={<HomePage />} />
+                {/* Auth Routes */}
 
                 {/* Admin Routes */}
                 <Route path="/admin/user-registration"

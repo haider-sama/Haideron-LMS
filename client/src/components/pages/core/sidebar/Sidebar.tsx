@@ -102,7 +102,7 @@ const Sidebar = () => {
                         {isLoggedIn && user ? (
                             <li>
                                 <SidebarUserDropdown
-                                    fullName={`${user.firstName} ${user.lastName}`}
+                                    fullName={user.firstName || user.lastName ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() : 'N/A'}
                                     onLogout={handleLogout}
                                     email={user.email}
                                     avatarUrl={user.avatarURL}

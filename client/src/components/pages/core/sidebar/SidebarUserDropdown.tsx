@@ -7,7 +7,7 @@ import AccountSettingsOverlay from '../../../account/AccountSettingsOverlay';
 
 
 interface SideBarUserDropdownProps {
-    fullName: string;
+    fullName: string | null;
     email: string;
     avatarUrl?: string | null;
     onLogout: () => void;
@@ -73,16 +73,17 @@ const SidebarUserDropdown: React.FC<SideBarUserDropdownProps> = ({
 
                 {/* Text + Chevron Wrapper */}
                 <div
-                    className={`flex items-center justify-between ml-3 overflow-hidden transition-all duration-300 ease-in-out 
-                 ${collapsed ? 'opacity-0 w-0' : 'opacity-100 w-full'}`}
+                    className={`flex items-center justify-between ml-3 overflow-hidden transition-all duration-300 ease-in-out
+                    ${collapsed ? 'opacity-0 w-0' : 'opacity-100 w-full'}
+                    hidden md:flex`} // Add these responsive classes
                 >
                     <div className="flex flex-col text-left whitespace-nowrap overflow-hidden text-ellipsis">
-                        <span className="text-sm text-gray-800 dark:text-darkTextPrimary">{truncateName(fullName)}</span>
+                        <span className="text-sm text-gray-800 dark:text-darkTextPrimary">{truncateName(fullName ?? "N/A")}</span>
                         <span className="text-xs text-gray-400 dark:text-darkTextMuted">{email}</span>
                     </div>
                     <FaChevronDown
-                        className={`ml-2 w-4 h-4 transform transition-transform duration-300 ease-in-out 
-                   ${open ? 'rotate-180' : ''} text-gray-600 dark:text-darkTextMuted`}
+                        className={`ml-2 w-4 h-4 transform transition-transform duration-300 ease-in-out
+                    ${open ? 'rotate-180' : ''} text-gray-600 dark:text-darkTextMuted`}
                     />
                 </div>
             </button>
@@ -90,7 +91,7 @@ const SidebarUserDropdown: React.FC<SideBarUserDropdownProps> = ({
             {/* Dropdown opens above */}
             {open && !collapsed && (
                 <div className="absolute bottom-full mb-2 right-2 w-48 bg-white dark:bg-darkSurface border border-gray-200 dark:border-darkBorderLight rounded-md shadow-lg z-50">
-                    <ul className="py-1 text-primary text-sm">
+                    <ul className="p-1 text-primary text-sm">
                         {userDropdownLinks.map((item, idx) => (
                             <li key={idx}>
                                 {item.href ? (
@@ -98,7 +99,7 @@ const SidebarUserDropdown: React.FC<SideBarUserDropdownProps> = ({
                                         to={item.href}
                                         onClick={() => setOpen(false)}
                                         role="menuitem"
-                                        className={`flex items-center px-4 py-2 transition-colors
+                                        className={`flex items-center px-4 py-2 transition-colors rounded-sm
                             hover:bg-blue-400 hover:text-white 
                             dark:hover:bg-darkBlurple dark:hover:text-white
                             ${item.danger ? 'text-red-600 hover:bg-red-600 dark:hover:bg-red-600' : 'text-gray-800 dark:text-darkTextSecondary'}`}
@@ -110,7 +111,7 @@ const SidebarUserDropdown: React.FC<SideBarUserDropdownProps> = ({
                                     <button
                                         onClick={item.onClick}
                                         role="menuitem"
-                                        className={`flex items-center w-full px-4 py-2 transition-colors
+                                        className={`flex items-center w-full px-4 py-2 transition-colors rounded-sm
                             ${item.danger
                                                 ? 'text-red-600 hover:bg-red-600 hover:text-white dark:hover:bg-red-600'
                                                 : 'hover:bg-blue-400 hover:text-white dark:hover:bg-darkBlurple dark:hover:text-white text-gray-800 dark:text-darkTextSecondary'}`}

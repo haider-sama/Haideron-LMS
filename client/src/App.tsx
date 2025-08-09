@@ -9,7 +9,7 @@ import { setToastBridge } from "./lib/toastBridge";
 import { useTheme } from "./hooks/useTheme";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { useAuth } from "./hooks/auth/useAuth";
-import { useDashboards } from "./hooks/auth/useDashboards";
+// import { useDashboards } from "./hooks/auth/useDashboards";
 
 function App() {
     const { user, isLoggedIn, hasCheckedAuth } = useAuth();
@@ -40,20 +40,21 @@ function App() {
     }, [toast]);
 
     // Load dashboards using role
-    const { faculty, student, head } = useDashboards(user?.role, isLoggedIn);
+    // const { faculty, student, head } = useDashboards(user?.role, isLoggedIn);
 
-    const isDashboardLoading =
-        (user?.role === AudienceEnum.Student && student.isLoading) ||
-        (user?.role === AudienceEnum.DepartmentTeacher && faculty.isLoading) ||
-        (user?.role === AudienceEnum.DepartmentHead && head.isLoading);
+    // const isDashboardLoading =
+    //     (user?.role === AudienceEnum.Student && student.isLoading) ||
+    //     (user?.role === AudienceEnum.DepartmentTeacher && faculty.isLoading) ||
+    //     (user?.role === AudienceEnum.DepartmentHead && head.isLoading);
 
-    if (!hasCheckedAuth || isDashboardLoading) return <Spinner />;
+    // if (!hasCheckedAuth || isDashboardLoading) return <Spinner />;
+    if (!hasCheckedAuth) return <Spinner />;
 
     return (
         <>
             <BrowserRouter>
                 <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID!}>
-                    <AppRoutes isLoggedIn={isLoggedIn} role={user?.role ?? AudienceEnum.User} />
+                    <AppRoutes isLoggedIn={isLoggedIn} role={user?.role ?? AudienceEnum.Guest} />
                 </GoogleOAuthProvider>
             </BrowserRouter>
         </>

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { resendVerificationEmail, verifyEmail } from "../../../../api/auth/auth-api";
-import { getButtonClass } from "../../../../components/ui/ButtonClass";
 import { useToast } from "../../../../context/ToastContext";
 import { useAuth } from "../../../../hooks/auth/useAuth";
+import { Button } from "../../../../components/ui/Button";
 
 const EmailVerification: React.FC = () => {
     const { user } = useAuth();
@@ -134,20 +134,12 @@ const EmailVerification: React.FC = () => {
                         <p className="text-red-500 font-semibold mt-2 text-center">{error}</p>
                     )}
 
-                    <button
-                        type="submit"
-                        disabled={isLoading || code.some((d) => !d)}
-                        className={`${getButtonClass({
-                            bg: "bg-primary dark:bg-darkBlurple",
-                            hoverBg: "hover:bg-white dark:hover:bg-darkBlurpleHover",
-                            text: "text-white dark:text-white",
-                            hoverText: "hover:text-gray-900 dark:hover:text-white",
-                            focusRing: "focus:ring-4 focus:ring-gray-200 dark:focus:ring-darkTextSecondary/30",
-                            disabled: isLoading || code.some((d) => !d),
-                        })} mt-4 w-full text-sm sm:px-5 sm:py-3 px-4 py-2 font-medium border border-gray-300 dark:border-darkBorderLight rounded-lg focus:outline-none`}
+                    <Button isLoading={isLoading} loadingText="Verifying..." fullWidth={true}
+                        disabled={code.some((d) => !d)}
+                        size="lg"
                     >
-                        {isLoading ? "Verifying..." : "Verify Email"}
-                    </button>
+                        Verify Email
+                    </Button>
                 </form>
 
                 <div className="text-center mt-4">

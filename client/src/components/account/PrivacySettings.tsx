@@ -3,8 +3,8 @@ import { useToast } from "../../context/ToastContext";
 import { setTheme } from "../../store/themeSlice";
 import { RootState } from "../../store/authStore";
 import { Link } from "react-router-dom";
-import { getButtonClass } from "../ui/ButtonClass";
 import { ALLOW_EMAIL_MIGRATION } from "../../constants";
+import { Button } from "../ui/Button";
 
 type PrivacySettingsProps = {
     onClose?: () => void; // Optional prop
@@ -69,18 +69,9 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({ onClose }) => {
 
                 {ALLOW_EMAIL_MIGRATION ? (
                     <Link to="/request-email-change" onClick={onClose}>
-                        <button
-                            className={getButtonClass({
-                                bg: "bg-blue-400",
-                                hoverBg: "hover:bg-white dark:hover:bg-transparent",
-                                text: "text-white",
-                                hoverText: "hover:text-blue-600 dark:hover:text-blue-400",
-                                focusRing: "focus:ring-4 focus:ring-blue-300",
-                                extra: "px-4 py-2 rounded-md text-sm font-medium border border-gray-200 dark:border-darkBorderLight",
-                            })}
-                        >
-                            Migrate Email
-                        </button>
+                        <Button size='md' fullWidth={false} variant="blue">
+                            Migrate Email Now
+                        </Button>
                     </Link>
                 ) : (
                     <span className="px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-600 dark:bg-darkBorderLight dark:text-darkTextSecondary border border-gray-300 dark:border-darkBorder">

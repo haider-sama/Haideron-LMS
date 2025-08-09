@@ -260,61 +260,61 @@ export interface Course {
     createdBy: string;
 }
 
-export interface TeacherQualification {
-    degree: string;
-    passingYear: number;
-    institutionName: string;
-    majorSubjects: string[];
-}
+// export interface TeacherQualification {
+//     degree: string;
+//     passingYear: number;
+//     institutionName: string;
+//     majorSubjects: string[];
+// }
 
-export interface TeacherInfo {
-    designation: TeacherDesignationEnum;
-    joiningDate: Date | null; // Use ISO string for frontend
-    facultyType: FacultyTypeEnum;
-    subjectOwner?: boolean;
-    qualifications?: TeacherQualification[];
-}
+// export interface TeacherInfo {
+//     designation: TeacherDesignationEnum;
+//     joiningDate: Date | null; // Use ISO string for frontend
+//     facultyType: FacultyTypeEnum;
+//     subjectOwner?: boolean;
+//     qualifications?: TeacherQualification[];
+// }
 
-export interface FacultyRegisterPayload {
-    email: string;
-    password: string;
-    department: DepartmentEnum;
-    teacherInfo: TeacherInfo;
-}
+// export interface FacultyRegisterPayload {
+//     email: string;
+//     password: string;
+//     department: DepartmentEnum;
+//     teacherInfo: TeacherInfo;
+// }
 
-export type FacultyUpdatePayload = Partial<{
-    firstName: string;
-    lastName: string;
-    city: string;
-    country: string;
-    address: string;
-    department: DepartmentEnum;
-    role: AudienceEnum;
-    teacherInfo: TeacherInfo; // can still be required based on your backend validation
-}>;
+// export type FacultyUpdatePayload = Partial<{
+//     firstName: string;
+//     lastName: string;
+//     city: string;
+//     country: string;
+//     address: string;
+//     department: DepartmentEnum;
+//     role: AudienceEnum;
+//     teacherInfo: TeacherInfo; // can still be required based on your backend validation
+// }>;
 
-export interface FacultyUser {
-    _id: string;
-    email: string;
-    firstName?: string;
-    lastName?: string;
-    avatarURL?: string;
-    city?: string;
-    country?: string;
-    address?: string;
-    department?: DepartmentEnum;
-    role: AudienceEnum;
-    teacherInfo?: TeacherInfo;
-    lastOnline: string;
-    isEmailVerified: boolean;
-}
+// export interface FacultyUser {
+//     _id: string;
+//     email: string;
+//     firstName?: string;
+//     lastName?: string;
+//     avatarURL?: string;
+//     city?: string;
+//     country?: string;
+//     address?: string;
+//     department?: DepartmentEnum;
+//     role: AudienceEnum;
+//     teacherInfo?: TeacherInfo;
+//     lastOnline: string;
+//     isEmailVerified: boolean;
+// }
 
-export interface PaginatedFacultyResponse {
-    data: FacultyUser[];
-    page: number;
-    totalPages: number;
-    totalFaculty: number;
-}
+// export interface PaginatedFacultyResponse {
+//     data: FacultyUser[];
+//     page: number;
+//     totalPages: number;
+//     totalFaculty: number;
+// }
 
 export interface UserPreview {
     _id: string;
@@ -766,20 +766,4 @@ export interface PLOAchievementResponse {
         weakPLOs: string[];
         message: string;
     };
-}
-
-export interface UserSession {
-    _id: string;
-    userId: string;
-    ip?: string;
-    userAgent?: {
-        browser?: string;
-        os?: string;
-        device?: string;
-        raw?: string;
-        location?: string; // ← Only if you're enriching userAgent with location somewhere
-    };
-    lastUsed: string; // ISO string (Date)
-    createdAt: string;
-    updatedAt: string;
 }

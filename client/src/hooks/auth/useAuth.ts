@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { User } from "../../../../server/src/shared/interfaces";
+import { UserWithRelations } from "../../../../server/src/shared/interfaces";
 import { validateToken } from "../../api/auth/token-api";
 import { useToast } from "../../context/ToastContext";
 import { login, loginWithGoogle, logout } from "../../api/auth/auth-api";
@@ -13,7 +13,7 @@ export function useAuth() {
         isLoading,
         isError,
         isFetched,
-    } = useQuery<User | null>({
+    } = useQuery<UserWithRelations | null>({
         queryKey: ["validateToken"],
         queryFn: validateToken,
         staleTime: 1000 * 60 * 5, // 5 minutes
@@ -52,7 +52,6 @@ export function useAuth() {
         try {
             await logout();
             await queryClient.invalidateQueries({ queryKey: ["validateToken"] });
-            toast.success("Logged out successfully");
         } catch {
             toast.error("Error while logging out");
         }

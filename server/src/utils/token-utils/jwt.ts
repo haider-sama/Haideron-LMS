@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { JWT_REFRESH_SECRET, JWT_SECRET } from "../../constants/env";
 
 export interface DecodedToken {
-    userId: number;
+    userId: string;
     tokenVersion: number;
     role: string;
     type: "access" | "refresh";

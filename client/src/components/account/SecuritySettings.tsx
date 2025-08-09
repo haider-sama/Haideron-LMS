@@ -4,7 +4,7 @@ import { FiLogOut } from "react-icons/fi";
 import { getButtonClass } from "../ui/ButtonClass";
 import { useDeleteSession, useLogoutAllDevices, useSessions } from "../../hooks/auth/useSessions";
 import { useAuth } from "../../hooks/auth/useAuth";
-import { UserSession } from "../../constants/core/interfaces";
+import { UserSession } from "../../../../server/src/shared/interfaces";
 
 const SecuritySettings: React.FC = () => {
     const toast = useToast();
@@ -115,10 +115,6 @@ const SecuritySettings: React.FC = () => {
                                     <p className="text-xs text-gray-600 dark:text-darkTextSecondary">
                                         {session.userAgent?.browser}
                                     </p>
-                                    <p className="text-xs text-gray-600 dark:text-darkTextSecondary">
-                                        IP: {session.ip || "Unknown"}
-                                        {session.userAgent?.location && ` · ${session.userAgent.location}`}
-                                    </p>
                                     <p className="text-xs text-gray-500 dark:text-darkTextMuted">
                                         Last active:{" "}
                                         {session.updatedAt
@@ -132,7 +128,7 @@ const SecuritySettings: React.FC = () => {
                                     </span>
                                 ) : (
                                     <button
-                                        onClick={() => handleLogoutSingleDevice(session._id)}
+                                        onClick={() => handleLogoutSingleDevice(session.id)}
                                         className="absolute bottom-4 right-4 text-xs text-red-600 dark:text-red-400 border border-red-600 dark:border-red-400 px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
                                     >
                                         Log out of this device

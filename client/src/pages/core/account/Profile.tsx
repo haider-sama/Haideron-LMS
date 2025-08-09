@@ -1,5 +1,4 @@
 import AvatarUpload from '../../../components/account/AvatarUpload';
-import { getButtonClass } from '../../../components/ui/ButtonClass';
 import { Link } from 'react-router-dom';
 import { Input, ReadOnlyInput, SelectInput } from '../../../components/ui/Input';
 import ErrorPage from '../../forbidden/ErrorPage';
@@ -9,6 +8,7 @@ import { Helmet } from 'react-helmet-async';
 import { DegreeEnum } from '../../../../../server/src/shared/enums';
 import { useProfile } from '../../../hooks/auth/useProfile';
 import { TeacherQualification } from '../../../../../server/src/shared/interfaces';
+import { Button } from '../../../components/ui/Button';
 
 type ProfileProps = {
     onClose?: () => void; // Optional prop
@@ -57,28 +57,29 @@ const Profile: React.FC<ProfileProps> = ({ onClose }) => {
                     </div>
 
                     {/* Inputs */}
-                    <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {canEditBasicFields ? (
                             <>
-                                <Input label="First Name" value={editFields.firstName} onChange={e => handleChange('firstName', e.target.value)} />
-                                <Input label="Last Name" value={editFields.lastName} onChange={e => handleChange('lastName', e.target.value)} />
-                                <Input label="Father's Name" value={editFields.fatherName} onChange={e => handleChange('fatherName', e.target.value)} />
-                                <Input label="City" value={editFields.city} onChange={e => handleChange('city', e.target.value)} />
-                                <Input label="Country" value={editFields.country} onChange={e => handleChange('country', e.target.value)} />
-                                <ReadOnlyInput label="Email" value={user.email} className="sm:col-span-2" />
-                                <Input label="Address" value={editFields.address} onChange={e => handleChange('address', e.target.value)} className="sm:col-span-2" />
-                                <ReadOnlyInput label="Department" value={user.department} className="sm:col-span-2" />
+                                <Input label="First Name" value={editFields.firstName ?? 'N/A'} onChange={e => handleChange('firstName', e.target.value)} className="col-span-1" />
+                                <Input label="Last Name" value={editFields.lastName ?? 'N/A'} onChange={e => handleChange('lastName', e.target.value)} className="col-span-1" />
+                                <Input label="Father's Name" value={editFields.fatherName ?? 'N/A'} onChange={e => handleChange('fatherName', e.target.value)} className="col-span-1" />
+                                <Input label="City" value={editFields.city ?? 'N/A'} onChange={e => handleChange('city', e.target.value)} className="col-span-1" />
+                                <Input label="Country" value={editFields.country ?? 'N/A'} onChange={e => handleChange('country', e.target.value)} className="col-span-1" />
+                                <ReadOnlyInput label="Department" value={user.department ?? 'N/A'} className="col-span-1" />
+                                <ReadOnlyInput label="Email" value={user.email} className="col-span-1" />
+                                <Input label="Address" value={editFields.address ?? 'N/A'} onChange={e => handleChange('address', e.target.value)} className="col-span-1" />
+
                             </>
                         ) : (
                             <>
-                                <ReadOnlyInput label="First Name" value={user.firstName ?? ''} />
-                                <ReadOnlyInput label="Last Name" value={user.lastName ?? ''} />
-                                <ReadOnlyInput label="Father's Name" value={user.fatherName ?? ''} />
-                                <ReadOnlyInput label="City" value={user.city ?? ''} />
-                                <ReadOnlyInput label="Country" value={user.country ?? ''} />
-                                <ReadOnlyInput label="Email" value={user.email} className="sm:col-span-2" />
-                                <ReadOnlyInput label="Address" value={user.address ?? ''} className="sm:col-span-2" />
-                                <ReadOnlyInput label="Department" value={user.department} className="sm:col-span-2" />
+                                <ReadOnlyInput label="First Name" value={user.firstName ?? 'N/A'} className="col-span-1" />
+                                <ReadOnlyInput label="Last Name" value={user.lastName ?? 'N/A'} className="col-span-1" />
+                                <ReadOnlyInput label="Father's Name" value={user.fatherName ?? 'N/A'} className="col-span-1" />
+                                <ReadOnlyInput label="City" value={user.city ?? 'N/A'} className="col-span-1" />
+                                <ReadOnlyInput label="Country" value={user.country ?? 'N/A'} className="col-span-1" />
+                                <ReadOnlyInput label="Department" value={user.department ?? 'N/A'} className="col-span-1" />
+                                <ReadOnlyInput label="Email" value={user.email} className="col-span-1" />
+                                <ReadOnlyInput label="Address" value={user.address ?? 'N/A'} className="col-span-1" />
                             </>
                         )}
                     </div>
@@ -107,7 +108,7 @@ const Profile: React.FC<ProfileProps> = ({ onClose }) => {
                                                 label="Degree"
                                                 value={q.degree}
                                                 onChange={(e) =>
-                                                    updateQualification(index, { ...q, degree: e.target.value })
+                                                    updateQualification(index, { ...q, degree: e.target.value as DegreeEnum })
                                                 }
                                                 options={Object.values(DegreeEnum).map((degree) => ({
                                                     label: degree,
@@ -181,29 +182,23 @@ const Profile: React.FC<ProfileProps> = ({ onClose }) => {
 
                 {/* Buttons */}
                 {canEditProfile && (
-                    <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
+                    <div className="mt-8 flex flex-col sm:flex-row justify-center">
                         <div className="w-full sm:w-auto">
-                            <button
+                            <Button
                                 type="button"
                                 onClick={handleSave}
-                                disabled={!isFormChanged || isSaving}
-                                className={getButtonClass({
-                                    bg: isFormChanged || isSaving
-                                        ? "bg-primary dark:bg-darkBlurple"
-                                        : "bg-gray-400 dark:bg-darkMuted cursor-not-allowed",
-                                    hoverBg: isFormChanged || isSaving
-                                        ? "hover:bg-white dark:hover:bg-darkSurface"
-                                        : "",
-                                    text: "text-white",
-                                    hoverText: isFormChanged || isSaving
-                                        ? "hover:text-gray-800 dark:hover:text-white"
-                                        : "",
-                                    extra:
-                                        "w-full text-sm px-4 py-2 transition-all duration-200 font-medium rounded border border-gray-200 dark:border-darkBorderLight",
-                                })}
+                                disabled={!isFormChanged}
+                                isLoading={isSaving}
+                                loadingText="Saving..."
+                                bg={isFormChanged ? "bg-primary dark:bg-darkBlurple" : "bg-gray-400 dark:bg-darkMuted cursor-not-allowed"}
+                                hoverBg={isFormChanged ? "hover:bg-white dark:hover:bg-darkPrimary" : ""}
+                                text="text-white"
+                                hoverText={isFormChanged ? "hover:text-gray-800 dark:hover:text-white" : ""}
+                                size="md"
+                                extra='border dark:border-darkBorderLight'
                             >
-                                {isSaving ? "Saving..." : "Save Changes"}
-                            </button>
+                                Save Changes
+                            </Button>
                         </div>
                     </div>
                 )}
@@ -217,19 +212,9 @@ const Profile: React.FC<ProfileProps> = ({ onClose }) => {
                             </h2>
 
                             <Link to="/forgot-password" className="block w-full" onClick={onClose}>
-                                <button
-                                    type="button"
-                                    className={getButtonClass({
-                                        bg: "bg-yellow-500",
-                                        hoverBg: "hover:bg-white dark:hover:bg-darkSurface",
-                                        text: "text-white",
-                                        hoverText: "hover:text-yellow-600 dark:hover:text-yellow-400",
-                                        focusRing: "focus:ring-4 focus:ring-yellow-200",
-                                        extra: "w-fit px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-all duration-200 border border-gray-200 dark:border-darkBorderLight",
-                                    })}
-                                >
+                                <Button variant="light" size='md' fullWidth={false} >
                                     Reset Password
-                                </button>
+                                </Button>
                             </Link>
                         </div>
 
@@ -249,20 +234,10 @@ const Profile: React.FC<ProfileProps> = ({ onClose }) => {
                                     Please verify your email to secure your account and enable full access.
                                 </p>
 
-                                <Link to="/request-email-verification" className="block w-full" onClick={onClose}>
-                                    <button
-                                        type="button"
-                                        className={getButtonClass({
-                                            bg: "bg-primary dark:bg-darkBlurple",
-                                            hoverBg: "hover:bg-white dark:hover:bg-darkSurface",
-                                            text: "text-white",
-                                            hoverText: "hover:text-gray-800 dark:hover:text-darkBlurple",
-                                            focusRing: "focus:ring-4 focus:ring-gray-200 dark:focus:ring-darkBorderLight",
-                                            extra: "w-fit px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-all duration-200 border border-gray-200 dark:border-darkBorderLight",
-                                        })}
-                                    >
+                                <Link to="/request-email-verification" className="block" onClick={onClose}>
+                                    <Button size='md' fullWidth={false} >
                                         Verify Email Now
-                                    </button>
+                                    </Button>
                                 </Link>
                             </div>
                         )}

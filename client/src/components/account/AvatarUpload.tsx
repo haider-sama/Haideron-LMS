@@ -5,6 +5,7 @@ import { FiImage } from 'react-icons/fi';
 import Modal from '../ui/Modal';
 import Cropper from 'react-easy-crop';
 import type { Area } from 'react-easy-crop';
+import { Button } from '../ui/Button';
 
 interface AvatarUploadProps {
     avatarURL?: string | null; // Expect a single string
@@ -149,12 +150,9 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({ avatarURL }) => {
             </div>
 
             {/* Trigger Button */}
-            <button
-                onClick={() => setModalOpen(true)}
-                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-white dark:hover:bg-transparent hover:text-primary dark:hover:text-darkBlurple border border-gray-300 dark:border-darkBorderLight transition-all text-sm shadow-sm"
-            >
+            <Button variant="primary" size='md' fullWidth={false} onClick={() => setModalOpen(true)}>
                 Change Avatar
-            </button>
+            </Button>
 
             {/* Modal */}
             <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
