@@ -9,6 +9,7 @@ import helmet from 'helmet';
 import { connectRedis } from './lib/redis';
 import { users } from './db/schema';
 import authRouter from './routes/auth/auth.routes';
+import adminRouter from './routes/admin/admin.routes';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ cloudinary.config({
 });
 
 app.use('/api/v1/auth/', authRouter);
+app.use('/api/v1/admin/', adminRouter);
 
 const startServer = async () => {
     console.time("Total Startup Time");

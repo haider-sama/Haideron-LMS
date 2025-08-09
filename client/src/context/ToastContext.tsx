@@ -1,0 +1,79 @@
+// context/ToastContext.tsx
+import React, { createContext, useCallback, useContext, useState } from 'react';
+import Toast, { ToastType } from '../components/ui/Toast';
+import { v4 as uuidv4 } from 'uuid';
+import { AnimatePresence, motion } from 'framer-motion';
+
+interface ToastMessage {
+    id: string;
+    type: ToastType;
+    message: string;
+    duration?: number;
+}
+
+interface ToastContextValue {
+    toasts: ToastMessage[];
+    showToast: (type: ToastType, message: string, duration?: number) => void;
+    success: (message: string, duration?: number) => void;
+    error: (message: string, duration?: number) => void;
+    warning: (message: string, duration?: number) => void;
+    neutral: (message: string, duration?: number) => void;
+}
+
+const ToastContext = createContext<ToastContextValue | undefined>(undefined);
+
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+    const removeToast = (id: string) => {
+        setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    };
+
+    const showToast = useCallback((type: ToastType, message: string, duration = 4000) => {
+        const id = uuidv4();
+        setToasts((prev) => [...prev, { id, type, message, duration }]);
+        setTimeout(() => removeToast(id), duration);
+    }, []);
+
+    const contextValue: ToastContextValue = {
+        toasts,
+        showToast,
+        success: (msg, duration) => showToast('success', msg, duration),
+        error: (msg, duration) => showToast('error', msg, duration),
+        warning: (msg, duration) => showToast('warning', msg, duration),
+        neutral: (msg, duration) => showToast('neutral', msg, duration),
+    };
+
+    return (
+        <ToastContext.Provider value={contextValue}>
+            {children}
+            <div className="fixed top-4 right-4 z-[1000] flex flex-col space-y-2 max-w-sm">
+                <AnimatePresence>
+                    {toasts.map((toast) => (
+                        <motion.div
+                            key={toast.id}
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <Toast
+                                type={toast.type}
+                                message={toast.message}
+                                show
+                                duration={toast.duration}
+                                onClose={() => removeToast(toast.id)}
+                            />
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            </div>
+        </ToastContext.Provider>
+    );
+};
+
+export const useToast = (): ToastContextValue => {
+    const context = useContext(ToastContext);
+    if (!context) throw new Error('useToast must be used within a ToastProvider');
+    return context;
+};

@@ -9,7 +9,7 @@ import dotenv from "dotenv";
 import { VerificationCodeType } from "../../shared/enums";
 import { fifteenMinutesFromNow } from "../../utils/date";
 import { BAD_REQUEST, CONFLICT, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../constants/http";
-import { emailOnlySchema, verifyEmailSchema } from "../../utils/validators/lmsSchemas/authSchemas";
+import { emailOnlySchema, verifyEmailSchema } from "../../utils/validators/lms-schemas/authSchemas";
 import { ALLOW_EMAIL_MIGRATION } from "../../constants/env";
 import { db } from "../../db/db";
 import { users } from "../../db/schema";

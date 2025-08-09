@@ -1,0 +1,31 @@
+email,password,role,department,firstName,lastName,fatherName,city,country,address
+depthead.mt@example.com,Password123,DepartmentHead,Mechatronics Engineering,Ahsan,Rafiq,Sarfaraz,Rahim Yar Khan,Pakistan,"House 1, Street 2"
+teacher1.mt@example.com,Password123,DepartmentTeacher,Mechatronics Engineering,Sadia,Hameed,Abid,Lahore,Pakistan,123 Model Town
+teacher2.mt@example.com,Password123,DepartmentTeacher,Mechatronics Engineering,Bilal,Nasir,Tariq,Faisalabad,Pakistan,45 Jinnah Colony
+teacher3.mt@example.com,Password123,DepartmentTeacher,Mechatronics Engineering,Muhammad,Arif,Sajjad,Islamabad,Pakistan,Sector F-10
+teacher4.mt@example.com,Password123,DepartmentTeacher,Mechatronics Engineering,Fatima,Noor,Kashif,Multan,Pakistan,Gulgasht Colony
+2024mt01@example.com,Password123,Student,Mechatronics Engineering,Ali,Usman,Kamran,Gujranwala,Pakistan,"Street 3, Gulberg"
+2024mt02@example.com,Password123,Student,Mechatronics Engineering,Hina,Tariq,Zubair,Lahore,Pakistan,"Flat 23, DHA Phase 1"
+2024mt03@example.com,Password123,Student,Mechatronics Engineering,Areeba,Shahbaz,Muqaddas,Islamabad,Pakistan,"Block 4, G-9"
+2024mt04@example.com,Password123,Student,Mechatronics Engineering,Faizan,Ilyas,Hammad,Karachi,Pakistan,Clifton Block 5
+2024mt05@example.com,Password123,Student,Mechatronics Engineering,Sana,Naveed,Farooq,Peshawar,Pakistan,University Town
+2024mt06@example.com,Password123,Student,Mechatronics Engineering,Zeeshan,Raheel,Shoaib,Multan,Pakistan,Musa Pak Road
+2024mt07@example.com,Password123,Student,Mechatronics Engineering,Maira,Azeem,Nasir,Rawalpindi,Pakistan,Satellite Town
+2024mt08@example.com,Password123,Student,Mechatronics Engineering,Huzaifa,Qasim,Waseem,Sialkot,Pakistan,Muhallah Noor
+2024mt09@example.com,Password123,Student,Mechatronics Engineering,Aiman,Faheem,Bashir,Quetta,Pakistan,Askari 10
+2024mt10@example.com,Password123,Student,Mechatronics Engineering,Talha,Hassan,Asif,Sargodha,Pakistan,Cantt View
+depthead.math@example.com,Password123,DepartmentHead,Mathematics,Razia,Ahmed,Nasir,Lahore,Pakistan,College Road
+teacher1.math@example.com,Password123,DepartmentTeacher,Mathematics,Sameer,Khan,Faheem,Faisalabad,Pakistan,Ghulam Muhammad Abad
+teacher2.math@example.com,Password123,DepartmentTeacher,Mathematics,Zainab,Ali,Nadeem,Islamabad,Pakistan,G-11/2
+teacher3.math@example.com,Password123,DepartmentTeacher,Mathematics,Osama,Saleem,Tariq,Peshawar,Pakistan,Hayatabad Phase 3
+teacher4.math@example.com,Password123,DepartmentTeacher,Mathematics,Ayesha,Khalid,Rashid,Karachi,Pakistan,Bahadurabad Block 7
+2024math01@example.com,Password123,Student,Mathematics,Rehan,Yousaf,Saeed,Multan,Pakistan,Shah Rukn-e-Alam
+2024math02@example.com,Password123,Student,Mathematics,Sara,Shafiq,Akhtar,Lahore,Pakistan,Shadman Colony
+2024math03@example.com,Password123,Student,Mathematics,Muhammad,Hasnain,Bilal,Rawalpindi,Pakistan,Committee Chowk
+2024math04@example.com,Password123,Student,Mathematics,Iqra,Siddique,Naveed,Faisalabad,Pakistan,Peoples Colony
+2024math05@example.com,Password123,Student,Mathematics,Hamza,Tariq,Sultan,Quetta,Pakistan,Airport Road
+2024math06@example.com,Password123,Student,Mathematics,Aleena,Nawaz,Mansoor,Sargodha,Pakistan,University Road
+2024math07@example.com,Password123,Student,Mathematics,Usama,Sheikh,Kamran,Gujrat,Pakistan,Civil Lines
+2024math08@example.com,Password123,Student,Mathematics,Laiba,Farooq,Hamza,Sialkot,Pakistan,Muradpur
+2024math09@example.com,Password123,Student,Mathematics,Taha,Javed,Shahid,Bahawalpur,Pakistan,Model Town A
+2024math10@example.com,Password123,Student,Mathematics,Zara,Rashid,Aamir,Hyderabad,Pakistan,Latifabad No. 2

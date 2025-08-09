@@ -8,7 +8,7 @@ import dotenv from "dotenv";
 import { VerificationCodeType } from "../../shared/enums";
 import { oneHourFromNow } from "../../utils/date";
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../constants/http";
-import { emailOnlySchema, resetPasswordSchema } from "../../utils/validators/lmsSchemas/authSchemas";
+import { emailOnlySchema, resetPasswordSchema } from "../../utils/validators/lms-schemas/authSchemas";
 import { db } from "../../db/db";
 import { users } from "../../db/schema";
 import { hashValue } from "../../utils/bcrypt";

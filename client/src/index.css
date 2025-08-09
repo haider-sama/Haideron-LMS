@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+#root {
+    height: 100%;
+}
+
+body {
+    font-family: 'Atkinson Hyperlegible', sans-serif;
+}
+
+@keyframes spin-slow {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin-slow {
+    animation: spin-slow 4s linear infinite;
+}
+
+body.dark,
+html.dark {
+    scrollbar-color: #555 #1e1e1e;
+    scrollbar-width: thin;
+}
+
+/* WebKit (Chrome, Edge, Brave, Safari) */
+body.dark ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+body.dark ::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+body.dark ::-webkit-scrollbar-thumb {
+    background-color: #555;
+    border-radius: 8px;
+    border: 2px solid #1e1e1e;
+}
+
+.is-editor-empty::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: #9ca3af;
+    /* Tailwind gray-400 */
+    pointer-events: none;
+    height: 0;
+}
+
+/* forum badges */
+.badge-bg {
+    background-image: linear-gradient(to bottom, #0077a2, #005a7c);
+    position: relative;
+    overflow: hidden;
+}
+
+.badge-bg::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: repeating-linear-gradient(45deg,
+            transparent,
+            transparent 5px,
+            rgba(0, 0, 0, 0.1) 5px,
+            rgba(0, 0, 0, 0.1) 10px);
+    z-index: 1;
+}
+
+.badge-bg::after {
+    content: "";
+    position: absolute;
+    top: 10%;
+    left: -25%;
+    width: 150%;
+    height: 20%;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0));
+    transform: skewY(-5deg);
+    z-index: 2;
+}
+
+.developer-text {
+    color: #d0d0d0;
+    text-shadow: 0 0 5px #000, 0 0 10px #000, 0 0 15px #000;
+}
+
+.staff-tag {
+    background: linear-gradient(to bottom, #f0f0f0, #c0c0c0);
+    clip-path: polygon(10% 0, 90% 0, 100% 100%, 0% 100%);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.staff-text {
+    color: #212121;
+
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
+}

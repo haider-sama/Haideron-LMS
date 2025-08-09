@@ -3,7 +3,7 @@ import { uploadImageToCloudinary } from "../../utils/uploadImage";
 import multer from "multer";
 import dotenv from "dotenv";
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "../../constants/http";
-import { avatarSchema } from "../../utils/validators/lmsSchemas/authSchemas";
+import { avatarSchema } from "../../utils/validators/lms-schemas/authSchemas";
 import { v2 as cloudinary } from "cloudinary";
 import { db } from "../../db/db";
 import { users } from "../../db/schema";

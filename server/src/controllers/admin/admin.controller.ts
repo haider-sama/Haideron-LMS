@@ -7,7 +7,7 @@ import { AudienceEnum, FacultyTypeEnum, TeacherDesignationEnum } from "../../sha
 import { hashValue } from "../../utils/bcrypt";
 import { GLOBAL_EMAIL_DOMAIN } from "../../constants/env";
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED } from "../../constants/http";
-import { adminUpdateUserSchema, bulkRegisterSchema, passwordOnlySchema } from "../../utils/validators/lmsSchemas/authSchemas";
+import { adminUpdateUserSchema, bulkRegisterSchema, passwordOnlySchema } from "../../utils/validators/lms-schemas/authSchemas";
 import { eq, ilike, or, sql } from "drizzle-orm";
 import { db } from "../../db/db";
 import { forumProfiles, teacherInfo, users } from "../../db/schema";
@@ -263,19 +263,19 @@ export async function fetchUserById(req: Request, res: Response) {
                 role: users.role,
 
                 // Optional related data
-                teacherInfoId: teacherInfo.id,
-                teacherDesignation: teacherInfo.designation,
-                teacherJoiningDate: teacherInfo.joiningDate,
-                teacherFacultyType: teacherInfo.facultyType,
-                teacherSubjectOwner: teacherInfo.subjectOwner,
+                // teacherInfoId: teacherInfo.id,
+                // teacherDesignation: teacherInfo.designation,
+                // teacherJoiningDate: teacherInfo.joiningDate,
+                // teacherFacultyType: teacherInfo.facultyType,
+                // teacherSubjectOwner: teacherInfo.subjectOwner,
 
-                forumProfileId: forumProfiles.id,
-                forumUsername: forumProfiles.username,
-                forumDisplayName: forumProfiles.displayName,
+                // forumProfileId: forumProfiles.id,
+                // forumUsername: forumProfiles.username,
+                // forumDisplayName: forumProfiles.displayName,
             })
             .from(users)
-            .leftJoin(teacherInfo, eq(teacherInfo.userId, users.id))
-            .leftJoin(forumProfiles, eq(forumProfiles.userId, users.id))
+            // .leftJoin(teacherInfo, eq(teacherInfo.userId, users.id))
+            // .leftJoin(forumProfiles, eq(forumProfiles.userId, users.id))
             .where(eq(users.id, userId))
             .limit(1)
             .execute()
@@ -301,21 +301,21 @@ export async function fetchUserById(req: Request, res: Response) {
             lastOnline: user.lastOnline,
             role: user.role,
 
-            teacherInfo: user.teacherInfoId
-                ? {
-                    designation: user.teacherDesignation,
-                    joiningDate: user.teacherJoiningDate,
-                    facultyType: user.teacherFacultyType,
-                    subjectOwner: user.teacherSubjectOwner,
-                }
-                : undefined,
+            // teacherInfo: user.teacherInfoId
+            //     ? {
+            //         designation: user.teacherDesignation,
+            //         joiningDate: user.teacherJoiningDate,
+            //         facultyType: user.teacherFacultyType,
+            //         subjectOwner: user.teacherSubjectOwner,
+            //     }
+            //     : undefined,
 
-            forumProfile: user.forumProfileId
-                ? {
-                    username: user.forumUsername,
-                    displayName: user.forumDisplayName,
-                }
-                : undefined,
+            // forumProfile: user.forumProfileId
+            //     ? {
+            //         username: user.forumUsername,
+            //         displayName: user.forumDisplayName,
+            //     }
+            //     : undefined,
         };
 
         res.json(safeUser);

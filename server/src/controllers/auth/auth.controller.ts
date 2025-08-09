@@ -9,7 +9,7 @@ import { AudienceEnum, DegreeEnum, FacultyTypeEnum, TeacherDesignationEnum, Veri
 import { fifteenMinutesFromNow, oneHourFromNow } from "../../utils/date";
 import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED } from "../../constants/http";
 import { clearAuthCookies } from "../../utils/token-utils/cookies";
-import { loginSchema, registerSchema } from "../../utils/validators/lmsSchemas/authSchemas";
+import { loginSchema, registerSchema } from "../../utils/validators/lms-schemas/authSchemas";
 import { ZodError } from "zod";
 import * as UAParser from "ua-parser-js";
 import { ALLOW_PUBLIC_REGISTRATION } from "../../constants/env";

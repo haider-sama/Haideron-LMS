@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import dotenv from "dotenv";
 import { BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../constants/http";
-import { updateUserProfileSchema } from "../../utils/validators/lmsSchemas/authSchemas";
+import { updateUserProfileSchema } from "../../utils/validators/lms-schemas/authSchemas";
 import { AudienceEnum, DegreeEnum } from "../../shared/enums";
 import { db } from "../../db/db";
 import { forumProfiles, teacherInfo, teacherQualifications, users } from "../../db/schema";

@@ -6,7 +6,7 @@ import {
 import { ForumBadgeEnum, VisibilityEnum } from "./social.enums";
 
 export interface User {
-    id: string; 
+    id: string;
     email: string;
     password: string;
     fatherName?: string | null;
@@ -68,10 +68,10 @@ export interface ForumProfile {
 }
 
 export interface UserWithRelations extends User {
-  teacherInfo?: TeacherInfoWithQualifications | null;
-  forumProfile?: ForumProfile | null;
+    teacherInfo?: TeacherInfoWithQualifications | null;
+    forumProfile?: ForumProfile | null;
 }
 
 export interface TeacherInfoWithQualifications extends TeacherInfo {
-  qualifications?: TeacherQualification[];
+    qualifications?: TeacherQualification[];
 }
