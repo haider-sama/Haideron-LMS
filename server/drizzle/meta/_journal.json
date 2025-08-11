@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1754647719123,
-      "tag": "0000_nasty_tiger_shark",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1754661274803,
-      "tag": "0001_lean_peter_quill",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1754661698281,
-      "tag": "0002_lazy_landau",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1754673029052,
-      "tag": "0003_polite_alex_power",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1754838179056,
-      "tag": "0004_careless_vanisher",
+      "when": 1754932493312,
+      "tag": "0000_open_luke_cage",
       "breakpoints": true
     }
   ]

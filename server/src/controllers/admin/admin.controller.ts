@@ -96,12 +96,13 @@ export async function bulkRegister(req: Request, res: Response) {
                 throw new Error(`Email domain must be exactly ${GLOBAL_EMAIL_DOMAIN}`);
             }
 
+            const hashedPassword = await hashValue(password);
             // Insert user
             const insertResult = await db
                 .insert(users)
                 .values({
                     email: email.toLowerCase().trim(),
-                    password,
+                    password: hashedPassword,
                     role,
                     department: department || undefined,
                     firstName,
@@ -415,18 +416,21 @@ export async function fetchPaginatedUsers(req: Request, res: Response) {
         // Build searchFilter (OR ilike on multiple fields)
         let searchFilter = undefined;
         if (search) {
-            const likePattern = `%${search}%`;
-            searchFilter = or(
-                ilike(users.email, likePattern),
-                ilike(users.firstName, likePattern),
-                ilike(users.lastName, likePattern),
-                ilike(users.fatherName, likePattern),
-                ilike(users.city, likePattern),
-                ilike(users.country, likePattern),
-                // For enums, cast to text and ilike, just in case
-                ilike(sql`CAST(${users.role} AS TEXT)`, likePattern),
-                ilike(sql`CAST(${users.department} AS TEXT)`, likePattern),
-            );
+            // const likePattern = `%${search}%`;
+            // searchFilter = or(
+            //     ilike(users.email, likePattern),
+            //     ilike(users.firstName, likePattern),
+            //     ilike(users.lastName, likePattern),
+            //     ilike(users.fatherName, likePattern),
+            //     ilike(users.city, likePattern),
+            //     ilike(users.country, likePattern),
+            //     // For enums, cast to text and ilike, just in case
+            //     ilike(sql`CAST(${users.role} AS TEXT)`, likePattern),
+            //     ilike(sql`CAST(${users.department} AS TEXT)`, likePattern),
+            // );
+
+            // plainto_tsquery automatically tokenizes & sanitizes
+            searchFilter = sql`search_vector @@ plainto_tsquery('simple', ${search})`;
         }
 
         // Build exact filters (AND)
