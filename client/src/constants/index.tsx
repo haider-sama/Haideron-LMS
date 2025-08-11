@@ -21,13 +21,26 @@ export const restrictedRoles = [
     AudienceEnum.Admin,
 ];
 
+export type RoleOption = {
+    label: string;
+    value: string;
+};
+
 // Function to get available roles based on current user's role
-export const getAvailableRoles = (currentUserRole: AudienceEnum) => {
+export const getAvailableRoles = (currentUserRole: AudienceEnum): RoleOption[] => {
+    let roles = [];
+
     if (currentUserRole === AudienceEnum.Admin) {
-        return Object.values(AudienceEnum); // Admin sees all roles
+        roles = Object.values(AudienceEnum);
     } else {
-        return Object.values(AudienceEnum).filter(role => !restrictedRoles.includes(role)); // Others see limited
+        roles = Object.values(AudienceEnum).filter(role => !restrictedRoles.includes(role));
     }
+
+    // Map enum values to RoleOption objects
+    return roles.map(role => ({
+        label: role.toString(),   // or format it as you like
+        value: role.toString()
+    }));
 };
 
 export interface NavLink {

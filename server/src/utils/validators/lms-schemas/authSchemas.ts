@@ -173,18 +173,26 @@ export const bulkRegisterUserSchema = z.object({
 });
 
 export const bulkRegisterSchema = z.object({
-    users: z.array(z.object({
-        email: z.string().email(),
-        password: z.string().min(6),
-        role: z.nativeEnum(AudienceEnum),
-        department: z.nativeEnum(DepartmentEnum),
-        firstName: z.string().min(1),
-        lastName: z.string().min(1),
-        fatherName: z.string().min(1),
-        city: z.string().min(1),
-        country: z.string().min(1),
-        address: z.string().min(1),
-    }))
+    users: z.array(
+        z.object({
+            email: z.string().email(),
+            password: z.string().min(6),
+            role: z.nativeEnum(AudienceEnum),
+            department: z.nativeEnum(DepartmentEnum),
+            firstName: z.string().min(1),
+            lastName: z.string().min(1),
+            fatherName: z.string().min(1),
+            city: z.string().min(1),
+            country: z.string().min(1),
+            address: z.string().min(1),
+        })
+    ).refine(
+        (users) => !users.some(user => user.role === AudienceEnum.Admin),
+        {
+            message: "Role 'Admin' is not allowed.",
+            path: ["users"], // attach error at users array level
+        }
+    )
 });
 
 export const adminUpdateUserSchema = z.object({
@@ -227,16 +235,14 @@ export const adminUpdateUserSchema = z.object({
         .max(50, { message: "Country must be at most 50 characters long" })
         .optional(),
 
-    avatarURL: z
-        .string({ required_error: "Avatar URL must be a valid URL" })
-        .url({ message: "Avatar URL must be a valid URL" })
-        .optional(),
-
     department: z
         .nativeEnum(DepartmentEnum, { errorMap: () => ({ message: "Invalid department selected" }) })
         .optional(),
 
     role: z
         .nativeEnum(AudienceEnum, { errorMap: () => ({ message: "Invalid role selected" }) })
-        .optional(),
+        .optional()
+        .refine((val) => val !== AudienceEnum.Admin, {
+            message: "Role 'Admin' is not allowed",
+        }),
 });

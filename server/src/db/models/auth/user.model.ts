@@ -1,4 +1,4 @@
-import { pgTable, serial, text, varchar, integer, boolean, timestamp, pgEnum, date, jsonb, uuid } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, varchar, integer, boolean, timestamp, pgEnum, date, jsonb, uuid, index } from "drizzle-orm/pg-core";
 import { AudienceEnum, DegreeEnum, DepartmentEnum, FacultyTypeEnum, TeacherDesignationEnum } from "../../../shared/enums";
 import { ForumBadgeEnum, VisibilityEnum } from "../../../shared/social.enums";
 import { relations } from "drizzle-orm";
@@ -43,7 +43,10 @@ export const teacherInfo = pgTable("teacher_info", {
     joiningDate: date("joining_date"),
     facultyType: facultyTypeEnum("faculty_type").notNull(),
     subjectOwner: boolean("subject_owner").default(false).notNull(),
-});
+}, (table) => ({
+    userIdIdx: index("idx_teacher_info_user_id").on(table.userId),
+}));
+
 
 export const teacherQualifications = pgTable("teacher_qualifications", {
     id: uuid("id").defaultRandom().primaryKey(),
@@ -52,7 +55,9 @@ export const teacherQualifications = pgTable("teacher_qualifications", {
     passingYear: integer("passing_year").notNull(),
     institutionName: text("institution_name").notNull(),
     majorSubjects: jsonb("major_subjects").$type<string[]>().notNull(),
-});
+}, (table) => ({
+    teacherInfoIdIdx: index("idx_teacher_qualifications_teacher_info_id").on(table.teacherInfoId),
+}));
 
 export const forumProfiles = pgTable("forum_profiles", {
     id: uuid("id").defaultRandom().primaryKey(), // Changed to UUID
@@ -68,7 +73,9 @@ export const forumProfiles = pgTable("forum_profiles", {
     postCount: integer("post_count").default(0),
     commentCount: integer("comment_count").default(0),
     joinedAt: timestamp("joined_at").defaultNow(),
-});
+}, (table) => ({
+    userIdIdx: index("idx_forum_profiles_user_id").on(table.userId),
+}));
 
 // Users -> TeacherInfo & ForumProfiles
 export const usersRelations = relations(users, ({ one, many }) => ({

@@ -83,8 +83,8 @@ const variantStyles: Record<Variant, { base: string; smPadding: string; mdPaddin
     },
     green: {
         base: `
-      bg-green-600 text-white border-green-600
-      hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800
+      bg-green-500 text-white border-green-500
+      hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-800
       disabled:bg-green-300 disabled:text-green-100 disabled:cursor-not-allowed
       focus:ring-2 focus:ring-green-400 dark:focus:ring-green-500
       border

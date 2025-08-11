@@ -70,7 +70,7 @@ export const ReadOnlyInput = ({
 interface SelectInputProps {
     label?: string;
     name?: string;
-    value: string | number;
+    value: string | number | null;
     onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
     options: string[] | { label: string; value: string | number }[];
     className?: string;
@@ -100,7 +100,7 @@ export const SelectInput: React.FC<SelectInputProps> = ({
             </label>
             <select
                 name={name}
-                value={value}
+                value={value ?? ""}
                 onChange={onChange}
                 disabled={false}
                 className="w-full px-2 py-1.5 rounded-md

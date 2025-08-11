@@ -1,6 +1,6 @@
 import { User } from "../../../../server/src/shared/interfaces";
 import { API_BASE_URL } from "../../constants";
-import { BulkRegisterError, BulkRegisterResult, PublicUser } from "../../constants/core/interfaces";
+import { BulkRegisterError, BulkRegisterResult, FetchUsersFilters, PublicUser } from "../../constants/core/interfaces";
 import { BulkUser, PaginatedUserResponse } from "../../constants/core/interfaces";
 
 const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/admin` || "";
@@ -115,7 +115,8 @@ export const updateUserById = async (
 export const fetchPaginatedUsers = async (
     page = 1,
     limit = 20,
-    search = ""
+    search = "",
+    filters: FetchUsersFilters = {}
 ): Promise<PaginatedUserResponse> => {
     const queryParams = new URLSearchParams({
         page: page.toString(),
@@ -125,6 +126,13 @@ export const fetchPaginatedUsers = async (
     if (search.trim()) {
         queryParams.append("search", search.trim());
     }
+
+    // Append filters if provided and not empty
+    Object.entries(filters).forEach(([key, value]) => {
+        if (value && value.toString().trim() !== "") {
+            queryParams.append(key, value.toString().trim());
+        }
+    });
 
     const res = await fetch(
         `${LOCAL_BASE_URL}/users?${queryParams.toString()}`,

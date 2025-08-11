@@ -3,12 +3,12 @@ import {
     sendResetSuccessEmail,
 } from "../../utils/email/emailService";
 import dotenv from "dotenv";
-import { AudienceEnum, FacultyTypeEnum, TeacherDesignationEnum } from "../../shared/enums";
+import { AudienceEnum, DepartmentEnum, FacultyTypeEnum, TeacherDesignationEnum } from "../../shared/enums";
 import { hashValue } from "../../utils/bcrypt";
 import { GLOBAL_EMAIL_DOMAIN } from "../../constants/env";
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED } from "../../constants/http";
 import { adminUpdateUserSchema, bulkRegisterSchema, passwordOnlySchema } from "../../utils/validators/lms-schemas/authSchemas";
-import { eq, ilike, or, sql } from "drizzle-orm";
+import { and, eq, ilike, or, sql } from "drizzle-orm";
 import { db } from "../../db/db";
 import { forumProfiles, teacherInfo, users } from "../../db/schema";
 
@@ -348,7 +348,6 @@ export async function updateUserById(req: Request, res: Response) {
             address: parsed.data.address,
             city: parsed.data.city,
             country: parsed.data.country,
-            avatarURL: parsed.data.avatarURL,
             department: parsed.data.department,
             role: parsed.data.role,
         };
@@ -377,7 +376,6 @@ export async function updateUserById(req: Request, res: Response) {
             address: updatedUser.address,
             city: updatedUser.city,
             country: updatedUser.country,
-            avatarURL: updatedUser.avatarURL,
             department: updatedUser.department,
             role: updatedUser.role,
         };
@@ -397,9 +395,24 @@ export async function fetchPaginatedUsers(req: Request, res: Response) {
         const page = Math.max(parseInt(req.query.page as string) || 1, 1);
         const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
         const offsetVal = (page - 1) * limit;
-        const search = (req.query.search as string || "").trim().toLowerCase();
 
-        // Build dynamic search filter using ilike (case-insensitive LIKE)
+        const search = (req.query.search as string || "").trim();
+
+        // Optional exact filters by individual fields
+        // Use exact match only for enum types and some strings, 
+        // you can add or remove fields as per your UI/filtering needs
+        const filterEmail = req.query.email as string | undefined;
+        const filterFirstName = req.query.firstName as string | undefined;
+        const filterLastName = req.query.lastName as string | undefined;
+        const filterFatherName = req.query.fatherName as string | undefined;
+        const filterCity = req.query.city as string | undefined;
+        const filterCountry = req.query.country as string | undefined;
+
+        // For enums, ensure valid values or skip filter
+        const filterRole = (req.query.role as AudienceEnum | undefined);
+        const filterDepartment = (req.query.department as DepartmentEnum | undefined);
+
+        // Build searchFilter (OR ilike on multiple fields)
         let searchFilter = undefined;
         if (search) {
             const likePattern = `%${search}%`;
@@ -407,20 +420,51 @@ export async function fetchPaginatedUsers(req: Request, res: Response) {
                 ilike(users.email, likePattern),
                 ilike(users.firstName, likePattern),
                 ilike(users.lastName, likePattern),
+                ilike(users.fatherName, likePattern),
                 ilike(users.city, likePattern),
                 ilike(users.country, likePattern),
-                ilike(users.role, likePattern),
-                ilike(users.department, likePattern),
+                // For enums, cast to text and ilike, just in case
+                ilike(sql`CAST(${users.role} AS TEXT)`, likePattern),
+                ilike(sql`CAST(${users.department} AS TEXT)`, likePattern),
             );
         }
 
-        // Fetch paginated users with optional search filter
+        // Build exact filters (AND)
+        const exactFilters = [];
+
+        if (filterEmail) exactFilters.push(eq(users.email, filterEmail));
+        if (filterFirstName) exactFilters.push(eq(users.firstName, filterFirstName));
+        if (filterLastName) exactFilters.push(eq(users.lastName, filterLastName));
+        if (filterFatherName) exactFilters.push(eq(users.fatherName, filterFatherName));
+        if (filterCity) exactFilters.push(eq(users.city, filterCity));
+        if (filterCountry) exactFilters.push(eq(users.country, filterCountry));
+        if (filterRole && Object.values(AudienceEnum).includes(filterRole)) {
+            exactFilters.push(eq(users.role, filterRole));
+        }
+        if (filterDepartment && Object.values(DepartmentEnum).includes(filterDepartment)) {
+            exactFilters.push(eq(users.department, filterDepartment));
+        }
+
+        // Combine filters: if searchFilter and exactFilters exist, combine with AND
+        let finalFilter;
+        if (searchFilter && exactFilters.length > 0) {
+            finalFilter = and(searchFilter, and(...exactFilters));
+        } else if (searchFilter) {
+            finalFilter = searchFilter;
+        } else if (exactFilters.length > 0) {
+            finalFilter = and(...exactFilters);
+        } else {
+            finalFilter = undefined;
+        }
+
+        // Fetch paginated users with combined filter
         const usersList = await db
             .select({
                 id: users.id,
                 email: users.email,
                 firstName: users.firstName,
                 lastName: users.lastName,
+                fatherName: users.fatherName,
                 city: users.city,
                 country: users.country,
                 address: users.address,
@@ -428,21 +472,18 @@ export async function fetchPaginatedUsers(req: Request, res: Response) {
                 isEmailVerified: users.isEmailVerified,
                 role: users.role,
                 department: users.department,
-                lastOnline: users.lastOnline,
-                teacherInfoId: teacherInfo.id,  // left join field (nullable)
             })
             .from(users)
-            .leftJoin(teacherInfo, eq(teacherInfo.userId, users.id))
-            .where(searchFilter ? searchFilter : undefined)
+            .where(finalFilter)
             .limit(limit)
             .offset(offsetVal)
             .execute();
 
-        // Fetch total count for pagination
+        // Count total for pagination
         const [{ count }] = await db
             .select({ count: sql<number>`count(*)` })
             .from(users)
-            .where(searchFilter ?? undefined)
+            .where(finalFilter)
             .execute();
 
         const totalUsers = Number(count);
@@ -457,4 +498,4 @@ export async function fetchPaginatedUsers(req: Request, res: Response) {
         console.error("Error fetching paginated users:", err);
         res.status(INTERNAL_SERVER_ERROR).json({ message: "Cannot fetch users. Please try again." });
     }
-};
+}

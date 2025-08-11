@@ -1,183 +1,64 @@
-import { useRef, useState } from "react";
-import { bulkRegisterUsers } from "../../../api/admin/admin-api";
 import { AudienceEnum, DepartmentEnum } from "../../../../../server/src/shared/enums";
 import UserAddForm from "../../../components/pages/core/admin/UserAddForm";
-import Papa from "papaparse";
-import { getButtonClass } from "../../../components/ui/ButtonClass";
-import { getAvailableRoles, GLOBAL_TITLE, restrictedRoles } from "../../../constants";
-import { useToast } from "../../../context/ToastContext";
+import { GLOBAL_TITLE } from "../../../constants";
 import { BulkUser } from "../../../constants/core/interfaces";
 import PageHeading from "../../../components/ui/PageHeading";
 import Breadcrumbs, { generateBreadcrumbs } from "../../../components/ui/Breadcrumbs";
 import { FiTrash2 } from "react-icons/fi";
-import { Input, SelectInput } from "../../../components/ui/Input";
 import { Helmet } from "react-helmet-async";
 import { usePermissions } from "../../../hooks/usePermissions";
-
+import { useUserManagement } from "../../../hooks/admin/useUserManagement";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "../../../components/ui/Button";
+import { motion, AnimatePresence } from "framer-motion";
 
 const UserRegistration = () => {
     const { user } = usePermissions();
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { usersFormData, viewMode, setViewMode, handleCSVUpload, isSubmitting, handleSubmit,
+        handleChangeForm, handleRemoveUser, availableRoles, validateUser, handleAddUser,
 
-    const currentUserRole = (user?.role ?? AudienceEnum.Guest) as AudienceEnum;
-    const availableRoles = getAvailableRoles(currentUserRole);
-    const toast = useToast();
-    const [viewMode, setViewMode] = useState<"form" | "table">("table");
+    } =
+        useUserManagement((user?.role ?? AudienceEnum.Guest) as AudienceEnum);
 
-    const initialUser: BulkUser = {
-        email: "",
-        password: "",
-        role: AudienceEnum.Guest,
-        department: DepartmentEnum.NA,
-        firstName: "",
-        lastName: "",
-        fatherName: "",
-        city: "",
-        country: "",
-        address: "",
+    const [editableCell, setEditableCell] = useState<{ rowIndex: number; field: string } | null>(null);
+    const [tempValue, setTempValue] = useState<string>("");
+    
+    // Refs for detecting outside clicks
+    const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+    const onCellDoubleClick = (rowIndex: number, field: string, currentValue: string) => {
+        if (isSubmitting) return;
+        setEditableCell({ rowIndex, field });
+        setTempValue(currentValue);
     };
 
-    const [users, setUsers] = useState([initialUser]);
-
-    const formRefs = useRef<(HTMLDivElement | null)[]>([]); // Refs to scroll to specific forms
-
-    const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (isSubmitting) return;
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            complete: (results) => {
-                const parsedUsers = results.data.map((row: any) => {
-                    let role = row.role && Object.values(AudienceEnum).includes(row.role) ? row.role : AudienceEnum.Guest;
-
-                    if (currentUserRole !== AudienceEnum.Admin && restrictedRoles.includes(role)) {
-                        role = AudienceEnum.Guest;
-                    }
-
-                    let department = Object.values(DepartmentEnum).includes(row.department) ? row.department : DepartmentEnum.NA;
-
-                    return {
-                        email: (row.email || "").trim(),
-                        password: row.password || "",
-                        role,
-                        department,
-                        firstName: (row.firstName || "").trim(),
-                        lastName: (row.lastName || "").trim(),
-                        fatherName: (row.fatherName || "").trim(),
-                        city: (row.city || "").trim(),
-                        country: (row.country || "").trim(),
-                        address: (row.address || "").trim(),
-                    };
-                });
-
-                setUsers((prevUsers) => [...prevUsers, ...parsedUsers]);
-            },
-            error: (error) => {
-                alert("Error parsing CSV: " + error.message);
-            },
-        });
-
-        e.target.value = ""; // reset input
+    const onSave = () => {
+        if (editableCell) {
+            handleChangeForm(editableCell.rowIndex, editableCell.field as keyof BulkUser, tempValue);
+            setEditableCell(null);
+        }
     };
 
-    const handleChange = <K extends keyof BulkUser>(index: number, field: K, value: BulkUser[K]) => {
-        if (isSubmitting) return;
-        const updatedUsers = [...users];
-        updatedUsers[index] = {
-            ...updatedUsers[index],
-            [field]: value,
+    const onCancel = () => {
+        setEditableCell(null);
+        setTempValue("");
+    };
+
+    useEffect(() => {
+        function handleEscape(event: KeyboardEvent) {
+            if (event.key === "Escape") {
+                onCancel();
+            }
+        }
+
+        if (editableCell) {
+            document.addEventListener("keydown", handleEscape);
+        }
+
+        return () => {
+            document.removeEventListener("keydown", handleEscape);
         };
-        setUsers(updatedUsers);
-    };
-
-    const handleAddUser = () => {
-        if (isSubmitting) return;
-        setUsers([...users, { ...initialUser }]);
-    };
-
-    const handleRemoveUser = (index: number) => {
-        if (isSubmitting) return;
-        const updated = users.filter((_, i) => i !== index);
-        setUsers(updated);
-    };
-
-    const handleSubmit = async () => {
-        for (let i = 0; i < users.length; i++) {
-            const user = users[i];
-            const requiredFields = [
-                "email", "password", "role", "department",
-                "firstName", "lastName", "fatherName", "city", "country", "address"
-            ];
-
-            const missing = requiredFields.filter((field) => !user[field as keyof typeof user]);
-            if (missing.length > 0) {
-                toast.error(`Please fill all fields for user ${i + 1}`);
-                formRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "center" });
-                return;
-            }
-        }
-
-        setIsSubmitting(true);
-        try {
-            const { results } = await bulkRegisterUsers(users);
-
-            const failed = results.filter(r => !r.success);
-            const success = results.filter(r => r.success);
-
-            if (failed.length > 0) {
-                failed.forEach(fail => {
-                    toast.error(`${fail.email}: ${fail.message}`);
-                });
-
-                // Scroll to first failed one (if you want):
-                const firstFailIndex = failed.findIndex(f => f.email);
-                if (firstFailIndex >= 0) {
-                    const refIndex = users.findIndex(u => u.email === failed[firstFailIndex].email);
-                    formRefs.current[refIndex]?.scrollIntoView({ behavior: "smooth", block: "center" });
-                }
-            }
-
-            if (success.length > 0) {
-                toast.success(`${success.length} user(s) registered successfully`);
-                setUsers([{ ...initialUser }]);
-            }
-
-        } catch (err: any) {
-            if (err.errors && typeof err.errors === "object") {
-                let shownError = false;
-
-                Object.entries(err.errors).forEach(([_, messages]) => {
-                    if (Array.isArray(messages)) {
-                        messages
-                            .filter(msg => msg && typeof msg === "string")
-                            .forEach(msg => {
-                                shownError = true;
-                                toast.error(msg);
-                            });
-                    }
-                });
-
-                if (!shownError) {
-                    toast.error("Some input fields are invalid.");
-                }
-            } else {
-                toast.error(err.message || "Unexpected error occurred");
-            }
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const validateUser = (user: BulkUser) => {
-        const requiredFields: (keyof BulkUser)[] = [
-            "email", "password", "firstName", "lastName",
-            "fatherName", "city", "country", "address",
-        ];
-        return requiredFields.every((field) => Boolean(user[field]));
-    };
+    }, [editableCell]);
 
     return (
         <div className="max-w-6xl mx-auto p-8">
@@ -188,20 +69,10 @@ const UserRegistration = () => {
             <PageHeading title="User Registration" />
 
             <div className="flex justify-end mb-4">
-                <button
-                    onClick={() => setViewMode(viewMode === "form" ? "table" : "form")}
-                    className={getButtonClass({
-                        bg: "bg-indigo-400",
-                        hoverBg: "hover:bg-white dark:hover:bg-darkSurface",
-                        text: "text-white dark:text-indigo-100",
-                        hoverText: "hover:text-indigo-700 dark:hover:text-indigo-300",
-                        focusRing: "focus:ring-4 focus:ring-indigo-200 dark:focus:ring-indigo-500/30",
-                        extra:
-                            "w-full sm:w-fit px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 border border-gray-200 dark:border-darkBorderLight transition-all duration-200",
-                    })}
-                >
+                <Button onClick={() => setViewMode(viewMode === "form" ? "table" : "form")}
+                    size="md" fullWidth={false} variant="green">
                     Switch to {viewMode === "form" ? "Table" : "Form"} View
-                </button>
+                </Button>
             </div>
 
             {/* CSV Upload Input */}
@@ -236,12 +107,12 @@ const UserRegistration = () => {
             {/* User Input Section (Form OR Table) */}
             {viewMode === "form" ? (
                 <>
-                    {users.map((user, index) => (
+                    {usersFormData.map((user, index) => (
                         <UserAddForm
                             key={index}
-                            user={user}
+                            user={user as BulkUser}
                             index={index}
-                            onChange={handleChange}
+                            onChange={handleChangeForm}
                             onRemove={handleRemoveUser}
                             canRemove={true}
                             disabled={isSubmitting}
@@ -250,75 +121,152 @@ const UserRegistration = () => {
                     ))}
                 </>
             ) : (
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm mt-6 border rounded-lg shadow-sm bg-white dark:bg-darkSurface dark:border-darkBorderLight">
-                        <thead className="bg-gray-100 text-left dark:bg-darkMuted dark:text-darkTextSecondary">
+                <div className="">
+                    <table className="w-full text-sm mt-6 border border-gray-300 rounded-lg shadow-sm bg-white dark:bg-darkSurface dark:border-darkBorderLight overflow-x-auto">
+                        <thead className="text-left dark:bg-darkMuted dark:text-darkTextSecondary">
                             <tr>
                                 {[
-                                    "Email", "Password", "Role", "Dept",
-                                    "First Name", "Last Name", "Father's Name", "City", "Country", "Address", "Action"
+                                    "email", "password", "role", "department",
+                                    "first Name", "last Name", "father Name", "city", "country", "address", "action"
                                 ].map((header) => (
-                                    <th key={header} className="p-2 border dark:border-darkBorderLight">
+                                    <th
+                                        key={header}
+                                        className={`p-2 border dark:border-darkBorderLight cursor-pointer select-none 
+                                            text-gray-800 uppercase text-xs
+                                            }`}
+                                        title="Double click a cell in this column to edit entire column"
+                                    >
                                         {header}
                                     </th>
                                 ))}
                             </tr>
                         </thead>
+
+
                         <tbody>
-                            {users.map((user, index) => (
+                            {usersFormData.map((user, rowIndex) => (
                                 <tr
-                                    key={index}
-                                    className={`even:bg-gray-50 dark:even:bg-darkSurface
-                                    ${!validateUser(user)
-                                            ? "bg-gray-100 dark:bg-darkMuted/50"
-                                            : "bg-white dark:bg-darkPrimary"
+                                    key={rowIndex}
+                                    className={`even:bg-gray-50 dark:even:bg-darkSurface ${!validateUser(user as BulkUser)
+                                        ? "bg-gray-100 dark:bg-darkMuted/50"
+                                        : "bg-white dark:bg-darkPrimary"
                                         }`}
                                 >
-                                    {Object.entries(user).map(([field, value]) => (
-                                        <td key={field} className="p-2 border dark:border-darkBorderLight">
-                                            {field === "role" ? (
-                                                <SelectInput
-                                                    name={`role-${index}`}
-                                                    value={value}
-                                                    onChange={(e) =>
-                                                        handleChange(index, "role", e.target.value as AudienceEnum)
-                                                    }
-                                                    options={availableRoles}
-                                                    disabled={isSubmitting}
-                                                />
-                                            ) : field === "department" ? (
-                                                <SelectInput
-                                                    name={`department-${index}`}
-                                                    value={value}
-                                                    onChange={(e) =>
-                                                        handleChange(
-                                                            index,
-                                                            "department",
-                                                            e.target.value as DepartmentEnum
-                                                        )
-                                                    }
-                                                    options={Object.values(DepartmentEnum).map((d) => ({
-                                                        label: d,
-                                                        value: d,
-                                                    }))}
-                                                    disabled={isSubmitting}
-                                                />
-                                            ) : (
-                                                <Input
-                                                    type="text"
-                                                    value={value}
-                                                    onChange={(e) =>
-                                                        handleChange(index, field as keyof BulkUser, e.target.value)
-                                                    }
-                                                    className="text-xs bg-white text-gray-800 dark:bg-darkSurface dark:text-darkTextPrimary"
-                                                />
-                                            )}
-                                        </td>
-                                    ))}
-                                    <td className="p-2 border text-center dark:border-darkBorderLight">
+                                    {Object.entries(user).map(([field, value]) => {
+                                        if (field === "action") return null;
+
+                                        const isEditing =
+                                            editableCell !== null &&
+                                            editableCell.rowIndex === rowIndex &&
+                                            editableCell.field === field;
+
+                                        const cellClass = `
+                                            p-2
+                                            ${isEditing ? "bg-blue-50 dark:bg-blue-800 border-0" : "border dark:border-darkBorderLight"}
+                                            cursor-pointer
+                                            relative
+                                        `;
+
+                                        // Normal cell (non-editing)
+                                        if (!isEditing) {
+                                            return (
+                                                <td
+                                                    key={field}
+                                                    className={cellClass}
+                                                    title="Double click to edit this cell"
+                                                    onDoubleClick={() => onCellDoubleClick(rowIndex, field, value as string)}
+                                                >
+                                                    {value}
+                                                </td>
+                                            );
+                                        }
+
+                                        // Editing cell - show the dropdown overlay with motion animation
+                                        return (
+                                            <td key={field} className={cellClass} style={{ position: "relative" }}>
+                                                {/* Render the current cell value faded/disabled */}
+                                                <div className="opacity-30">{value}</div>
+
+                                                {/* Dropdown panel */}
+                                                <AnimatePresence>
+                                                    {isEditing && (
+                                                        <motion.div
+                                                            ref={dropdownRef}
+                                                            initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                            exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                                                            transition={{ duration: 0.15 }}
+                                                            className="absolute z-50 top-full left-0 mt-1 w-72 p-4 bg-white dark:bg-darkSurface border border-gray-300 dark:border-darkBorderLight"
+                                                        >
+                                                            {/* Use textarea for address or multiline fields */}
+                                                            {(field === "address" || field === "notes") ? (
+                                                                <textarea
+                                                                    value={tempValue}
+                                                                    onChange={(e) => setTempValue(e.target.value)}
+                                                                    rows={4}
+                                                                    autoFocus
+                                                                    className="w-full h-full p-2 text-xs bg-transparent text-gray-800 dark:text-darkTextPrimary border-0 focus:outline-none focus:ring-0 align-bottom"
+                                                                />
+                                                            ) : (field === "role") ? (
+                                                                <select
+                                                                    value={tempValue}
+                                                                    onChange={(e) => setTempValue(e.target.value)}
+                                                                    disabled={isSubmitting}
+                                                                    className="w-full p-2 text-sm border rounded-md dark:bg-darkPrimary dark:text-darkTextPrimary"
+                                                                    autoFocus
+                                                                >
+                                                                    {availableRoles.map(role => (
+                                                                        <option key={role.value} value={role.value}>{role.label}</option>
+                                                                    ))}
+                                                                </select>
+                                                            ) : (field === "department") ? (
+                                                                <select
+                                                                    value={tempValue}
+                                                                    onChange={(e) => setTempValue(e.target.value)}
+                                                                    disabled={isSubmitting}
+                                                                    className="w-full p-2 text-sm border rounded-md dark:bg-darkPrimary dark:text-darkTextPrimary"
+                                                                    autoFocus
+                                                                >
+                                                                    {Object.values(DepartmentEnum).map(d => (
+                                                                        <option key={d} value={d}>{d}</option>
+                                                                    ))}
+                                                                </select>
+                                                            ) : (
+                                                                <input
+                                                                    type="text"
+                                                                    value={tempValue}
+                                                                    onChange={(e) => setTempValue(e.target.value)}
+                                                                    autoFocus
+                                                                    className="w-full h-full p-2 text-xs bg-transparent text-gray-800 dark:text-darkTextPrimary border-0 focus:outline-none focus:ring-0 align-bottom"
+                                                                />
+                                                            )}
+
+                                                            {/* Buttons */}
+                                                            <div className="mt-2 flex justify-end space-x-2">
+                                                                <Button onClick={onCancel} fullWidth={false}
+                                                                    size="sm" variant="light">
+                                                                    Cancel
+                                                                </Button>
+                                                                <Button onClick={onSave} fullWidth={false} disabled={isSubmitting}
+                                                                    size="sm" variant="green" loadingText="Saving..."
+                                                                    isLoading={isSubmitting}>
+                                                                    Save
+                                                                </Button>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </td>
+                                        );
+                                    })}
+
+                                    {/* Action cell */}
+                                    <td className="border dark:border-darkBorderLight p-2 text-center">
                                         <button
-                                            onClick={() => handleRemoveUser(index)}
+                                            onClick={() => handleRemoveUser(rowIndex)}
                                             className="text-red-400 hover:underline hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-xs"
+                                            disabled={isSubmitting}
+                                            title="Delete user"
                                         >
                                             <FiTrash2 size={16} />
                                         </button>
@@ -328,41 +276,22 @@ const UserRegistration = () => {
                         </tbody>
                     </table>
                 </div>
+
             )}
 
             <div className="flex flex-col sm:flex-row justify-center gap-4 mt-6">
-                <button
-                    onClick={handleAddUser}
+                <Button onClick={handleAddUser}
                     disabled={isSubmitting}
-                    className={getButtonClass({
-                        bg: "bg-blue-400",
-                        hoverBg: "hover:bg-white dark:hover:bg-darkSurface",
-                        text: "text-white dark:text-blue-100",
-                        hoverText: "hover:text-blue-800 dark:hover:text-blue-300",
-                        focusRing: "focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-500/30",
-                        extra:
-                            "px-6 py-2 text-sm border border-gray-200 dark:border-darkBorderLight font-medium rounded disabled:opacity-50 disabled:cursor-not-allowed",
-                    })}
+                    size="md" fullWidth={false} variant="blue"
                 >
                     Add Another User
-                </button>
-
-                <button
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    className={getButtonClass({
-                        bg: "bg-primary dark:bg-darkBlurpleHover",
-                        hoverBg: "hover:bg-white dark:hover:bg-darkSurface",
-                        text: "text-white dark:text-blue-100",
-                        hoverText: "hover:text-darkBlurpleHover dark:hover:text-darkBlurpleHover",
-                        focusRing: "focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-500/30",
-                        extra:
-                            "px-6 py-2 text-sm border border-gray-200 dark:border-darkBorderLight font-medium rounded disabled:opacity-50 disabled:cursor-not-allowed",
-                    })}
+                </Button>
+                <Button onClick={handleSubmit} isLoading={isSubmitting}
+                    disabled={isSubmitting} loadingText="Submitting..."
+                    size="md" fullWidth={false}
                 >
-                    {isSubmitting ? "Submitting..." : "Submit"}
-                </button>
-
+                    Submit
+                </Button>
             </div>
         </div>
     );

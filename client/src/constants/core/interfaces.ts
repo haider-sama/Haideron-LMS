@@ -35,6 +35,17 @@ export interface BulkUser {
     address: string;
 }
 
+export type FetchUsersFilters = {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    fatherName?: string;
+    city?: string;
+    country?: string;
+    role?: AudienceEnum;       // or string if you don't have enum here
+    department?: DepartmentEnum; // or string
+};
+
 export interface PaginatedUserResponse {
     data: User[];
     page: number;

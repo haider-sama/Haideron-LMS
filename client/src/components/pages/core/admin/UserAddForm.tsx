@@ -2,28 +2,18 @@ import React from "react";
 import { AudienceEnum, DepartmentEnum } from "../../../../../../server/src/shared/enums";
 import { FiTrash2 } from "react-icons/fi";
 import { Input, SelectInput } from "../../../ui/Input";
+import { BulkUser } from "../../../../constants/core/interfaces";
+import { RoleOption } from "../../../../constants";
 
-type UserAddFormType = {
-    email: string;
-    password: string;
-    role: AudienceEnum;
-    department: DepartmentEnum;
-    firstName: string;
-    lastName: string;
-    fatherName: string;
-    city: string;
-    country: string;
-    address: string;
-};
 
 type UserAddFormProps = {
-    user: UserAddFormType;
+    user: BulkUser;
     index: number;
-    onChange: (index: number, field: keyof UserAddFormType, value: string) => void;
+    onChange: (index: number, field: keyof BulkUser, value: string) => void;
     onRemove: (index: number) => void;
     canRemove: boolean;
     disabled?: boolean;  // <-- NEW
-    availableRoles?: AudienceEnum[];
+    availableRoles?: RoleOption[];
 };
 
 const UserAddForm: React.FC<UserAddFormProps> = ({
