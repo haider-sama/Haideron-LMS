@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "../../constants";
 import clientApi from "./clientApi";
 
-const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/auth` || "";
+const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/auth`;
 
 export const validateToken = async () => {
     try {

@@ -43,9 +43,9 @@ export const teacherInfo = pgTable("teacher_info", {
     joiningDate: date("joining_date"),
     facultyType: facultyTypeEnum("faculty_type").notNull(),
     subjectOwner: boolean("subject_owner").default(false).notNull(),
-}, (table) => ({
-    userIdIdx: index("idx_teacher_info_user_id").on(table.userId),
-}));
+}, (table) => [
+    index("idx_teacher_info_user_id").on(table.userId),
+]);
 
 
 export const teacherQualifications = pgTable("teacher_qualifications", {

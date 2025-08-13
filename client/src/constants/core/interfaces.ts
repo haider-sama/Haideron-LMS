@@ -1,5 +1,5 @@
 import { AssessmentTypeEnum, AudienceEnum, BatchEnrollmentStatus, ClassSectionEnum, DegreeEnum, DepartmentEnum, DomainEnum, FacultyTypeEnum, FinalizedResultStatusEnum, KnowledgeAreaEnum, StrengthEnum, SubjectLevelEnum, SubjectTypeEnum, TeacherDesignationEnum, TermEnum } from "../../../../server/src/shared/enums";
-import { User } from "../../../../server/src/shared/interfaces";
+import { Course, Program, ProgramWithCreator, TeacherInfo, TeacherInfoWithQualifications, User } from "../../../../server/src/shared/interfaces";
 
 export interface RegisterFormData {
     email: string;
@@ -22,19 +22,6 @@ export interface VerifyEmailResponse {
     message?: string;
 }
 
-export interface BulkUser {
-    email: string;
-    password: string;
-    role: AudienceEnum;
-    department: DepartmentEnum;
-    firstName: string;
-    lastName: string;
-    fatherName: string;
-    city: string;
-    country: string;
-    address: string;
-}
-
 export type FetchUsersFilters = {
     email?: string;
     firstName?: string;
@@ -42,8 +29,8 @@ export type FetchUsersFilters = {
     fatherName?: string;
     city?: string;
     country?: string;
-    role?: AudienceEnum;       // or string if you don't have enum here
-    department?: DepartmentEnum; // or string
+    role?: AudienceEnum;
+    department?: DepartmentEnum;
 };
 
 export interface PaginatedUserResponse {
@@ -71,117 +58,195 @@ export type PublicUser = Pick<
     | "avatarURL"
 >;
 
-export interface AssessmentPayload {
-    type: AssessmentTypeEnum;
-    title: string;
-    weightage: number;
-    dueDate: string; // ISO string
-    clos: string[];
+export interface BulkUser {
+    email: string;
+    password: string;
+    role: AudienceEnum;
+    department: DepartmentEnum;
+    firstName: string;
+    lastName: string;
+    fatherName: string;
+    city: string;
+    country: string;
+    address: string;
 }
 
-// Keep this as a type because it's a union
-export type AssessmentResponse =
-    | {
-        success: true;
-        message: string;
-        assessment: Assessment;
-    }
-    | {
-        success: false;
-        message: string;
-        fieldErrors?: Record<string, string[]>;
-    };
+export interface BulkRegisterResult {
+    email: string;
+    success: boolean;
+    message: string;
+}
+
+export interface BulkRegisterError {
+    message: string;
+    errors?: Record<string, string[]>;
+}
+
+export interface RegisterProgramPayload {
+    title: string;
+    programLevel: DegreeEnum;
+    departmentTitle: DepartmentEnum;
+    maxDurationYears: number;
+    requirements?: string;
+    vision?: string;
+    mission?: string;
+}
 
 export interface GetProgramsParams {
     page?: number;
     limit?: number;
     search?: string;
-    programLevel?: string;
-    minCreditHours?: number;
-    maxCreditHours?: number;
-    maxDurationYears?: number;
 }
 
-
-export interface GetProgramsResponse {
+export interface GetProgramsListResponse {
     message: string;
-    programs: Program[];
+    programs: ProgramWithCreator[];
     page: number;
     totalPages: number;
     totalPrograms: number;
 }
 
-export interface PLOMapping {
-    _id?: string;
-    plo: string; // assuming frontend only needs the PLO ID (ObjectId as string)
-    strength: StrengthEnum;
+export interface AddPLOPayload {
+    code: string;        // /^PLO\d+$/
+    title: string;
+    description: string;
 }
 
-export interface Program {
-    _id: string;
+export interface AddPLOsResponse {
+    message: string;
+    plos: Array<{
+        id: string;
+        code: string;
+        title: string;
+        description: string;
+        programId: string;
+    }>;
+}
+
+export interface PEOWithMappings {
+    id: string;
+    title: string;
+    description: string;
+    programId: string;
+    position: number;
+    mappings: {
+        ploId: string;
+        ploCode: string;
+        ploTitle: string;
+        ploDescription: string;
+        strength: StrengthEnum;
+    }[];
+}
+
+export interface PEOUpdatePayload {
+    title: string;
+    description: string;
+    ploMapping: {
+        plo: string;              // UUID of PLO
+        strength: StrengthEnum;
+    }[];
+}
+
+// PLO inside a PEO (frontend)
+export interface PLO {
+    id: string;
+    code: string;
+    title: string;
+    description: string;
+}
+
+// PEO with nested PLOs
+export interface PEOWithPlos {
+    id: string;
+    title: string;
+    description: string;
+    programId: string;
+    position: number;
+    plos: PLO[];
+}
+
+// Program type for getProgramById response
+export interface ProgramById {
+    id: string;
     title: string;
     programLevel: DegreeEnum;
     departmentTitle: DepartmentEnum;
     maxDurationYears: number;
     minCreditHours: number;
     maxCreditHours: number;
-    requirements: string;
-    vision: string;
-    mission: string;
-    peos: PEO[];
-    createdBy?: {
-        _id: string;
-        firstName: string;
-        lastName: string;
-        email: string;
-    };
+    requirements?: string | null;
+    vision?: string | null;
+    mission?: string | null;
+    createdBy: string;
+    isArchived: boolean;
+    archivedAt?: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+    peos: PEOWithPlos[];
 }
 
-export interface PLO {
-    _id?: string;
-    code: string;
-    title: string;
-    description: string;
+// API response type
+export interface GetProgramResponse {
+    message: string;
+    program: ProgramById;
 }
 
-export interface PEO {
+export interface PEOFrontend {
+    id?: string;
     title: string;
     description: string;
     ploMapping: {
-        plo: PLO;
+        plo: PLO;                  // full PLO object for frontend use
         strength: StrengthEnum;
     }[];
 }
+// export interface AssessmentPayload {
+//     type: AssessmentTypeEnum;
+//     title: string;
+//     weightage: number;
+//     dueDate: string; // ISO string
+//     clos: string[];
+// }
 
-export interface ProgramCatalogue {
-    _id: string;
-    program: Program;
-    catalogueYear: number;
-    createdBy: User | { _id: string; firstName: string; lastName: string; email?: string };
-    createdAt?: string;
-    updatedAt?: string;
-}
+// // Keep this as a type because it's a union
+// export type AssessmentResponse =
+//     | {
+//         success: true;
+//         message: string;
+//         assessment: Assessment;
+//     }
+//     | {
+//         success: false;
+//         message: string;
+//         fieldErrors?: Record<string, string[]>;
+//     };
 
-export interface Semester {
-    _id: string;
-    programCatalogue: string;
-    semesterNo: number;
-    courses: string[];
-    createdAt?: string;
-    updatedAt?: string;
+// export interface Semester {
+//     _id: string;
+//     programCatalogue: string;
+//     semesterNo: number;
+//     courses: string[];
+//     createdAt?: string;
+//     updatedAt?: string;
+// }
+
+export interface PLOMapping {
+    id?: string; // optional for new mappings
+    ploId: string;
+    strength: StrengthEnum;
 }
 
 export interface CLO {
-    _id?: string;
+    id?: string; // optional for new clos
     code: string;
     title: string;
     description: string;
     ploMapping: PLOMapping[];
 }
 
-export interface AddCourseToSemesterPayload {
+export interface CreateCoursePayload {
     programId: string;
-    catalogueId: string;
+    programCatalogueId: string;
     title: string;
     code: string;
     codePrefix: string;
@@ -199,7 +264,7 @@ export interface AddCourseToSemesterPayload {
 }
 
 export interface CourseFilters {
-    semesterId: string;
+    semesterId?: string;
     page?: number;
     limit?: number;
     title?: string;
@@ -208,12 +273,11 @@ export interface CourseFilters {
     subjectType?: string;
     knowledgeArea?: string;
     domain?: string;
-    isActive?: boolean;
 }
 
-export interface GetCoursesInSemesterResponse {
+export interface GetCoursesResponse {
     message: string;
-    courses: any[]; // You can replace `any` with a proper Course type if needed
+    courses: Course[];
     page: number;
     totalPages: number;
     totalCourses: number;
@@ -221,111 +285,94 @@ export interface GetCoursesInSemesterResponse {
 
 export interface UpdateCoursePayload {
     program?: string;
-    programCatalogue?: string;
+    programCatalogueId?: string;
     title?: string;
     code?: string;
     codePrefix?: string;
     description?: string;
-    subjectLevel?: string;
-    subjectType?: string;
+    subjectLevel?: SubjectLevelEnum;
+    subjectType?: SubjectTypeEnum;
     contactHours?: number;
-    knowledgeArea?: string;
-    domain?: string;
+    knowledgeArea?: KnowledgeAreaEnum;
+    domain?: DomainEnum;
     preRequisites?: string[];
     coRequisites?: string[];
-    clos?: any[]; // optionally define a CLO interface if needed
-    sectionTeachers?: Record<string, string>; // section => teacherId
-    sections?: string[];
-    isActive?: boolean;
+    clos?: CLO[];
+    sectionTeachers?: Array<{
+        section: ClassSectionEnum;
+        teacherId: string;
+    }>;
+
+    sections?: Array<{
+        section: ClassSectionEnum;
+    }>;
 }
 
 export interface UpdateCourseResponse {
     message: string;
-    course: Course; // replace with Course type if defined
+    course: Course;
 }
 
-export interface DeleteCourseResponse {
-    message: string;
-    courseId: string;
+export interface TeacherInfoInput {
+    designation: TeacherDesignationEnum;
+    joiningDate?: Date | null;
+    facultyType: FacultyTypeEnum;
+    subjectOwner: boolean;
 }
 
-export interface Course {
-    _id: string;
-    program: string;
-    programCatalogue: string;
-    title: string;
-    code: string;
-    codePrefix: string;
-    description: string;
-    subjectLevel: SubjectLevelEnum;
-    subjectType: SubjectTypeEnum;
-    contactHours: number;
-    creditHours: number;
-    knowledgeArea: KnowledgeAreaEnum;
-    domain: DomainEnum;
-    preRequisites: string[];
-    coRequisites: string[];
-    clos: CLO[];
-    sectionTeachers: Record<string, string>;
-    sections: ClassSectionEnum[];
-    createdBy: string;
+export interface FacultyRegisterPayload {
+    email: string;
+    password: string;
+    department: DepartmentEnum;
+    teacherInfo: TeacherInfoInput;
 }
 
-// export interface TeacherQualification {
-//     degree: string;
-//     passingYear: number;
-//     institutionName: string;
-//     majorSubjects: string[];
-// }
+export interface TeacherQualificationInput {
+    id?: string;  // optional for new qualifications
+    teacherInfoId: string;
+    degree: DegreeEnum;
+    passingYear: number;
+    institutionName: string;
+    majorSubjects: string[];
+}
 
-// export interface TeacherInfo {
-//     designation: TeacherDesignationEnum;
-//     joiningDate: Date | null; // Use ISO string for frontend
-//     facultyType: FacultyTypeEnum;
-//     subjectOwner?: boolean;
-//     qualifications?: TeacherQualification[];
-// }
+export interface TeacherInfoWithQualificationsInput extends Partial<Omit<TeacherInfo, 'id' | 'userId'>> {
+    id?: string;
+    userId?: string;
+    qualifications?: TeacherQualificationInput[];
+}
 
-// export interface FacultyRegisterPayload {
-//     email: string;
-//     password: string;
-//     department: DepartmentEnum;
-//     teacherInfo: TeacherInfo;
-// }
+export type FacultyUpdatePayload = Partial<Pick<User,
+    'firstName' | 'lastName' | 'city' | 'country' | 'address' | 'department' | 'role'>> & {
+        teacherInfo?: TeacherInfoWithQualificationsInput;
+    };
 
-// export type FacultyUpdatePayload = Partial<{
-//     firstName: string;
-//     lastName: string;
-//     city: string;
-//     country: string;
-//     address: string;
-//     department: DepartmentEnum;
-//     role: AudienceEnum;
-//     teacherInfo: TeacherInfo; // can still be required based on your backend validation
-// }>;
+type FacultyUserSubset = Pick<User,
+    "id" | "email" | "firstName" | "lastName" | "avatarURL" | "city" | "country" | "address" | "department" | "role" | "lastOnline" | "isEmailVerified"
+>;
 
-// export interface FacultyUser {
-//     _id: string;
-//     email: string;
-//     firstName?: string;
-//     lastName?: string;
-//     avatarURL?: string;
-//     city?: string;
-//     country?: string;
-//     address?: string;
-//     department?: DepartmentEnum;
-//     role: AudienceEnum;
-//     teacherInfo?: TeacherInfo;
-//     lastOnline: string;
-//     isEmailVerified: boolean;
-// }
+export interface FacultyUser extends FacultyUserSubset {
+    teacherInfo?: TeacherInfoWithQualifications | null;
+}
 
-// export interface PaginatedFacultyResponse {
-//     data: FacultyUser[];
-//     page: number;
-//     totalPages: number;
-//     totalFaculty: number;
-// }
+export interface FacultyFilterParams {
+    page?: number;
+    limit?: number;
+    search?: string; // full-text search on users.search_vector
+    designation?: string;
+    facultyType?: string;
+    subjectOwner?: string; // "true" | "false"
+    joiningDateFrom?: string; // ISO date string
+    joiningDateTo?: string;   // ISO date string
+    department?: string;
+}
+
+export interface PaginatedFacultyResponse {
+    data: FacultyUser[];
+    page: number;
+    totalPages: number;
+    totalFaculty: number;
+}
 
 export interface UserPreview {
     _id: string;
@@ -360,17 +407,6 @@ export interface PaginatedBatches {
     page: number;
     totalPages: number;
     totalBatches: number;
-}
-
-export interface BulkRegisterResult {
-    email: string;
-    success: boolean;
-    message: string;
-}
-
-export interface BulkRegisterError {
-    message: string;
-    errors?: Record<string, string[]>;
 }
 
 export interface CourseUpdatePayload {

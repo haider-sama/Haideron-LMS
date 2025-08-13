@@ -10,6 +10,9 @@ import { connectRedis } from './lib/redis';
 import { users } from './db/schema';
 import authRouter from './routes/auth/auth.routes';
 import adminRouter from './routes/admin/admin.routes';
+import facultyRouter from './routes/core/faculty/faculty.routes';
+import courseRouter from './routes/core/course/course.routes';
+import programRouter from './routes/core/program/program.routes';
 
 dotenv.config();
 
@@ -30,6 +33,10 @@ cloudinary.config({
 
 app.use('/api/v1/auth/', authRouter);
 app.use('/api/v1/admin/', adminRouter);
+
+app.use('/api/v1/faculty/', facultyRouter);
+app.use('/api/v1/course/', courseRouter);
+app.use('/api/v1/program/', programRouter);
 
 const startServer = async () => {
     console.time("Total Startup Time");

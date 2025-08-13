@@ -20,6 +20,8 @@ import HomePage from "../pages/main/HomePage";
 import { ALLOW_EMAIL_MIGRATION, ALLOW_PUBLIC_REGISTRATION } from "../constants";
 import RequestEmailChange from "../pages/core/auth/verification/RequestEmailChange";
 import EmailChangeVerification from "../pages/core/auth/verification/EmailChangeVerification";
+import FacultyManagement from "../pages/core/faculty/FacultyManagement";
+import ProgramManagement from "../pages/core/program/ProgramManagement";
 // import SocialShell from "../pages/main/SocialShell";
 
 interface AppRoutesProps {
@@ -89,7 +91,6 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
 
             <Route element={<AppShell />}>
                 <Route path="/" element={<HomePage />} />
-                {/* Auth Routes */}
 
                 {/* Admin Routes */}
                 <Route path="/admin/user-registration"
@@ -113,7 +114,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
 
 
                 {/* Program routes */}
-                {/* <Route path="/faculty/programs"
+                <Route path="/faculty/programs"
                     element={
                         <ProtectedRoute
                             isAllowed={isLoggedIn && (role === AudienceEnum.Admin || role === AudienceEnum.DepartmentHead)}
@@ -121,7 +122,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                             element={<ProgramManagement />}
                         />
                     }
-                /> */}
+                />
 
 
                 {/* Catalogue routes */}
@@ -150,7 +151,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
 
 
                 {/* Faculty routes */}
-                {/* <Route
+                <Route
                     path="/faculty/members"
                     element={
                         <ProtectedRoute
@@ -159,7 +160,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                             element={<FacultyManagement />}
                         />
                     }
-                /> */}
+                />
                 {/* <Route path="/faculty/pending-results"
                     element={
                         <ProtectedRoute

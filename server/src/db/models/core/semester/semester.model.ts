@@ -1,4 +1,4 @@
-import { pgTable, integer, timestamp, uuid, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, integer, timestamp, uuid, index, uniqueIndex, boolean } from "drizzle-orm/pg-core";
 import { programCatalogues } from "../program/program.catalogue.model";
 import { courses } from "../course/course.model";
 
@@ -8,6 +8,8 @@ export const semesters = pgTable(
         id: uuid("id").defaultRandom().primaryKey(),
         programCatalogueId: uuid("program_catalogue_id").notNull().references(() => programCatalogues.id, { onDelete: "cascade" }),
         semesterNo: integer("semester_no").notNull(),
+        isArchived: boolean("is_archived").notNull().default(false),
+        archivedAt: timestamp("archived_at"),
         createdAt: timestamp("created_at").notNull().defaultNow(),
         updatedAt: timestamp("updated_at").notNull().defaultNow(),
     },

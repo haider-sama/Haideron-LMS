@@ -2,9 +2,10 @@ import { Request, Response } from "express";
 import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../../constants/http";
 import { programRegisterSchema, updateProgramSchema } from "../../../utils/validators/lms-schemas/programSchemas";
 import { AudienceEnum, DepartmentEnum } from "../../../shared/enums";
-import { programs, users } from "../../../db/schema";
+import { peoPloMappings, peos, plos, programs, users } from "../../../db/schema";
 import { db } from "../../../db/db";
-import { eq, ilike, sql } from "drizzle-orm";
+import { eq, ilike, sql, desc, SQL, and, inArray } from "drizzle-orm";
+import { PeoPloWithPlo } from "../../../shared/interfaces";
 
 export const registerProgram = async (req: Request, res: Response) => {
     try {
@@ -77,7 +78,6 @@ export const registerProgram = async (req: Request, res: Response) => {
 
         return res.status(CREATED).json({
             message: "Program registered successfully",
-            program: newProgram,
         });
     } catch (err: any) {
         console.error("Error while registering program:", err.message);
@@ -121,10 +121,10 @@ export const getPrograms = async (req: Request, res: Response) => {
 
             // Build query conditions for single program
             const conditions = [eq(programs.id, programId)];
-
             if (user.role === AudienceEnum.DepartmentHead && user.department) {
                 conditions.push(eq(programs.departmentTitle, user.department));
             }
+
 
             // Fetch program + createdBy info (join with users)
             const [program] = await db
@@ -173,25 +173,29 @@ export const getPrograms = async (req: Request, res: Response) => {
         const search = req.query.search as string | undefined;
 
         // Build where conditions for filtering
-        const conditions = [];
+        const conditions: SQL<boolean>[] = [];
 
+        conditions.push(eq(programs.isArchived, false) as SQL<boolean>);
         if (user.role === AudienceEnum.DepartmentHead && user.department) {
-            conditions.push(eq(programs.departmentTitle, user.department));
+            conditions.push(eq(programs.departmentTitle, user.department) as SQL<boolean>);
         }
 
         if (search) {
-            // Case-insensitive LIKE search on title
-            conditions.push(ilike(programs.title, `%${search}%`));
+            conditions.push(ilike(programs.title, `%${search}%`) as SQL<boolean>);
+        }
+        // Count total matching programs
+        const countQuery = db
+            .select({ count: sql<number>`count(*)`.mapWith(Number) })
+            .from(programs);
+
+        if (conditions.length > 0) {
+            countQuery.where(sql.join(conditions, " AND "));
         }
 
-        // Count total matching programs
-        const [{ count }] = await db
-            .select({ count: sql<number>`count(*)`.mapWith(Number) })
-            .from(programs)
-            .where(sql.join(conditions, " AND "));
+        const [{ count }] = await countQuery;
 
         // Fetch paginated programs with createdBy info
-        const programsList = await db
+        const programsListQuery = db
             .select({
                 id: programs.id,
                 title: programs.title,
@@ -212,10 +216,15 @@ export const getPrograms = async (req: Request, res: Response) => {
             })
             .from(programs)
             .leftJoin(users, eq(users.id, programs.createdBy))
-            .where(sql.join(conditions, " AND "))
-            .orderBy(programs.createdAt, sql`DESC`)
+            .orderBy(desc(programs.createdAt))
             .limit(limit)
             .offset(offset);
+
+        if (conditions.length > 0) {
+            programsListQuery.where(sql.join(conditions, " AND "));
+        }
+
+        const programsList = await programsListQuery;
 
         return res.status(OK).json({
             message: "Programs fetched successfully",
@@ -228,6 +237,100 @@ export const getPrograms = async (req: Request, res: Response) => {
         console.error("Error while fetching programs:", err.message);
         return res.status(500).json({
             message: "Error while fetching programs. Please try again.",
+            error: err.message,
+        });
+    }
+};
+
+export const getProgramById = async (req: Request, res: Response) => {
+    try {
+        const userId = req.userId; // auth middleware sets this
+        const { programId } = req.params;
+
+        if (!programId) {
+            return res.status(BAD_REQUEST).json({ message: "Program ID is required" });
+        }
+
+        // Fetch user info
+        const [user] = await db
+            .select({ id: users.id, role: users.role, department: users.department })
+            .from(users)
+            .where(eq(users.id, userId));
+
+        if (!user) {
+            return res.status(BAD_REQUEST).json({ message: "User not found" });
+        }
+
+        // Build program conditions based on permissions
+        const programConditions: SQL<boolean>[] = [
+            eq(programs.id, programId) as SQL<boolean>,
+            eq(programs.isArchived, false) as SQL<boolean>,
+        ];
+
+        if (user.role === AudienceEnum.DepartmentHead && user.department) {
+            programConditions.push(eq(programs.departmentTitle, user.department) as SQL<boolean>);
+        } else if (user.role !== AudienceEnum.Admin) {
+            return res.status(FORBIDDEN).json({
+                message: "You can only get programs for your department",
+            });
+        }
+
+        // Fetch the program
+        const [program] = await db
+            .select()
+            .from(programs)
+            .where(and(...programConditions));
+
+        if (!program) {
+            return res.status(NOT_FOUND).json({ message: "Program not found" });
+        }
+
+        // Fetch PEOs for the program
+        const programPeos = await db
+            .select()
+            .from(peos)
+            .where(eq(peos.programId, programId))
+            .orderBy(peos.position);
+
+        // Fetch PLO mappings for the PEOs
+        const peoIds = programPeos.map((p) => p.id).filter(Boolean); // remove undefined/null/empty
+        let peoPloData: PeoPloWithPlo[] = [];
+
+        if (peoIds.length > 0) {
+            peoPloData = await db
+                .select({
+                    id: peoPloMappings.id,
+                    peoId: peoPloMappings.peoId,
+                    strength: peoPloMappings.strength,
+                    plo: {
+                        id: plos.id,
+                        code: plos.code,
+                        title: plos.title,
+                        description: plos.description,
+                    },
+                })
+                .from(peoPloMappings)
+                .leftJoin(plos, eq(plos.id, peoPloMappings.ploId))
+                .where(inArray(peoPloMappings.peoId, peoIds));
+        }
+
+        // Attach PLOs to PEOs
+        const peosWithPlos = programPeos.map((peo) => ({
+            ...peo,
+            plos: peoPloData.filter((m) => m.peoId === peo.id).map((m) => m.plo),
+        }));
+
+        return res.status(OK).json({
+            message: "Program fetched successfully",
+            program: {
+                ...program,
+                peos: peosWithPlos,
+            },
+        });
+    } catch (err: any) {
+        console.error("Error fetching program by ID:", err.message);
+        return res.status(INTERNAL_SERVER_ERROR).json({
+            message: "Error while fetching program. Please try again.",
             error: err.message,
         });
     }

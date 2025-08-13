@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { FaUserCircle, FaCog, FaSignOutAlt, FaChevronDown } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import { truncateName } from '../../../../utils/truncate-name';
+import { truncateName } from '../../../../../utils/truncate-name';
 import { IconType } from 'react-icons';
-import AccountSettingsOverlay from '../../../account/AccountSettingsOverlay';
+import AccountSettingsOverlay from '../../../../account/AccountSettingsOverlay';
 
 
 interface SideBarUserDropdownProps {

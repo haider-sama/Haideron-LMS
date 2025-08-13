@@ -296,6 +296,7 @@ export function useUserManagement(currentUserRole: AudienceEnum) {
         isLoading,
         search,
         setSearch,
+        debouncedSearch,
         page,
         setPage,
         selectedUser,

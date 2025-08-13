@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Tooltip } from 'react-tooltip';
 import { FaBars, FaTimes } from 'react-icons/fa';
-import { ALLOW_PUBLIC_REGISTRATION, navLinks } from '../../../../constants';
+import { ALLOW_PUBLIC_REGISTRATION, navLinks } from '../../../../../constants';
 import SidebarItem from './SidebarItem';
 import { HiOutlineLogin, HiOutlineUserAdd } from 'react-icons/hi';
 import SidebarUserDropdown from './SidebarUserDropdown';
 import MobileNav from './MobileNav';
-import { useAuth } from '../../../../hooks/auth/useAuth';
+import { useAuth } from '../../../../../hooks/auth/useAuth';
 
 const Sidebar = () => {
     const [collapsed, setCollapsed] = useState(() => {

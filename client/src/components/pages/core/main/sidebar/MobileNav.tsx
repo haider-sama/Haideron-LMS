@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { HiOutlineLogin, HiOutlineUserAdd } from 'react-icons/hi';
-import { ALLOW_PUBLIC_REGISTRATION, navLinks } from '../../../../constants';
+import { ALLOW_PUBLIC_REGISTRATION, navLinks } from '../../../../../constants';
 import SidebarUserDropdown from './SidebarUserDropdown';
-import { useAuth } from '../../../../hooks/auth/useAuth';
+import { useAuth } from '../../../../../hooks/auth/useAuth';
 
 const MobileNav = () => {
     const [expandedMenus, setExpandedMenus] = useState<{ [label: string]: boolean }>({});

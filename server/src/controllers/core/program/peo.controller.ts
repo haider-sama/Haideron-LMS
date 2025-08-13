@@ -112,7 +112,6 @@ export const addPEOsToProgram = async (req: Request, res: Response) => {
 
         return res.status(CREATED).json({
             message: "PEOs added successfully",
-            peos: insertedPeos,
         });
 
     } catch (err: any) {
@@ -179,6 +178,8 @@ export const getPEOsForProgram = async (req: Request, res: Response) => {
                 id: peos.id,
                 title: peos.title,
                 description: peos.description,
+                programId: peos.programId,
+                position: peos.position,
                 mappings: sql<
                     { ploId: string; ploCode: string; ploTitle: string; ploDescription: string; strength: number }[]
                 >`json_agg(json_build_object(
@@ -195,7 +196,6 @@ export const getPEOsForProgram = async (req: Request, res: Response) => {
             .where(eq(peos.programId, programId))
             .groupBy(peos.id);
 
-
         return res.status(OK).json({
             message: "PEOs fetched successfully",
             peos: peosWithMappings,
@@ -211,20 +211,16 @@ export const getPEOsForProgram = async (req: Request, res: Response) => {
 
 export const updatePEO = async (req: Request, res: Response) => {
     try {
-        const { programId, peoId } = req.params; // peoId replaces `index`
+        const { programId, peoId } = req.params;
         const userId = req.userId;
 
-        if (!isValidUUID(programId)) {
-            return res.status(BAD_REQUEST).json({ message: "Invalid program ID format" });
-        }
-        if (!isValidUUID(peoId)) {
-            return res.status(BAD_REQUEST).json({ message: "Invalid PEO ID format" });
+        if (!isValidUUID(programId) || !isValidUUID(peoId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid program or PEO ID format" });
         }
 
-        // Fetch program + user in one query
+        // Check program + user access
         const result = await db
             .select({
-                programId: programs.id,
                 programDept: programs.departmentTitle,
                 userRole: users.role,
                 userDept: users.department,
@@ -239,16 +235,14 @@ export const updatePEO = async (req: Request, res: Response) => {
         }
 
         const { userRole, userDept, programDept } = result[0];
-
         const isAdmin = userRole === AudienceEnum.Admin;
         const isDeptHead = userRole === AudienceEnum.DepartmentHead && userDept === programDept;
 
         if (!isAdmin && !isDeptHead) {
-            return res.status(FORBIDDEN).json({
-                message: "You are not authorized to update PEOs to this program",
-            });
+            return res.status(FORBIDDEN).json({ message: "You are not authorized to update PEOs for this program" });
         }
 
+        // Validate payload
         const parsed = updatePeoSchema.safeParse(req.body);
         if (!parsed.success) {
             return res.status(BAD_REQUEST).json({
@@ -258,19 +252,14 @@ export const updatePEO = async (req: Request, res: Response) => {
         }
 
         // Check PEO exists
-        const [existingPeo] = await db
-            .select()
-            .from(peos)
-            .where(eq(peos.id, peoId));
-
+        const [existingPeo] = await db.select().from(peos).where(eq(peos.id, peoId));
         if (!existingPeo) {
             return res.status(NOT_FOUND).json({ message: "PEO not found" });
         }
 
-        // If ploMapping provided, validate them
+        // Validate PLO mapping IDs if provided
         if (parsed.data.ploMapping) {
             const allPLOIds = parsed.data.ploMapping.map(m => m.plo);
-
             const validPLOs = await db
                 .select({ id: plos.id })
                 .from(plos)
@@ -281,7 +270,7 @@ export const updatePEO = async (req: Request, res: Response) => {
             }
         }
 
-        // Perform update in a transaction
+        // Transaction for update + mapping replacement
         await db.transaction(async (tx) => {
             if (parsed.data.title || parsed.data.description) {
                 await tx.update(peos)
@@ -293,23 +282,18 @@ export const updatePEO = async (req: Request, res: Response) => {
             }
 
             if (parsed.data.ploMapping) {
-                // Delete old mappings
-                await tx.delete(peoPloMappings)
-                    .where(eq(peoPloMappings.peoId, peoId));
-
-                // Insert new mappings
+                await tx.delete(peoPloMappings).where(eq(peoPloMappings.peoId, peoId));
                 await tx.insert(peoPloMappings).values(
                     parsed.data.ploMapping.map(m => ({
-                        peoId: peoId,
+                        peoId,
                         ploId: m.plo,
                         strength: m.strength,
                     }))
                 );
             }
         });
-        return res.status(OK).json({
-            message: "PEO updated successfully",
-        });
+
+        return res.status(OK).json({ message: "PEO updated successfully" });
 
     } catch (err: any) {
         console.error("Error while updating PEOs:", err.message);
@@ -322,7 +306,7 @@ export const updatePEO = async (req: Request, res: Response) => {
 
 export const deletePEO = async (req: Request, res: Response) => {
     try {
-        const { programId, index } = req.params;
+        const { programId, peoId } = req.params;
         const userId = req.userId;
 
         if (!isValidUUID(programId)) {
@@ -357,7 +341,7 @@ export const deletePEO = async (req: Request, res: Response) => {
             });
         }
 
-        const idx = parseInt(index, 10);
+        const idx = parseInt(peoId, 10);
         if (isNaN(idx) || idx < 0) {
             return res.status(BAD_REQUEST).json({ message: "Invalid PEO index" });
         }

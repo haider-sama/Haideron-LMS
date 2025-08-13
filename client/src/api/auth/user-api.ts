@@ -1,7 +1,7 @@
 import { User } from "../../../../server/src/shared/interfaces";
 import { API_BASE_URL } from "../../constants";
 
-const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/auth` || "";
+const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/auth`;
 
 export const fetchUserProfile = async () => {
     const res = await fetch(`${LOCAL_BASE_URL}/profile`, {

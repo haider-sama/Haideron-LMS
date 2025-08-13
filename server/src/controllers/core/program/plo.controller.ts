@@ -287,7 +287,6 @@ export const deletePLO = async (req: Request, res: Response) => {
 
         return res.status(OK).json({
             message: "PLO deleted successfully",
-            deleted: deleted[0],
         });
 
     } catch (err: any) {

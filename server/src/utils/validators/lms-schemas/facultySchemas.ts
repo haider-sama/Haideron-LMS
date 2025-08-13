@@ -83,6 +83,7 @@ export const updateFacultySchema = z.object({
             qualifications: z
                 .array(
                     z.object({
+                        id: z.string().uuid().optional(),
                         degree: z.nativeEnum(DegreeEnum),
                         passingYear: z
                             .number()

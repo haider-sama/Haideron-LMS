@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Sidebar from "../../components/pages/core/sidebar/Sidebar";
+import Sidebar from "../../components/pages/core/main/sidebar/Sidebar";
 
 export const AppContainer = () => {
   return (

@@ -3,7 +3,7 @@ import { API_BASE_URL } from "../../constants";
 import { BulkRegisterError, BulkRegisterResult, FetchUsersFilters, PublicUser } from "../../constants/core/interfaces";
 import { BulkUser, PaginatedUserResponse } from "../../constants/core/interfaces";
 
-const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/admin` || "";
+const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/admin`;
 
 export const bulkRegisterUsers = async (
     users: BulkUser[]

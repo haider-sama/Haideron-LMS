@@ -1,4 +1,4 @@
-import { pgTable, integer, timestamp, uuid, index, uniqueIndex, pgEnum, varchar, text } from "drizzle-orm/pg-core";
+import { pgTable, integer, timestamp, uuid, index, uniqueIndex, pgEnum, varchar, text, boolean } from "drizzle-orm/pg-core";
 import { ClassSectionEnum, DomainEnum, KnowledgeAreaEnum, SubjectLevelEnum, SubjectTypeEnum } from "../../../../shared/enums";
 import { plos, programs, strengthEnum } from "../program/program.model";
 import { users } from "../../auth/user.model";
@@ -57,6 +57,8 @@ export const courses = pgTable(
         creditHours: integer("credit_hours").notNull(),
         knowledgeArea: knowledgeAreaEnum("knowledge_area").notNull(),
         domain: domainEnum("domain").notNull(),
+        isArchived: boolean("is_archived").notNull().default(false),
+        archivedAt: timestamp("archived_at"),
         createdBy: uuid("created_by").notNull().references(() => users.id),
         createdAt: timestamp("created_at").notNull().defaultNow(),
         updatedAt: timestamp("updated_at").notNull().defaultNow(),

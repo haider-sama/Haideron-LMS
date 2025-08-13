@@ -53,7 +53,7 @@ export const ReadOnlyInput = ({
     className?: string;
 }) => (
     <div className={className}>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-darkTextSecondary">
+        <label className="block text-sm font-medium mb-1 text-gray-800 dark:text-darkTextSecondary">
             {label}
         </label>
         <input
@@ -61,7 +61,7 @@ export const ReadOnlyInput = ({
             value={value ?? ''} // Handle null/undefined by falling back to ''
             readOnly
             className="w-full text-sm px-2 py-1.5 rounded-md cursor-not-allowed
-      bg-gray-100 text-gray-700 border border-gray-300
+      bg-gray-100 text-gray-800 border border-gray-300
       dark:bg-darkMuted dark:text-darkTextMuted dark:border-darkBorderLight"
         />
     </div>
@@ -95,7 +95,7 @@ export const SelectInput: React.FC<SelectInputProps> = ({
 
     return (
         <div className={className}>
-            <label className="block text-sm font-medium text-gray-700 dark:text-darkTextSecondary">
+            <label className="block text-sm font-medium text-gray-800 dark:text-darkTextSecondary">
                 {label}
             </label>
             <select
@@ -148,7 +148,7 @@ export const TextAreaInput: React.FC<TextAreaInputProps> = ({
             {label && (
                 <label
                     htmlFor={name}
-                    className="block mb-1 text-sm font-medium text-gray-700 dark:text-darkTextSecondary"
+                    className="block mb-1 text-sm font-medium text-gray-800 dark:text-darkTextSecondary"
                 >
                     {label}
                 </label>
