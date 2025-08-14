@@ -115,12 +115,6 @@ export interface Program {
     updatedAt: Date;
 }
 
-export interface ProgramWithCreator extends Program {
-    createdByFirstName: string;
-    createdByLastName: string;
-    createdByEmail: string;
-}
-
 export interface PLO {
     id: string;
     code: string;          // e.g., "PLO1"
@@ -146,23 +140,16 @@ export interface PEO_PLO_Mapping {
     strength: StrengthEnum;
 }
 
-export interface PeoPloWithPlo {
-    id: string;
-    peoId: string;
-    strength: string;
-    plo: {
-        id: string;
-        code: string;
-        title: string;
-        description: string;
-    } | null;
-}
-
 export interface ProgramCatalogue {
     id: string;
     programId: string;
     catalogueYear: number;
-    createdBy: string; // user ID
+    createdBy: {
+        id: string,
+        firstName: string,
+        lastName: string,
+        email: string,
+    }, // user ID
     isArchived: boolean;
     archivedAt?: Date | null;
     createdAt: Date;
@@ -230,7 +217,5 @@ export interface Course {
         section: ClassSectionEnum;
     }>;
 
-    // Optional relations, include if we query with joins
-    program?: Program | null;
-    programCatalogue?: ProgramCatalogue | null;
+
 }

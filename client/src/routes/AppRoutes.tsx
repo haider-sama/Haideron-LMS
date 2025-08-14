@@ -2,26 +2,28 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import AppShell from "../pages/main/AppContainer";
 import ProtectedRoute from "../components/account/ProtectedRoute";
-import Register from "../pages/core/auth/credentials/Register";
-import Login from "../pages/core/auth/credentials/Login";
-import RequestEmailVerification from "../pages/core/auth/verification/RequestEmailVerification";
-import ForgotPassword from "../pages/core/auth/verification/ForgotPassword";
-import ResetPassword from "../pages/core/auth/verification/ResetPassword";
+import Register from "../pages/auth/credentials/Register";
+import Login from "../pages/auth/credentials/Login";
+import RequestEmailVerification from "../pages/auth/verification/RequestEmailVerification";
+import ForgotPassword from "../pages/auth/verification/ForgotPassword";
+import ResetPassword from "../pages/auth/verification/ResetPassword";
 
-import UserRegistration from "../pages/core/admin/UserRegistration";
-import UserManagementTable from "../pages/core/admin/UserManagementTable";
+import UserRegistration from "../pages/admin/UserRegistration";
+import UserManagementTable from "../pages/admin/UserManagementTable";
 import NotFound from "../pages/forbidden/NotFound";
-import EmailVerification from "../pages/core/auth/verification/EmailVerification";
+import EmailVerification from "../pages/auth/verification/EmailVerification";
 import Forbidden from "../pages/forbidden/Forbidden";
 import Unauthorized from "../pages/forbidden/Unauthorized";
 import InternalError from "../pages/forbidden/InternalError";
 import { AudienceEnum } from "../../../server/src/shared/enums";
 import HomePage from "../pages/main/HomePage";
 import { ALLOW_EMAIL_MIGRATION, ALLOW_PUBLIC_REGISTRATION } from "../constants";
-import RequestEmailChange from "../pages/core/auth/verification/RequestEmailChange";
-import EmailChangeVerification from "../pages/core/auth/verification/EmailChangeVerification";
-import FacultyManagement from "../pages/core/faculty/FacultyManagement";
-import ProgramManagement from "../pages/core/program/ProgramManagement";
+import RequestEmailChange from "../pages/auth/verification/RequestEmailChange";
+import EmailChangeVerification from "../pages/auth/verification/EmailChangeVerification";
+import FacultyManagement from "../pages/core/FacultyManagement";
+import ProgramManagement from "../pages/core/ProgramManagement";
+import CatalogueManagement from "../pages/core/CatalogueManagement";
+import CourseManagement from "../pages/core/CourseManagement";
 // import SocialShell from "../pages/main/SocialShell";
 
 interface AppRoutesProps {
@@ -126,7 +128,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
 
 
                 {/* Catalogue routes */}
-                {/* <Route path="/faculty/catalogues"
+                <Route path="/faculty/catalogues"
                     element={
                         <ProtectedRoute
                             isAllowed={isLoggedIn && (role === AudienceEnum.Admin || role === AudienceEnum.DepartmentHead)}
@@ -134,11 +136,11 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                             element={<CatalogueManagement />}
                         />
                     }
-                /> */}
+                />
 
 
                 {/* Course routes */}
-                {/* <Route
+                <Route
                     path="/faculty/semesters/courses/"
                     element={
                         <ProtectedRoute
@@ -147,7 +149,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                             element={<CourseManagement />}
                         />
                     }
-                /> */}
+                />
 
 
                 {/* Faculty routes */}

@@ -1,4 +1,4 @@
-import { pgTable, serial, text, varchar, integer, boolean, timestamp, pgEnum, date, jsonb, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, pgEnum, date, jsonb, uuid, index } from "drizzle-orm/pg-core";
 import { AudienceEnum, DegreeEnum, DepartmentEnum, FacultyTypeEnum, TeacherDesignationEnum } from "../../../shared/enums";
 import { ForumBadgeEnum, VisibilityEnum } from "../../../shared/social.enums";
 import { relations } from "drizzle-orm";

@@ -1,5 +1,5 @@
 import { AssessmentTypeEnum, AudienceEnum, BatchEnrollmentStatus, ClassSectionEnum, DegreeEnum, DepartmentEnum, DomainEnum, FacultyTypeEnum, FinalizedResultStatusEnum, KnowledgeAreaEnum, StrengthEnum, SubjectLevelEnum, SubjectTypeEnum, TeacherDesignationEnum, TermEnum } from "../../../../server/src/shared/enums";
-import { Course, Program, ProgramWithCreator, TeacherInfo, TeacherInfoWithQualifications, User } from "../../../../server/src/shared/interfaces";
+import { Course, Program, ProgramCatalogue, Semester, TeacherInfo, TeacherInfoWithQualifications, User } from "../../../../server/src/shared/interfaces";
 
 export interface RegisterFormData {
     email: string;
@@ -148,7 +148,7 @@ export interface PEOUpdatePayload {
 }
 
 // PLO inside a PEO (frontend)
-export interface PLO {
+export interface PLOFrontend {
     id: string;
     code: string;
     title: string;
@@ -162,33 +162,12 @@ export interface PEOWithPlos {
     description: string;
     programId: string;
     position: number;
-    plos: PLO[];
+    plos: PLOFrontend[];
 }
 
-// Program type for getProgramById response
-export interface ProgramById {
-    id: string;
-    title: string;
-    programLevel: DegreeEnum;
-    departmentTitle: DepartmentEnum;
-    maxDurationYears: number;
-    minCreditHours: number;
-    maxCreditHours: number;
-    requirements?: string | null;
-    vision?: string | null;
-    mission?: string | null;
-    createdBy: string;
-    isArchived: boolean;
-    archivedAt?: Date | null;
-    createdAt: Date;
-    updatedAt: Date;
-    peos: PEOWithPlos[];
-}
-
-// API response type
 export interface GetProgramResponse {
     message: string;
-    program: ProgramById;
+    program: Program;
 }
 
 export interface PEOFrontend {
@@ -196,10 +175,45 @@ export interface PEOFrontend {
     title: string;
     description: string;
     ploMapping: {
-        plo: PLO;                  // full PLO object for frontend use
+        plo: PLOFrontend;                  // full PLO object for frontend use
         strength: StrengthEnum;
     }[];
 }
+
+export interface ProgramWithCreator extends Program {
+    createdByFirstName: string;
+    createdByLastName: string;
+    createdByEmail: string;
+}
+
+export interface GetCataloguesListResponse {
+    data: ProgramCatalogue[];
+    page: number;
+    totalPages: number;
+    totalCatalogues: number;
+}
+
+export interface AddSemesterPayload {
+    programCatalogueId: string; // renamed to match backend
+    semesterNo: number;
+    courses?: string[];
+}
+
+export interface GetSemestersResponse {
+    message: string;
+    semesters: Semester[];
+}
+
+export interface UpdateSemesterPayload {
+    semesterNo?: number;
+    courses?: string[]; // array of course IDs
+}
+
+export interface UpdateSemesterResponse {
+    message: string;
+    semester: Semester;
+}
+
 // export interface AssessmentPayload {
 //     type: AssessmentTypeEnum;
 //     title: string;
@@ -221,15 +235,6 @@ export interface PEOFrontend {
 //         fieldErrors?: Record<string, string[]>;
 //     };
 
-// export interface Semester {
-//     _id: string;
-//     programCatalogue: string;
-//     semesterNo: number;
-//     courses: string[];
-//     createdAt?: string;
-//     updatedAt?: string;
-// }
-
 export interface PLOMapping {
     id?: string; // optional for new mappings
     ploId: string;
@@ -241,7 +246,7 @@ export interface CLO {
     code: string;
     title: string;
     description: string;
-    ploMapping: PLOMapping[];
+    ploMappings: PLOMapping[];
 }
 
 export interface CreateCoursePayload {
@@ -273,6 +278,7 @@ export interface CourseFilters {
     subjectType?: string;
     knowledgeArea?: string;
     domain?: string;
+    programId?: string;
 }
 
 export interface GetCoursesResponse {
@@ -311,6 +317,35 @@ export interface UpdateCoursePayload {
 export interface UpdateCourseResponse {
     message: string;
     course: Course;
+}
+
+export interface EditableCourse {
+    programId?: string;
+    programCatalogueId?: string;
+
+    title?: string;
+    code?: string;
+    codePrefix?: string;
+    description?: string;
+
+    subjectLevel?: SubjectLevelEnum;
+    subjectType?: SubjectTypeEnum;
+    contactHours?: number;
+    creditHours?: number;
+    knowledgeArea?: KnowledgeAreaEnum;
+    domain?: DomainEnum;
+
+    preRequisites?: string[]; // just IDs on frontend
+    coRequisites?: string[];
+    sectionTeachers?: Array<{
+        section: ClassSectionEnum;
+        teacherId: string;
+    }>;
+    sections?: Array<{
+        section: ClassSectionEnum;
+    }>;
+
+    clos?: CLO[];
 }
 
 export interface TeacherInfoInput {
@@ -425,29 +460,6 @@ export interface CourseUpdatePayload {
     updatedAt?: string;
 }
 
-export interface CourseType {
-    selectedSection: string;
-    _id: string;
-    title: string;
-    code: string;
-    creditHours: number;
-    department: DepartmentEnum;
-    semester: string; // e.g., "Fall 2025"
-    sectionTeachers?: {
-        [sectionName: string]: {
-            _id: string;
-            firstName: string;
-            lastName: string;
-            email: string;
-        };
-    };
-    sections: string[];
-    isActive: boolean;
-    enrollmentDeadline: string | null; // ISO string (from backend)
-    createdBy: string; // User ID
-    createdAt: string;
-    updatedAt: string;
-}
 
 export interface ActivatedSemester {
     _id: string;
@@ -465,16 +477,6 @@ export interface ActivatedSemester {
 export interface ActivateSemesterResponse {
     message: string;
     activatedSemester: ActivatedSemester;
-}
-
-export interface GetSemestersResponse {
-    message: string;
-    semesters: ActivatedSemester[];
-}
-
-export interface UpdateSemesterResponse {
-    message: string;
-    batchSemester: ActivatedSemester;
 }
 
 export interface ScheduleSlot {

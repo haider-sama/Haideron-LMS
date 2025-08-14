@@ -1,52 +1,43 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { REGISTER_PROGRAM_YEARS_ARRAY } from "./RegisterProgramForm";
 import { Program } from "../../../../../../server/src/shared/interfaces";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../../../../context/ToastContext";
 import TopCenterLoader from "../../../ui/TopCenterLoader";
-import InternalError from "../../../../pages/forbidden/InternalError";
 import { Helmet } from "react-helmet-async";
 import { GLOBAL_TITLE } from "../../../../constants";
 import { Input, SelectInput, TextAreaInput } from "../../../ui/Input";
 import { DegreeEnum, DepartmentEnum } from "../../../../../../server/src/shared/enums";
-import { deleteProgramById } from "../../../../api/core/program/program-api";
-import { ProgramById } from "../../../../constants/core/interfaces";
+import { deleteProgramById } from "../../../../api/core/program-api";
 import { Button } from "../../../ui/Button";
+import ErrorStatus from "../../../ui/ErrorStatus";
 
 interface ProgramProps {
     programId: string;
-    fetchProgram: (id: string) => Promise<{ program: ProgramById }>
+    fetchProgram: (id: string) => Promise<{ program: Program }>
     updateProgram: (id: string, data: Partial<Program>) => Promise<any>;
 }
 
 const ProgramProfile = ({ programId, fetchProgram, updateProgram }: ProgramProps) => {
     const queryClient = useQueryClient();
     const toast = useToast();
-
-    const [program, setProgram] = useState<ProgramById | null>(null);
-    const [editFields, setEditFields] = useState<Partial<ProgramById>>({});
+    const [editFields, setEditFields] = useState<Partial<Program>>({});
 
     // Fetch single program
     const { data, isLoading, isError } = useQuery({
         queryKey: ['program', programId],
         enabled: !!programId,
-        queryFn: async () => {
-            if (!programId) throw new Error('Program ID is required');
-
-            try {
-                const data = await fetchProgram(programId); // use prop function
-                // Side-effects: update state
-                const { peos, ...safeData } = data.program;
-                setProgram(data.program); // ProgramById
-                setEditFields(safeData);  // Partial<ProgramById> without `peos`
-                return data;
-            } catch (err: any) {
-                toast.error(err.message || 'Failed to fetch program.');
-                throw err; // re-throw so react-query knows the query failed
-            }
-        },
+        queryFn: () => fetchProgram(programId),
         retry: false,
     });
+
+    const program = data?.program;
+
+    useEffect(() => {
+        if (program) {
+            setEditFields(program); // initialize form only when program changes
+        }
+    }, [program]);
 
     // Mutation for updating program
     const mutation = useMutation({
@@ -56,7 +47,7 @@ const ProgramProfile = ({ programId, fetchProgram, updateProgram }: ProgramProps
         },
         onSuccess: () => {
             toast.success('Program updated successfully!');
-            queryClient.invalidateQueries({ queryKey: ['program', programId] }); // note: use singular 'program'
+            queryClient.invalidateQueries({ queryKey: ['programs', programId] });
         },
         onError: (err: any) => {
             if (err?.zodErrors) {
@@ -100,7 +91,7 @@ const ProgramProfile = ({ programId, fetchProgram, updateProgram }: ProgramProps
         mutationFn: () => deleteProgramById(programId),
         onSuccess: () => {
             toast.success("Program deleted successfully");
-            queryClient.invalidateQueries({ queryKey: ['program', programId] });
+            queryClient.invalidateQueries({ queryKey: ['programs', programId] });
         },
         onError: (err: any) => {
             toast.error(err?.message || "Failed to delete program");
@@ -118,21 +109,9 @@ const ProgramProfile = ({ programId, fetchProgram, updateProgram }: ProgramProps
         deleteMutation.mutate(); // trigger the mutation
     };
 
-    // const getStrengthBadgeClass = (strength: string) => {
-    //     switch (strength.toLowerCase()) {
-    //         case "low":
-    //             return "bg-red-50 text-red-600 ring-1 ring-inset ring-red-200 shadow-sm dark:bg-red-900 dark:text-red-300 dark:ring-red-700";
-    //         case "medium":
-    //             return "bg-yellow-50 text-yellow-600 ring-1 ring-inset ring-yellow-200 shadow-sm dark:bg-yellow-900 dark:text-yellow-200 dark:ring-yellow-700";
-    //         case "high":
-    //             return "bg-emerald-50 text-emerald-600 ring-1 ring-inset ring-emerald-200 shadow-sm dark:bg-emerald-900 dark:text-emerald-200 dark:ring-emerald-700";
-    //         default:
-    //             return "bg-gray-50 text-gray-500 ring-1 ring-inset ring-gray-200 shadow-sm dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-600";
-    //     }
-    // };
 
     if (isLoading || !program) return <TopCenterLoader />;
-    if (isError) return <InternalError />;
+    if (isError) return <ErrorStatus message="Failed to fetch program details" />
 
     return (
         <div className="flex flex-col items-center px-4 space-y-8">
@@ -140,7 +119,7 @@ const ProgramProfile = ({ programId, fetchProgram, updateProgram }: ProgramProps
                 <title>{GLOBAL_TITLE} - Program Management - Edit Program</title>
             </Helmet>
 
-            <div className="w-full max-w-4xl p-6 space-y-6 bg-white dark:bg-darkSurface rounded-xl border border-gray-200 dark:border-darkBorderLight">
+            <div className="w-full max-w-4xl p-6 space-y-6 bg-white dark:bg-darkSurface">
                 <h1 className="text-2xl font-bold text-center text-black dark:text-white">
                     Edit Program Details
                 </h1>

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const createProgramCatalogueSchema = z.object({
-    program: z.string(),
+    programId: z.string().uuid({ message: "Invalid program ID" }),
     catalogueYear: z.number().refine((year) => {
         const currentYear = new Date().getFullYear();
         return year >= 2000 && year <= currentYear + 5;
@@ -11,9 +11,7 @@ export const createProgramCatalogueSchema = z.object({
 });
 
 export const updateProgramCatalogueSchema = z.object({
-    program: z
-        .string()
-        .optional(),
+    programId: z.string().uuid({ message: "Invalid program ID" }).optional(),
     catalogueYear: z
         .number()
         .int()

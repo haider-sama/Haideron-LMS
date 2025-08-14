@@ -2,10 +2,9 @@ import { Request, Response } from "express";
 import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../../constants/http";
 import { programRegisterSchema, updateProgramSchema } from "../../../utils/validators/lms-schemas/programSchemas";
 import { AudienceEnum, DepartmentEnum } from "../../../shared/enums";
-import { peoPloMappings, peos, plos, programs, users } from "../../../db/schema";
+import { programs, users } from "../../../db/schema";
 import { db } from "../../../db/db";
-import { eq, ilike, sql, desc, SQL, and, inArray } from "drizzle-orm";
-import { PeoPloWithPlo } from "../../../shared/interfaces";
+import { eq, ilike, sql, desc, SQL, and, or } from "drizzle-orm";
 
 export const registerProgram = async (req: Request, res: Response) => {
     try {
@@ -88,12 +87,39 @@ export const registerProgram = async (req: Request, res: Response) => {
     }
 };
 
+function buildProgramConditions(user: any, search?: string): SQL<boolean>[] {
+    const conditions: SQL<boolean>[] = [];
+
+    // Always exclude archived
+    conditions.push(eq(programs.isArchived, false) as SQL<boolean>);
+
+    // Restrict department for department heads
+    if (user.role === AudienceEnum.DepartmentHead && user.department) {
+        conditions.push(eq(programs.departmentTitle, user.department) as SQL<boolean>);
+    }
+
+    // Search handling
+    if (search) {
+        const searchTerm = `%${search}%`;
+
+        conditions.push(
+            or(
+                ilike(programs.title, searchTerm),
+                ilike(sql`${programs.departmentTitle}::text`, searchTerm),
+                ilike(sql`coalesce(${users.firstName}, '')`, searchTerm),
+                ilike(sql`coalesce(${users.lastName}, '')`, searchTerm),
+                ilike(sql`coalesce(${users.email}, '')`, searchTerm)
+            ) as SQL<boolean>
+        );
+    }
+
+    return conditions;
+}
+
 export const getPrograms = async (req: Request, res: Response) => {
     try {
         const userId = req.userId;
-        const { programId } = req.params; // optional
-
-        // Fetch user info
+        const { programId } = req.params;
         const [user] = await db
             .select({ id: users.id, role: users.role, department: users.department })
             .from(users)
@@ -103,7 +129,6 @@ export const getPrograms = async (req: Request, res: Response) => {
             return res.status(BAD_REQUEST).json({ message: "User not found" });
         }
 
-        // Check if user's department is valid for non-admins
         if (
             user.role !== AudienceEnum.Admin &&
             (!user.department || !Object.values(DepartmentEnum).includes(user.department as DepartmentEnum))
@@ -113,20 +138,13 @@ export const getPrograms = async (req: Request, res: Response) => {
             });
         }
 
-        // If programId is provided, fetch a single program
+        // SINGLE PROGRAM
         if (programId) {
-            if (!programId) {
-                return res.status(NOT_FOUND).json({ message: "Invalid program ID" });
-            }
-
-            // Build query conditions for single program
-            const conditions = [eq(programs.id, programId)];
+            const conditions = [eq(programs.id, programId) as SQL<boolean>];
             if (user.role === AudienceEnum.DepartmentHead && user.department) {
-                conditions.push(eq(programs.departmentTitle, user.department));
+                conditions.push(eq(programs.departmentTitle, user.department) as SQL<boolean>);
             }
 
-
-            // Fetch program + createdBy info (join with users)
             const [program] = await db
                 .select({
                     id: programs.id,
@@ -142,20 +160,17 @@ export const getPrograms = async (req: Request, res: Response) => {
                     createdById: programs.createdBy,
                     createdAt: programs.createdAt,
                     updatedAt: programs.updatedAt,
-                    // Add more fields if needed
                     createdByFirstName: users.firstName,
                     createdByLastName: users.lastName,
                     createdByEmail: users.email,
                 })
                 .from(programs)
                 .leftJoin(users, eq(users.id, programs.createdBy))
-                .where(sql`(${conditions.join(" AND ")})`);
+                .where(and(...conditions));
 
             if (!program) {
                 return res.status(NOT_FOUND).json({ message: "Program not found" });
             }
-
-            // TODO: If you have peos and plo mappings, you can fetch them here similarly
 
             return res.status(OK).json({
                 message: "Program fetched successfully",
@@ -163,39 +178,23 @@ export const getPrograms = async (req: Request, res: Response) => {
             });
         }
 
-        // Otherwise, fetch paginated list
-
-        // Pagination params
+        // LIST PROGRAMS
         const page = Math.max(1, parseInt(req.query.page as string) || 1);
         const limit = Math.min(100, parseInt(req.query.limit as string) || 20);
         const offset = (page - 1) * limit;
-
         const search = req.query.search as string | undefined;
 
-        // Build where conditions for filtering
-        const conditions: SQL<boolean>[] = [];
+        const conditions = buildProgramConditions(user, search);
 
-        conditions.push(eq(programs.isArchived, false) as SQL<boolean>);
-        if (user.role === AudienceEnum.DepartmentHead && user.department) {
-            conditions.push(eq(programs.departmentTitle, user.department) as SQL<boolean>);
-        }
-
-        if (search) {
-            conditions.push(ilike(programs.title, `%${search}%`) as SQL<boolean>);
-        }
-        // Count total matching programs
-        const countQuery = db
+        // COUNT
+        const [{ count }] = await db
             .select({ count: sql<number>`count(*)`.mapWith(Number) })
-            .from(programs);
+            .from(programs)
+            .leftJoin(users, eq(users.id, programs.createdBy))
+            .where(and(...conditions));
 
-        if (conditions.length > 0) {
-            countQuery.where(sql.join(conditions, " AND "));
-        }
-
-        const [{ count }] = await countQuery;
-
-        // Fetch paginated programs with createdBy info
-        const programsListQuery = db
+        // LIST
+        const programsList = await db
             .select({
                 id: programs.id,
                 title: programs.title,
@@ -216,15 +215,10 @@ export const getPrograms = async (req: Request, res: Response) => {
             })
             .from(programs)
             .leftJoin(users, eq(users.id, programs.createdBy))
+            .where(and(...conditions))
             .orderBy(desc(programs.createdAt))
             .limit(limit)
             .offset(offset);
-
-        if (conditions.length > 0) {
-            programsListQuery.where(sql.join(conditions, " AND "));
-        }
-
-        const programsList = await programsListQuery;
 
         return res.status(OK).json({
             message: "Programs fetched successfully",
@@ -234,8 +228,8 @@ export const getPrograms = async (req: Request, res: Response) => {
             totalPrograms: count,
         });
     } catch (err: any) {
-        console.error("Error while fetching programs:", err.message);
-        return res.status(500).json({
+        console.error("Error while fetching programs:", err);
+        return res.status(INTERNAL_SERVER_ERROR).json({
             message: "Error while fetching programs. Please try again.",
             error: err.message,
         });
@@ -285,47 +279,9 @@ export const getProgramById = async (req: Request, res: Response) => {
             return res.status(NOT_FOUND).json({ message: "Program not found" });
         }
 
-        // Fetch PEOs for the program
-        const programPeos = await db
-            .select()
-            .from(peos)
-            .where(eq(peos.programId, programId))
-            .orderBy(peos.position);
-
-        // Fetch PLO mappings for the PEOs
-        const peoIds = programPeos.map((p) => p.id).filter(Boolean); // remove undefined/null/empty
-        let peoPloData: PeoPloWithPlo[] = [];
-
-        if (peoIds.length > 0) {
-            peoPloData = await db
-                .select({
-                    id: peoPloMappings.id,
-                    peoId: peoPloMappings.peoId,
-                    strength: peoPloMappings.strength,
-                    plo: {
-                        id: plos.id,
-                        code: plos.code,
-                        title: plos.title,
-                        description: plos.description,
-                    },
-                })
-                .from(peoPloMappings)
-                .leftJoin(plos, eq(plos.id, peoPloMappings.ploId))
-                .where(inArray(peoPloMappings.peoId, peoIds));
-        }
-
-        // Attach PLOs to PEOs
-        const peosWithPlos = programPeos.map((peo) => ({
-            ...peo,
-            plos: peoPloData.filter((m) => m.peoId === peo.id).map((m) => m.plo),
-        }));
-
         return res.status(OK).json({
             message: "Program fetched successfully",
-            program: {
-                ...program,
-                peos: peosWithPlos,
-            },
+            program,
         });
     } catch (err: any) {
         console.error("Error fetching program by ID:", err.message);

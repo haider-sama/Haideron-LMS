@@ -3,6 +3,7 @@ import { ClassSectionEnum, DomainEnum, KnowledgeAreaEnum, SubjectLevelEnum, Subj
 import { plos, programs, strengthEnum } from "../program/program.model";
 import { users } from "../../auth/user.model";
 import { programCatalogues } from "../program/program.catalogue.model";
+import { relations } from "drizzle-orm";
 
 // Enums
 export const subjectLevelEnum = pgEnum("subject_level_enum", Object.values(SubjectLevelEnum) as [string, ...string[]]);
@@ -100,6 +101,7 @@ export const courseCoRequisites = pgTable(
 export const courseSectionTeachers = pgTable(
     "course_section_teachers",
     {
+        id: uuid("id").defaultRandom().primaryKey(),
         courseId: uuid("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
         section: classSectionEnum("section").notNull(),
         teacherId: uuid("teacher_id").notNull().references(() => users.id),
@@ -120,6 +122,21 @@ export const courseSections = pgTable(
         uniqueIndex("course_section_unique").on(table.courseId, table.section),
     ]
 );
+
+export const coursesRelations = relations(courses, ({ one, many }) => ({
+    program: one(programs, { fields: [courses.programId], references: [programs.id] }),
+    sectionTeachers: many(courseSectionTeachers),
+    preRequisites: many(coursePreRequisites),
+    coRequisites: many(courseCoRequisites),
+    sections: many(courseSections),
+    clos: many(clos),
+}));
+
+export const closRelations = relations(clos, ({ one, many }) => ({
+    course: one(courses, { fields: [clos.courseId], references: [courses.id] }),
+    ploMappings: many(cloPloMappings),
+}));
+
 
 // TODO:
 // Validation like creditHours >= contactHours

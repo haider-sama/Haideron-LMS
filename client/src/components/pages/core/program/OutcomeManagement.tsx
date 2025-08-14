@@ -1,48 +1,37 @@
 import { useState } from "react";
-import { FiEdit3, FiPlus } from "react-icons/fi";
 import AddPLOsForm from "./AddPLOsForm";
 import AddPEOsForm from "./AddPEOsForm";
 import Modal from "../../../ui/Modal";
-import { ProgramById } from "../../../../constants/core/interfaces";
-import { useToast } from "../../../../context/ToastContext";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "../../../ui/Button";
 import EditPLOList from "./EditPLOList";
 import EditPEOList from "./EditPEOList";
+import { getPEOsForProgram } from "../../../../api/core/program-api";
+import ErrorStatus from "../../../ui/ErrorStatus";
+import TopCenterLoader from "../../../ui/TopCenterLoader";
 
 interface OutcomeManagementProps {
     programId: string | null;
-    fetchProgram: (id: string) => Promise<{ program: ProgramById }>
 }
 
-const OutcomeManagement: React.FC<OutcomeManagementProps> = ({ programId, fetchProgram }) => {
+const OutcomeManagement: React.FC<OutcomeManagementProps> = ({ programId }) => {
     const [showAddPLOModal, setShowAddPLOModal] = useState(false);
     const [showAddPEOModal, setShowAddPEOModal] = useState(false);
     const [showEditPEOModal, setShowEditPEOModal] = useState(false);
     const [showEditPLOModal, setShowEditPLOModal] = useState(false);
-    const toast = useToast();
 
-    // Fetch single program
     const { data, isLoading, isError } = useQuery({
-        queryKey: ['program', programId],
+        queryKey: ['peos', programId],
         enabled: !!programId,
-        queryFn: async () => {
-            if (!programId) throw new Error('Program ID is required');
-
-            try {
-                const data = await fetchProgram(programId); // use prop function
-                return data;
-            } catch (err: any) {
-                toast.error(err.message || 'Failed to fetch program.');
-                throw err; // re-throw so react-query knows the query failed
-            }
-        },
-        retry: false,
+        queryFn: () => getPEOsForProgram(programId!),
     });
+
+    if (isLoading) return <TopCenterLoader />
+    if (isError) return <ErrorStatus message="Failed to fetch outcomes for this program" />
 
     return (
         <>
-            {data?.program?.peos && data?.program.peos.length > 0 && (
+            {data?.peos && data?.peos.length > 0 && (
                 <div className="w-full max-w-4xl mx-auto mt-8 space-y-6">
                     <h2 className="text-2xl font-semibold text-center text-gray-800 dark:text-darkTextPrimary">
                         Program Educational Objectives (PEOs)
@@ -59,7 +48,7 @@ const OutcomeManagement: React.FC<OutcomeManagementProps> = ({ programId, fetchP
                                 </tr>
                             </thead>
                             <tbody>
-                                {data?.program.peos.map((peo, index) => (
+                                {data?.peos.map((peo, index) => (
                                     <tr
                                         key={peo.id}
                                         className="border-b last:border-0 border-gray-200 dark:border-darkBorderLight hover:bg-gray-50 dark:hover:bg-darkMuted transition"
@@ -74,14 +63,14 @@ const OutcomeManagement: React.FC<OutcomeManagementProps> = ({ programId, fetchP
                                             {peo.description}
                                         </td>
                                         <td className="px-4 py-4">
-                                            {peo.plos && peo.plos.length > 0 ? (
+                                            {peo.mappings && peo.mappings.length > 0 ? (
                                                 <ul className="space-y-2">
-                                                    {peo.plos.map((plo) => (
-                                                        <li key={plo.id} className="flex flex-wrap items-center gap-2 text-sm">
+                                                    {peo.mappings.map((plo) => (
+                                                        <li key={plo.ploId} className="flex flex-wrap items-center gap-2 text-sm">
                                                             <span className="font-medium text-gray-800 dark:text-darkTextPrimary">
-                                                                {plo.code}
+                                                                {plo.ploCode}
                                                             </span>
-                                                            <span className="text-gray-500 dark:text-darkTextMuted">– {plo.title}</span>
+                                                            <span className="text-gray-500 dark:text-darkTextMuted">– {plo.ploTitle}</span>
                                                         </li>
                                                     ))}
                                                 </ul>

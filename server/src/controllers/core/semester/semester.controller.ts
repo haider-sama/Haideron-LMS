@@ -35,11 +35,11 @@ export const addSemesterToCatalogue = async (req: Request, res: Response) => {
             });
         }
 
-        const { programCatalogue, semesterNo, courses: courseIds } = parsed.data;
+        const { programCatalogueId, semesterNo, courses: courseIds } = parsed.data;
 
         // Fetch programCatalogue along with program data
         const catalogue = await db.query.programCatalogues.findFirst({
-            where: (pc, { eq }) => eq(pc.id, programCatalogue),
+            where: (pc, { eq }) => eq(pc.id, programCatalogueId),
             with: { program: true },
         }) as CatalogueWithProgram | null;
 
@@ -62,7 +62,7 @@ export const addSemesterToCatalogue = async (req: Request, res: Response) => {
 
         // Check if semester already exists in this catalogue
         const existingSemester = await db.query.semesters.findFirst({
-            where: (s, { and, eq }) => and(eq(s.programCatalogueId, programCatalogue), eq(s.semesterNo, semesterNo)),
+            where: (s, { and, eq }) => and(eq(s.programCatalogueId, programCatalogueId), eq(s.semesterNo, semesterNo)),
         });
 
         if (existingSemester) {
@@ -91,7 +91,7 @@ export const addSemesterToCatalogue = async (req: Request, res: Response) => {
         const [newSemester] = await db
             .insert(semesters)
             .values({
-                programCatalogueId: programCatalogue,
+                programCatalogueId: programCatalogueId,
                 semesterNo,
             })
             .returning();
@@ -109,7 +109,6 @@ export const addSemesterToCatalogue = async (req: Request, res: Response) => {
 
         return res.status(CREATED).json({
             message: "Semester added to catalogue successfully",
-            semester: newSemester,
         });
     } catch (err: any) {
         console.error("Error while adding semester:", err.message);

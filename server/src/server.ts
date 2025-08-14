@@ -8,11 +8,13 @@ import { CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_CLOUD_NAME, FRONT
 import helmet from 'helmet';
 import { connectRedis } from './lib/redis';
 import { users } from './db/schema';
-import authRouter from './routes/auth/auth.routes';
-import adminRouter from './routes/admin/admin.routes';
-import facultyRouter from './routes/core/faculty/faculty.routes';
-import courseRouter from './routes/core/course/course.routes';
-import programRouter from './routes/core/program/program.routes';
+import authRouter from './routes/auth.routes';
+import adminRouter from './routes/admin.routes';
+import facultyRouter from './routes/core/faculty.routes';
+import courseRouter from './routes/core/course.routes';
+import programRouter from './routes/core/program.routes';
+import catalogueRouter from './routes/core/catalogue.routes';
+import semesterRouter from './routes/core/semester.routes';
 
 dotenv.config();
 
@@ -37,6 +39,8 @@ app.use('/api/v1/admin/', adminRouter);
 app.use('/api/v1/faculty/', facultyRouter);
 app.use('/api/v1/course/', courseRouter);
 app.use('/api/v1/program/', programRouter);
+app.use('/api/v1/catalogue/', catalogueRouter);
+app.use('/api/v1/semester/', semesterRouter);
 
 const startServer = async () => {
     console.time("Total Startup Time");

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoMdClose } from "react-icons/io";
-import Profile from "../../pages/core/account/Profile";
+import Profile from "../../pages/account/Profile";
 import { FiShield, FiUser } from "react-icons/fi";
 import { MdOutlineSettingsSuggest } from "react-icons/md";
 import SecuritySettings from "./SecuritySettings";

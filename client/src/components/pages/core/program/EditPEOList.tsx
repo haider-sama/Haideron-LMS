@@ -1,20 +1,21 @@
 import { useEffect, useState } from "react";
 import { FiEdit3, FiChevronUp, FiTrash2 } from "react-icons/fi";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deletePEO, getPEOsForProgram, getPLOsForProgram, updatePEOInProgram } from "../../../../api/core/program/program-api";
-import { PEOFrontend, PEOUpdatePayload, PEOWithMappings, PLO } from "../../../../constants/core/interfaces";
+import { deletePEO, getPEOsForProgram, getPLOsForProgram, updatePEOInProgram } from "../../../../api/core/program-api";
+import { PEOFrontend, PEOUpdatePayload, PEOWithMappings, PLOFrontend } from "../../../../constants/core/interfaces";
 import { PEO } from "../../../../../../server/src/shared/interfaces";
 import { useToast } from "../../../../context/ToastContext";
 import { StrengthEnum } from "../../../../../../server/src/shared/enums";
-import Spinner from "../../../ui/Spinner";
 import { SelectInput, TextAreaInput } from "../../../ui/Input";
+import TopCenterLoader from "../../../ui/TopCenterLoader";
+import ErrorStatus from "../../../ui/ErrorStatus";
 
 interface EditPEOListProps {
     programId: string;
 }
 
 const EditPEOList = ({ programId }: EditPEOListProps) => {
-    const [plos, setPlos] = useState<PLO[]>([]);
+    const [plos, setPlos] = useState<PLOFrontend[]>([]);
     const [editedPeos, setEditedPeos] = useState<PEOFrontend[]>([]);
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
     const [savingIndex, setSavingIndex] = useState<number | null>(null);
@@ -74,7 +75,7 @@ const EditPEOList = ({ programId }: EditPEOListProps) => {
             updatePEOInProgram(programId, payload.peoId, payload.update),
         onSuccess: () => {
             toast.success("PEO updated successfully");
-            queryClient.invalidateQueries({ queryKey: ["peos", programId] });
+            queryClient.invalidateQueries({ queryKey: ["programs", programId] });
         },
         onError: (err: any) => {
             if (err?.zodErrors && typeof err.zodErrors === "object") {
@@ -167,7 +168,7 @@ const EditPEOList = ({ programId }: EditPEOListProps) => {
             const updated = [...editedPeos];
             updated.splice(peoIndex, 1);
             setEditedPeos(updated);
-            queryClient.invalidateQueries({ queryKey: ["peos", programId] });
+            queryClient.invalidateQueries({ queryKey: ["programs", programId] });
         } catch (err: any) {
             toast.error(err.message || "Failed to delete PEO");
         }
@@ -186,11 +187,12 @@ const EditPEOList = ({ programId }: EditPEOListProps) => {
         }
     };
 
-    // if (!plos.length) return <Spinner />;
+    if (isLoading) return <TopCenterLoader />
+    if (isError) return <ErrorStatus message="Failed to fetch PEOs" />
 
     return (
         <div className="w-full max-w-4xl mx-auto px-4 py-6">
-            <h2 className="text-2xl font-bold text-center mb-6 text-black dark:text-darkTextPrimary">
+            <h2 className="text-2xl font-semibold text-center mb-6 text-black dark:text-darkTextPrimary">
                 Edit Program Educational Objectives (PEOs)
             </h2>
 

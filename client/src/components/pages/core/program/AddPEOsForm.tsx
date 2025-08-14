@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { FiTrash2 } from "react-icons/fi";
 import { StrengthEnum } from "../../../../../../server/src/shared/enums";
 import { useToast } from "../../../../context/ToastContext";
-import { addPEOsToProgram, getPLOsForProgram } from "../../../../api/core/program/program-api";
+import { addPEOsToProgram, getPLOsForProgram } from "../../../../api/core/program-api";
 import { SelectInput, TextAreaInput } from "../../../ui/Input";
-import { PEOFrontend, PEOUpdatePayload, PLO } from "../../../../constants/core/interfaces";
+import { PEOFrontend, PEOUpdatePayload, PLOFrontend } from "../../../../constants/core/interfaces";
 import { Button } from "../../../ui/Button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -13,7 +13,7 @@ const peoCodeOptions = Array.from({ length: 10 }, (_, i) => `PEO${i + 1}`);
 
 const AddPEOsForm = ({ programId }: { programId: string | null }) => {
     const [peos, setPeos] = useState<PEOFrontend[]>([]);
-    const [availablePLOs, setAvailablePLOs] = useState<PLO[]>([]);
+    const [availablePLOs, setAvailablePLOs] = useState<PLOFrontend[]>([]);
     const toast = useToast();
     const queryClient = useQueryClient();
 
@@ -84,7 +84,7 @@ const AddPEOsForm = ({ programId }: { programId: string | null }) => {
         onSuccess: () => {
             toast.success("PEOs added successfully.");
             setPeos([]);
-            queryClient.invalidateQueries({ queryKey: ["program", programId] });
+            queryClient.invalidateQueries({ queryKey: ["programs", programId] });
         },
         onError: (err: any) => {
             if (err?.zodErrors) {

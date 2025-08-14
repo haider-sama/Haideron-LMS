@@ -95,7 +95,7 @@ export const SelectInput: React.FC<SelectInputProps> = ({
 
     return (
         <div className={className}>
-            <label className="block text-sm font-medium text-gray-800 dark:text-darkTextSecondary">
+            <label className="block mb-1 text-sm font-medium text-gray-800 dark:text-darkTextSecondary">
                 {label}
             </label>
             <select

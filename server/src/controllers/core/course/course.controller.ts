@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { BAD_REQUEST, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../../constants/http";
 import { AudienceEnum, ClassSectionEnum, DepartmentEnum } from "../../../shared/enums";
-import { cloPloMappings, clos, courseCoRequisites, coursePreRequisites, courses, courseSections, semesterCourses } from "../../../db/schema";
+import { cloPloMappings, clos, courseCoRequisites, coursePreRequisites, courses, courseSections, courseSectionTeachers, semesterCourses } from "../../../db/schema";
 import { db } from "../../../db/db";
 import { eq, and, inArray, sql, desc } from "drizzle-orm";
 import { createCourseSchema, updateCourseSchema } from "../../../utils/validators/lms-schemas/semesterSchemas";
@@ -274,21 +274,15 @@ export const getCourseById = async (req: Request, res: Response) => {
         const userId = req.userId;
         const { courseId } = req.params;
 
-        if (!courseId) {
-            return res.status(BAD_REQUEST).json({ message: "Course ID is required" });
-        }
+        if (!courseId) return res.status(BAD_REQUEST).json({ message: "Course ID is required" });
 
-        // Fetch user info (role, department)
+        // Fetch user
         const user = await db.query.users.findFirst({
             where: (u, { eq }) => eq(u.id, userId),
             columns: { role: true, department: true, id: true },
         });
 
-        if (
-            !user ||
-            !user.department ||
-            !Object.values(DepartmentEnum).includes(user.department as DepartmentEnum)
-        ) {
+        if (!user || !Object.values(DepartmentEnum).includes(user.department as DepartmentEnum)) {
             return res.status(FORBIDDEN).json({
                 message: "You must belong to a valid department to view course details",
             });
@@ -298,67 +292,62 @@ export const getCourseById = async (req: Request, res: Response) => {
         const isDeptHead = user.role === AudienceEnum.DepartmentHead;
         const isFaculty = user.role === AudienceEnum.DepartmentTeacher;
 
-        // Fetch course with program info
+        // Fetch course + program
         const course = await db.query.courses.findFirst({
             where: (c, { eq }) => eq(c.id, courseId),
-            with: {
-                program: {
-                    columns: { departmentTitle: true, id: true, createdBy: true },
-                },
-            },
-        }) as Course | null;
-
-        if (!course) {
-            return res.status(NOT_FOUND).json({ message: "Course not found" });
-        }
-
-        // Admins can access all courses
-        if (isAdmin) {
-            return res.status(OK).json({
-                message: "Course fetched successfully",
-                course,
-            });
-        }
-
-        // Department Head access check
-        if (isDeptHead) {
-            if (course?.program?.departmentTitle !== user.department) {
-                return res.status(FORBIDDEN).json({
-                    message: "You are not authorized to access courses from another department",
-                });
-            }
-            return res.status(OK).json({
-                message: "Course fetched successfully",
-                course,
-            });
-        }
-
-        // Faculty access check: load assigned teachers from course_section_teachers
-        if (isFaculty) {
-            const assignedSectionTeachers = await db.query.courseSectionTeachers.findMany({
-                where: (cst, { eq }) => eq(cst.courseId, courseId),
-                columns: { teacherId: true },
-            });
-            const isAssigned = assignedSectionTeachers.some(
-                (st) => String(st.teacherId) === String(user.id)
-            );
-
-            if (!isAssigned) {
-                return res.status(FORBIDDEN).json({
-                    message: "You are not assigned to teach this course",
-                });
-            }
-
-            return res.status(OK).json({
-                message: "Course fetched successfully",
-                course,
-            });
-        }
-
-        // Default deny access
-        return res.status(FORBIDDEN).json({
-            message: "You do not have permission to view this course",
+            with: { program: true },
         });
+
+        if (!course) return res.status(NOT_FOUND).json({ message: "Course not found" });
+
+        // --- Fetch related data ---
+        const [preRequisites, coRequisites, sections, sectionTeachers, clos] = await Promise.all([
+            db.query.coursePreRequisites.findMany({ where: (pr, { eq }) => eq(pr.courseId, courseId) }),
+            db.query.courseCoRequisites.findMany({ where: (cr, { eq }) => eq(cr.courseId, courseId) }),
+            db.query.courseSections.findMany({ where: (sec, { eq }) => eq(sec.courseId, courseId) }),
+            db.query.courseSectionTeachers.findMany({ where: (st, { eq }) => eq(st.courseId, courseId) }),
+            db.query.clos.findMany({ where: (clo, { eq }) => eq(clo.courseId, courseId) }),
+        ]);
+
+        // Attach PLO mappings
+        const cloIds = clos.map(c => c.id);
+        const cloPloMappingsRows = cloIds.length > 0
+            ? await db.query.cloPloMappings.findMany({
+                where: (m, { inArray }) => inArray(m.cloId, cloIds),
+            })
+            : [];
+        const closWithMappings = clos.map(c => ({
+            ...c,
+            ploMappings: cloPloMappingsRows.filter(m => m.cloId === c.id),
+        }));
+
+        const fullCourse = {
+            ...course,
+            preRequisites,
+            coRequisites,
+            sections,
+            sectionTeachers,
+            clos: closWithMappings,
+        };
+
+        // --- Role-based access checks ---
+        if (isAdmin) return res.status(OK).json({ message: "Course fetched successfully", course: fullCourse });
+
+        if (isDeptHead) {
+            if (course.program?.departmentTitle !== user.department) {
+                return res.status(FORBIDDEN).json({ message: "You cannot access courses from another department" });
+            }
+            return res.status(OK).json({ message: "Course fetched successfully", course: fullCourse });
+        }
+
+        if (isFaculty) {
+            const isAssigned = sectionTeachers.some(st => String(st.teacherId) === String(user.id));
+            if (!isAssigned) return res.status(FORBIDDEN).json({ message: "You are not assigned to teach this course" });
+            return res.status(OK).json({ message: "Course fetched successfully", course: fullCourse });
+        }
+
+        // Default deny
+        return res.status(FORBIDDEN).json({ message: "You do not have permission to view this course" });
     } catch (err: any) {
         console.error("Error fetching course by ID:", err);
         return res.status(INTERNAL_SERVER_ERROR).json({
@@ -373,12 +362,20 @@ export const updateCourseById = async (req: Request, res: Response) => {
         const { courseId } = req.params;
         const userId = req.userId;
 
+        // console.log("🚀 updateCourseById called");
+        // console.log("Course ID:", courseId);
+        // console.log("User ID:", userId);
+        // console.log("Request body:", JSON.stringify(req.body, null, 2));
+
         const user = await db.query.users.findFirst({
             where: (u, { eq }) => eq(u.id, userId),
             columns: { role: true, id: true, department: true },
         });
 
+        // console.log("Fetched user:", user);
+
         if (!user) {
+            // console.warn("User not found");
             return res.status(NOT_FOUND).json({ message: "User not found" });
         }
 
@@ -386,7 +383,10 @@ export const updateCourseById = async (req: Request, res: Response) => {
         const isDeptHead = user.role === AudienceEnum.DepartmentHead;
         const isFaculty = user.role === AudienceEnum.DepartmentTeacher;
 
+        // console.log("Roles:", { isAdmin, isDeptHead, isFaculty });
+
         if (!isAdmin && !isDeptHead && !isFaculty) {
+            // console.warn("User not authorized based on role");
             return res.status(FORBIDDEN).json({ message: "You are not authorized to update a course" });
         }
 
@@ -394,27 +394,45 @@ export const updateCourseById = async (req: Request, res: Response) => {
         const existingCourse = await db.query.courses.findFirst({
             where: (c, { eq }) => eq(c.id, courseId),
             with: {
-                program: { columns: { departmentTitle: true } },
-                sectionTeachers: true // assuming you have a relation here
-            }
-        }) as Course | null;
+                program: true, // OK
+            },
+        });
+
+        // console.log("Fetched existing course:", existingCourse);
 
         if (!existingCourse) {
             return res.status(NOT_FOUND).json({ message: "Course not found" });
         }
 
+        // If user is faculty, fetch sectionTeachers separately
+        type SectionTeacherRow = {
+            id: string;
+            courseId: string;
+            section: string;
+            teacherId: string;
+        };
+
+        let sectionTeachers: SectionTeacherRow[] = [];
+        if (isFaculty) {
+            sectionTeachers = await db.query.courseSectionTeachers.findMany({
+                where: (st, { eq }) => eq(st.courseId, courseId),
+            });
+
+            // console.log("Faculty section teachers:", sectionTeachers);
+        }
+
         // Role-based access checks
         if (isDeptHead) {
             if (user.department !== existingCourse.program?.departmentTitle) {
+                console.warn("Dept head not in same department");
                 return res.status(FORBIDDEN).json({
                     message: "You are not authorized to update this course (different department).",
                 });
             }
         } else if (isFaculty) {
             // Check if faculty is assigned as section teacher
-            const isAssigned = existingCourse.sectionTeachers?.some(
-                (st) => st.teacherId === user.id
-            );
+            const isAssigned = sectionTeachers.some(st => st.teacherId === user.id);
+            console.log("Faculty assignment check:", isAssigned);
             if (!isAssigned) {
                 return res.status(FORBIDDEN).json({
                     message: "You are not authorized to update this course (not section teacher).",
@@ -426,16 +444,22 @@ export const updateCourseById = async (req: Request, res: Response) => {
             });
         }
 
+        // console.log("Validating payload with Zod schema...");
         const parsed = updateCourseSchema.safeParse(req.body);
         if (!parsed.success) {
+            // console.error("Validation FAILED");
+            // console.error("Zod error object:", parsed.error);
+            // console.error("Flattened field errors:", parsed.error.flatten().fieldErrors);
             return res.status(BAD_REQUEST).json({
                 message: "Validation failed",
                 errors: parsed.error.flatten().fieldErrors,
             });
         }
         const data = parsed.data;
+        // console.log("Validation SUCCESS, parsed data:", JSON.stringify(data, null, 2));
 
         // Update the course
+        // console.log("Updating course in DB...");
         const updatedCourse = await db.update(courses)
             .set({
                 title: data.title,
@@ -451,8 +475,8 @@ export const updateCourseById = async (req: Request, res: Response) => {
                 updatedAt: new Date(),
             })
             .where(eq(courses.id, courseId));
+            // console.log("Course updated successfully:", updatedCourse);
 
-            
         if (data.clos) {
             const existingClos = await db.query.clos.findMany({
                 where: (c, { eq }) => eq(c.courseId, courseId),
@@ -490,7 +514,7 @@ export const updateCourseById = async (req: Request, res: Response) => {
                 }
 
                 // --- 3. PLO Mapping Logic ---
-                if (clo.ploMapping && clo.ploMapping.length > 0) {
+                if (clo.ploMappings && clo.ploMappings.length > 0) {
                     // Get current mappings for this CLO
                     const existingMappings = await db.query.cloPloMappings.findMany({
                         where: (pm, { eq }) => eq(pm.cloId, cloId),
@@ -499,7 +523,7 @@ export const updateCourseById = async (req: Request, res: Response) => {
                     const existingMappingIds = existingMappings.map(m => m.id);
 
                     // (a) Update existing mappings
-                    for (const mapping of clo.ploMapping) {
+                    for (const mapping of clo.ploMappings) {
                         if (mapping.id && existingMappingIds.includes(mapping.id)) {
                             await db.update(cloPloMappings)
                                 .set({
@@ -511,7 +535,7 @@ export const updateCourseById = async (req: Request, res: Response) => {
                     }
 
                     // (b) Insert new mappings
-                    const newMappings = clo.ploMapping.filter(m => !m.id);
+                    const newMappings = clo.ploMappings.filter(m => !m.id);
                     if (newMappings.length > 0) {
                         await db.insert(cloPloMappings).values(
                             newMappings.map(m => ({
@@ -523,7 +547,7 @@ export const updateCourseById = async (req: Request, res: Response) => {
                     }
 
                     // (c) Delete removed mappings
-                    const incomingMappingIds = clo.ploMapping.filter(m => m.id).map(m => m.id);
+                    const incomingMappingIds = clo.ploMappings.filter(m => m.id).map(m => m.id);
                     const mappingsToDelete = existingMappingIds.filter(id => !incomingMappingIds.includes(id));
                     if (mappingsToDelete.length > 0) {
                         await db.delete(cloPloMappings)
@@ -602,14 +626,16 @@ export const updateCourseById = async (req: Request, res: Response) => {
             }
 
             if (data.sections) {
+                // Fetch existing sections from DB
                 const existing = await db.query.courseSections.findMany({
                     where: (sec, { eq }) => eq(sec.courseId, courseId),
                     columns: { section: true },
                 });
 
-                const existingSections = existing.map(sec => sec.section);
-                const incomingSections = data.sections;
+                const existingSections = existing.map(sec => sec.section); // ["A", "B"]
+                const incomingSections = data.sections.map(s => s.section); // ["A", "C"] from objects
 
+                // Insert new sections
                 const toInsert = incomingSections.filter(sec => !existingSections.includes(sec));
                 if (toInsert.length > 0) {
                     await db.insert(courseSections).values(
@@ -620,8 +646,9 @@ export const updateCourseById = async (req: Request, res: Response) => {
                     );
                 }
 
-                const toDelete = existingSections.filter(sec => !incomingSections
-                    .includes(sec as ClassSectionEnum));
+                // Delete removed sections
+                const toDelete = existingSections
+                    .filter(sec => !incomingSections.includes(sec as ClassSectionEnum));
                 if (toDelete.length > 0) {
                     await db.delete(courseSections)
                         .where(and(
@@ -683,9 +710,9 @@ export const deleteCourseById = async (req: Request, res: Response) => {
         const course = await db.query.courses.findFirst({
             where: (c, { eq }) => eq(c.id, courseId),
             with: {
-                program: { columns: { departmentTitle: true } }
-            }
-        }) as Course | null;
+                program: true, // must match the key in coursesRelations
+            },
+        });
 
         if (!course) {
             return res.status(NOT_FOUND).json({ message: "Course not found" });

@@ -1,202 +1,219 @@
-// import React, { useEffect, useState } from "react";
-// import { usePermissions } from "../../../../hooks/usePermissions";
-// import { useDashboards } from "../../../../hooks/auth/useDashboards";
-// import { useToast } from "../../../../context/ToastContext";
+import React, { useEffect, useState } from "react";
+import { usePermissions } from "../../../../hooks/usePermissions";
+import { useDashboards } from "../../../../hooks/auth/useDashboards";
+import { useToast } from "../../../../context/ToastContext";
+import { Input, SelectInput, TextAreaInput } from "../../../ui/Input";
+import { DomainEnum, KnowledgeAreaEnum, SubjectLevelEnum, SubjectTypeEnum } from "../../../../../../server/src/shared/enums";
+import { CreateCoursePayload } from "../../../../constants/core/interfaces";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getCataloguesByProgram } from "../../../../api/core/catalogueApi";
+import { getPrograms } from "../../../../api/core/program-api";
+import { createCourse } from "../../../../api/core/course-api";
+import { Button } from "../../../ui/Button";
+import TopCenterLoader from "../../../ui/TopCenterLoader";
 
-// const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
-//     const { user, isLoggedIn, isAdmin, isDepartmentHead } = usePermissions();
-//     const { head: departmentHeadDashboard } = useDashboards(user?.role, isLoggedIn);
+const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
+    const { user, isLoggedIn, isAdmin, isDepartmentHead } = usePermissions();
+    const { head: departmentHeadDashboard } = useDashboards(user?.role, isLoggedIn);
 
-//     const dashboard = departmentHeadDashboard.data;
+    const dashboard = departmentHeadDashboard.data;
 
-//     const [programs, setPrograms] = useState<Program[]>([]);
-//     const [catalogues, setCatalogues] = useState<ProgramCatalogue[]>([]);
-//     const toast = useToast();
+    const queryClient = useQueryClient();
+    const toast = useToast();
 
-//     const [form, setForm] = useState<any>({
-//         programId: "",
-//         catalogueId: "",
-//         title: "",
-//         code: "",
-//         codePrefix: "",
-//         description: "",
-//         subjectLevel: "",
-//         subjectType: "",
-//         creditHours: 3,
-//         contactHours: 3,
-//         knowledgeArea: "",
-//         domain: "",
-//         preRequisites: [],
-//         coRequisites: [],
-//         clos: [],
-//         sections: [],
-//     });
+    // Form state
+    const [form, setForm] = useState<CreateCoursePayload & { programmeId?: string }>({
+        programId: "",
+        programCatalogueId: "",
+        title: "",
+        code: "",
+        codePrefix: "",
+        description: "",
+        subjectLevel: "" as SubjectLevelEnum,
+        subjectType: "" as SubjectTypeEnum,
+        contactHours: 3,
+        creditHours: 3,
+        knowledgeArea: "" as KnowledgeAreaEnum,
+        domain: "" as DomainEnum,
+        preRequisites: [],
+        coRequisites: [],
+        clos: [],
+        sections: [],
+    });
 
-//     useEffect(() => {
-//         if (isAdmin) {
-//             getAllPrograms()
-//                 .then((res) => setPrograms(res.programs || []))
-//                 .catch(() => toast.error("Failed to fetch programs"));
-//         } else if (isDepartmentHead && dashboard.program?._id) {
-//             const deptProgram = dashboard.program;
-//             setPrograms([deptProgram]);
-//             setForm((prev: any) => ({
-//                 ...prev,
-//                 programId: deptProgram._id,
-//             }));
-//         }
-//     }, [isAdmin, isDepartmentHead, dashboard.program]);
+    // Fetch programs
+    const { data: programsData, isLoading: programsLoading, error: programsError } = useQuery({
+        queryKey: ["programs", isAdmin, isDepartmentHead, dashboard?.program?._id],
+        queryFn: async () => {
+            if (isAdmin) {
+                const res = await getPrograms();
+                return res.programs || [];
+            } else if (isDepartmentHead && dashboard?.program?._id) {
+                return [dashboard.program];
+            }
+            return [];
+        },
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
 
-//     useEffect(() => {
-//         if (form.programId) {
-//             getCataloguesByProgram({ programId: form.programId })
-//                 .then((res) => setCatalogues(res.data || []))
-//                 .catch(() => toast.error("Failed to fetch catalogues"));
-//         }
-//     }, [form.programId]);
+    useEffect(() => {
+        if (programsError) {
+            toast.error("Failed to fetch programs");
+        }
+        // Pre-fill department head program
+        if (isDepartmentHead && dashboard?.program?._id) {
+            setForm((prev) => ({
+                ...prev,
+                programId: dashboard.program._id,
+            }));
+        }
+    }, [programsError, isDepartmentHead, dashboard?.program, toast]);
 
-//     const handleChange = (
-//         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-//     ) => {
-//         const { name, value, type } = e.target;
-//         setForm({
-//             ...form,
-//             [name]: type === "number" ? Number(value) : value,
-//         });
-//     };
-//     const mutation = useMutation(createCourse, {
-//         onSuccess: () => {
-//             toast.success("Course added to semester!");
-//             setForm({
-//                 programId: "",
-//                 catalogueId: "",
-//                 title: "",
-//                 code: "",
-//                 codePrefix: "",
-//                 description: "",
-//                 subjectLevel: "",
-//                 subjectType: "",
-//                 creditHours: 3,
-//                 contactHours: 3,
-//                 knowledgeArea: "",
-//                 domain: "",
-//                 preRequisites: [],
-//                 coRequisites: [],
-//                 clos: [],
-//                 sections: [],
-//             });
-//             onSuccess?.();
-//         },
-//         onError: (err: any) => {
-//             if (err.fieldErrors) {
-//                 const fieldErrors = err.fieldErrors as Record<string, string[]>;
-//                 for (const messages of Object.values(fieldErrors)) {
-//                     messages.forEach((msg) => toast.error(msg));
-//                 }
-//             } else {
-//                 toast.error(err.message || "Failed to add course");
-//             }
-//         },
-//     });
+    // Fetch catalogues for selected program
+    const { data: cataloguesData, isLoading: cataloguesLoading, error: cataloguesError } = useQuery({
+        queryKey: ["catalogues", form.programId],
+        queryFn: async () => {
+            if (!form.programId) return [];
+            const res = await getCataloguesByProgram({ programId: form.programId });
+            return res.data || [];
+        },
+        enabled: !!form.programId, // only fetch if program selected
+        staleTime: 1000 * 60 * 5,
+    });
 
-//     const handleSubmit = (e: React.FormEvent) => {
-//         e.preventDefault();
+    useEffect(() => {
+        if (cataloguesError) {
+            toast.error("Failed to fetch catalogues");
+        }
+    }, [cataloguesError, toast]);
 
-//         const payload: AddCourseToSemesterPayload = {
-//             programId: form.programId,
-//             catalogueId: form.catalogueId,
-//             title: form.title,
-//             code: form.code,
-//             codePrefix: form.codePrefix,
-//             description: form.description,
-//             subjectLevel: form.subjectLevel,
-//             subjectType: form.subjectType,
-//             contactHours: Number(form.contactHours),
-//             creditHours: Number(form.creditHours),
-//             knowledgeArea: form.knowledgeArea,
-//             domain: form.domain,
-//             preRequisites: form.preRequisites,
-//             coRequisites: form.coRequisites,
-//             clos: form.clos,
-//             sections: form.sections,
-//         };
+    // Form change handler
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    ) => {
+        const { name, value, type } = e.target;
+        setForm({
+            ...form,
+            [name]: type === "number" ? Number(value) : value,
+        });
+    };
 
-//         // console.log("Submitting payload:", payload);
-//         mutation.mutate(payload);
-//     };
+    // Mutation for creating course
+    const mutation = useMutation({
+        mutationFn: (payload: CreateCoursePayload) => createCourse(payload),
+        onSuccess: () => {
+            toast.success("Course added to semester!");
+            setForm({
+                programId: isDepartmentHead && dashboard?.program?.id ? dashboard.program.id : "",
+                programCatalogueId: "",
+                title: "",
+                code: "",
+                codePrefix: "",
+                description: "",
+                subjectLevel: "" as SubjectLevelEnum,
+                subjectType: "" as SubjectTypeEnum,
+                contactHours: 3,
+                creditHours: 3,
+                knowledgeArea: "" as KnowledgeAreaEnum,
+                domain: "" as DomainEnum,
+                preRequisites: [],
+                coRequisites: [],
+                clos: [],
+                sections: [],
+            });
+            onSuccess?.();
+            queryClient.invalidateQueries({ queryKey: ["courses"] }); // Refresh courses list
+        },
+        onError: (err: any) => {
+            if (err.fieldErrors) {
+                const fieldErrors = err.fieldErrors as Record<string, string[]>;
+                Object.values(fieldErrors).forEach((messages) =>
+                    messages.forEach((msg) => toast.error(msg))
+                );
+            } else {
+                toast.error(err.message || "Failed to add course");
+            }
+        },
+    });
 
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        mutation.mutate(form);
+    };
 
-//     return (
-//         <div className="max-w-4xl mx-auto p-6">
-//             <h2 className="text-2xl font-bold text-center mb-8">Add Course to Semester</h2>
-//             <form onSubmit={handleSubmit} className="space-y-6">
-//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                     <SelectInput
-//                         label="Program"
-//                         name="programId"
-//                         value={form.programId}
-//                         onChange={handleChange}
-//                         options={programs.map((p) => ({ label: p.title, value: p._id }))}
-//                         disabled={isDepartmentHead}
-//                     />
-//                     <SelectInput
-//                         label="Catalogue"
-//                         name="catalogueId"
-//                         value={form.catalogueId}
-//                         onChange={handleChange}
-//                         options={catalogues.map((c) => ({ label: `Catalogue ${c.catalogueYear}`, value: c._id }))}
-//                     />
+    if (programsLoading || cataloguesLoading) return <TopCenterLoader />
 
-//                     {/* Other fields */}
-//                     <Input label="Course Title" name="title" value={form.title} onChange={handleChange} />
-//                     <Input label="Course Code" name="code" value={form.code} onChange={handleChange} />
-//                     <Input label="Code Prefix" name="codePrefix" value={form.codePrefix} onChange={handleChange} />
-//                     <Input label="Credit Hours" name="creditHours" type="number" value={form.creditHours} onChange={handleChange} />
-//                     <Input label="Contact Hours" name="contactHours" type="number" value={form.contactHours} onChange={handleChange} />
+    return (
+        <div className="max-w-4xl mx-auto p-4">
+            <h2 className="text-2xl font-semibold text-center mb-8">Create Course</h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <SelectInput
+                        label="Program"
+                        name="programId"
+                        value={form.programId}
+                        onChange={handleChange}
+                        options={(programsData || []).map((p) => ({ label: p.title, value: p.id }))}
+                        disabled={isDepartmentHead}
+                    />
 
-//                     <SelectInput label="Subject Level" name="subjectLevel" value={form.subjectLevel} onChange={handleChange}
-//                         options={Object.values(SubjectLevelEnum).map((v) => ({ label: v, value: v }))} />
-//                     <SelectInput label="Subject Type" name="subjectType" value={form.subjectType} onChange={handleChange}
-//                         options={Object.values(SubjectTypeEnum).map((v) => ({ label: v, value: v }))} />
-//                     <SelectInput label="Knowledge Area" name="knowledgeArea" value={form.knowledgeArea} onChange={handleChange}
-//                         options={Object.values(KnowledgeAreaEnum).map((v) => ({ label: v, value: v }))} />
-//                     <SelectInput label="Domain" name="domain" value={form.domain} onChange={handleChange}
-//                         options={Object.values(DomainEnum).map((v) => ({ label: v, value: v }))} />
-//                 </div>
+                    <SelectInput
+                        label="Catalogue"
+                        name="programCatalogueId"
+                        value={form.programCatalogueId}
+                        onChange={handleChange}
+                        options={(cataloguesData || []).map((c) => ({ label: `Catalogue ${c.catalogueYear}`, value: c.id }))}
+                    />
 
-//                 <TextAreaInput
-//                     label="Description"
-//                     name="description"
-//                     value={form.description}
-//                     onChange={handleChange}
-//                 />
+                    <Input label="Course Title" name="title" value={form.title} onChange={handleChange} />
+                    <Input label="Course Code" name="code" value={form.code} onChange={handleChange} />
+                    <Input label="Code Prefix" name="codePrefix" value={form.codePrefix} onChange={handleChange} />
+                    <Input label="Credit Hours" name="creditHours" type="number" value={form.creditHours} onChange={handleChange} />
+                    <Input label="Contact Hours" name="contactHours" type="number" value={form.contactHours} onChange={handleChange} />
 
-//                 <div className="flex justify-center">
-//                     <button
-//                         type="submit"
-//                         disabled={mutation.isLoading}
-//                         className={getButtonClass({
-//                             bg: mutation.isLoading
-//                                 ? "bg-gray-400 dark:bg-darkMuted cursor-not-allowed"
-//                                 : "bg-primary dark:bg-darkBlurple",
-//                             hoverBg: mutation.isLoading
-//                                 ? ""
-//                                 : "hover:bg-white dark:hover:bg-darkBlurpleHover",
-//                             text: "text-white dark:text-darkTextPrimary",
-//                             hoverText: mutation.isLoading
-//                                 ? ""
-//                                 : "hover:text-gray-900 dark:hover:text-darkTextPrimary",
-//                             focusRing: "focus:ring-4 focus:ring-blue-200 dark:focus:ring-darkTextSecondary/30",
-//                             extra:
-//                                 "w-full max-w-md text-sm px-2 py-2 transition-all duration-200 rounded border border-gray-200 dark:border-darkBorderLight",
-//                         })}
-//                     >
-//                         {mutation.isLoading ? "Submitting..." : "Add Course"}
-//                     </button>
-//                 </div>
-//             </form>
-//         </div>
-//     );
-// };
+                    <SelectInput
+                        label="Subject Level"
+                        name="subjectLevel"
+                        value={form.subjectLevel}
+                        onChange={handleChange}
+                        options={Object.values(SubjectLevelEnum).map((v) => ({ label: v, value: v }))}
+                    />
+                    <SelectInput
+                        label="Subject Type"
+                        name="subjectType"
+                        value={form.subjectType}
+                        onChange={handleChange}
+                        options={Object.values(SubjectTypeEnum).map((v) => ({ label: v, value: v }))}
+                    />
+                    <SelectInput
+                        label="Knowledge Area"
+                        name="knowledgeArea"
+                        value={form.knowledgeArea}
+                        onChange={handleChange}
+                        options={Object.values(KnowledgeAreaEnum).map((v) => ({ label: v, value: v }))}
+                    />
+                    <SelectInput
+                        label="Domain"
+                        name="domain"
+                        value={form.domain}
+                        onChange={handleChange}
+                        options={Object.values(DomainEnum).map((v) => ({ label: v, value: v }))}
+                    />
+                </div>
 
-// export default CreateCourse;
+                <TextAreaInput label="Description" name="description" value={form.description} 
+                onChange={handleChange} rows={4}/>
+
+                <div className="flex justify-center">
+                    <Button isLoading={mutation.isPending} loadingText="Creating..."
+                    disabled={mutation.isPending} fullWidth={false} size="md"
+                    extra="max-w-xs w-full">
+                        Create Course
+                    </Button>
+                </div>
+            </form>
+        </div>
+    );
+};
+
+export default CreateCourse;

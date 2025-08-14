@@ -1,0 +1,1 @@
+ALTER TABLE "course_section_teachers" ADD COLUMN "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL;

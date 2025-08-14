@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FiTrash2 } from "react-icons/fi";
 import { AddPLOPayload } from "../../../../constants/core/interfaces";
 import { useToast } from "../../../../context/ToastContext";
-import { addPLOsToProgram } from "../../../../api/core/program/program-api";
+import { addPLOsToProgram } from "../../../../api/core/program-api";
 import { Input, SelectInput } from "../../../ui/Input";
 import { Button } from "../../../ui/Button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -35,7 +35,7 @@ const AddPLOsForm = ({ programId }: { programId: string | null }) => {
         onSuccess: () => {
             toast.success("PLOs added successfully.");
             setPlos([]);
-            queryClient.invalidateQueries({ queryKey: ["program", programId] });
+            queryClient.invalidateQueries({ queryKey: ["programs", programId] });
         },
         onError: (err: any) => {
             if (err?.zodErrors && typeof err.zodErrors === "object") {

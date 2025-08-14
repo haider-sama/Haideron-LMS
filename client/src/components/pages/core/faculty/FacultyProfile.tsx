@@ -12,7 +12,7 @@ import { GLOBAL_TITLE } from "../../../../constants";
 import AvatarUpload from "../../../account/AvatarUpload";
 import { Input, ReadOnlyInput, SelectInput } from "../../../ui/Input";
 import { FiTrash2 } from "react-icons/fi";
-import { deleteFacultyMember } from "../../../../api/core/faculty/faculty-api";
+import { deleteFacultyMember } from "../../../../api/core/faculty-api";
 import { Button } from "../../../ui/Button";
 
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { usePermissions } from "../../../../hooks/usePermissions";
 import { useToast } from "../../../../context/ToastContext";
 import { DegreeEnum, DepartmentEnum } from "../../../../../../server/src/shared/enums";
-import { registerProgram } from "../../../../api/core/program/program-api";
+import { registerProgram } from "../../../../api/core/program-api";
 import { Input, ReadOnlyInput, SelectInput, TextAreaInput } from "../../../ui/Input";
 import { Button } from "../../../ui/Button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

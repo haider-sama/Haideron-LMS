@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { usePermissions } from "../../../../hooks/usePermissions";
 import { useToast } from "../../../../context/ToastContext";
 import { DepartmentEnum, FacultyTypeEnum, TeacherDesignationEnum } from "../../../../../../server/src/shared/enums";
-import { registerFacultyMember } from "../../../../api/core/faculty/faculty-api";
+import { registerFacultyMember } from "../../../../api/core/faculty-api";
 import { Helmet } from "react-helmet-async";
 import { GLOBAL_TITLE } from "../../../../constants";
 import { Input, ReadOnlyInput, SelectInput } from "../../../ui/Input";

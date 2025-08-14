@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { AudienceEnum } from "../../../../server/src/shared/enums";
-import { getDepartmentHeadDashboardContext } from "../../api/core/faculty/faculty-api";
+import { getDepartmentHeadDashboardContext } from "../../api/core/faculty-api";
 import { ProgramWithCreator } from "../../../../server/src/shared/interfaces";
 
 type DepartmentHeadDashboardResponse = {

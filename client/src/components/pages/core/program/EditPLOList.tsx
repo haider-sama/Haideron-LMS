@@ -1,20 +1,20 @@
 import { useEffect, useState } from "react";
 import { FiEdit3, FiChevronUp } from "react-icons/fi";
-import { PLO } from "../../../../constants/core/interfaces";
+import { PLOFrontend } from "../../../../constants/core/interfaces";
 import { useToast } from "../../../../context/ToastContext";
 import { Input, TextAreaInput } from "../../../ui/Input";
 import TopCenterLoader from "../../../ui/TopCenterLoader";
-import InternalError from "../../../../pages/forbidden/InternalError";
-import { deletePLO, getPLOsForProgram, updatePLO } from "../../../../api/core/program/program-api";
+import { deletePLO, getPLOsForProgram, updatePLO } from "../../../../api/core/program-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../../../ui/Button";
+import ErrorStatus from "../../../ui/ErrorStatus";
 
 interface EditPLOListProps {
     programId: string;
 }
 
 const EditPLOList: React.FC<EditPLOListProps> = ({ programId }) => {
-    const [editedPlos, setEditedPlos] = useState<PLO[]>([]);
+    const [editedPlos, setEditedPlos] = useState<PLOFrontend[]>([]);
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
     const [savingIndex, setSavingIndex] = useState<number | null>(null);
     const toast = useToast();
@@ -40,14 +40,14 @@ const EditPLOList: React.FC<EditPLOListProps> = ({ programId }) => {
 
     // Mutation: update PLO
     const updateMutation = useMutation({
-        mutationFn: (plo: PLO) => updatePLO(programId, plo.id, {
+        mutationFn: (plo: PLOFrontend) => updatePLO(programId, plo.id, {
             code: plo.code,
             title: plo.title,
             description: plo.description
         }),
         onSuccess: (_, variables) => {
             toast.success(`${variables.code} updated successfully`);
-            queryClient.invalidateQueries({ queryKey: ["program", programId] });
+            queryClient.invalidateQueries({ queryKey: ["programs", programId] });
         },
         onError: (err: any) => {
             if (err?.zodErrors && typeof err.zodErrors === "object") {
@@ -61,7 +61,7 @@ const EditPLOList: React.FC<EditPLOListProps> = ({ programId }) => {
         },
     });
 
-    const handleChange = (index: number, field: keyof PLO, value: string) => {
+    const handleChange = (index: number, field: keyof PLOFrontend, value: string) => {
         const updated = [...editedPlos];
         updated[index][field] = value;
         setEditedPlos(updated);
@@ -95,8 +95,8 @@ const EditPLOList: React.FC<EditPLOListProps> = ({ programId }) => {
         }
     };
 
-    if (isLoading) return <TopCenterLoader />;
-    if (isError) return <InternalError />;
+    if (isLoading) return <TopCenterLoader />
+    if (isError) return <ErrorStatus message="Failed to fetch PLOs" />
 
     return (
         <div className="w-full max-w-4xl mx-auto p-4">
