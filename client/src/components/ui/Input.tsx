@@ -182,6 +182,7 @@ interface MultiSelectInputProps {
     options: MultiSelectOption[];
     value: MultiSelectOption[];
     onChange: (selected: MultiSelectOption[]) => void;
+    onInputChange?: (value: string) => void;
 }
 
 export const MultiSelectInput: React.FC<MultiSelectInputProps> = ({
@@ -189,6 +190,7 @@ export const MultiSelectInput: React.FC<MultiSelectInputProps> = ({
     options,
     value,
     onChange,
+    onInputChange,
 }) => {
     const [isDark, setIsDark] = useState(false);
 
@@ -278,6 +280,7 @@ export const MultiSelectInput: React.FC<MultiSelectInputProps> = ({
                 hideSelectedOptions={false}
                 menuPortalTarget={typeof window !== "undefined" ? document.body : undefined}
                 menuPosition="absolute"
+                onInputChange={(val) => onInputChange?.(val)}
             />
         </div>
     );

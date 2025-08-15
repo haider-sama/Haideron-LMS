@@ -3,7 +3,8 @@ import { ClassSectionEnum, DomainEnum, KnowledgeAreaEnum, SubjectLevelEnum, Subj
 import { plos, programs, strengthEnum } from "../program/program.model";
 import { users } from "../../auth/user.model";
 import { programCatalogues } from "../program/program.catalogue.model";
-import { relations } from "drizzle-orm";
+import { relations, SQL, sql } from "drizzle-orm";
+import { tsvector } from "../tsvector";
 
 // Enums
 export const subjectLevelEnum = pgEnum("subject_level_enum", Object.values(SubjectLevelEnum) as [string, ...string[]]);
@@ -63,12 +64,26 @@ export const courses = pgTable(
         createdBy: uuid("created_by").notNull().references(() => users.id),
         createdAt: timestamp("created_at").notNull().defaultNow(),
         updatedAt: timestamp("updated_at").notNull().defaultNow(),
+
+        searchVector: tsvector("search_vector")
+            .notNull()
+            .generatedAlwaysAs(
+                (): SQL => sql`
+                setweight(to_tsvector('english', coalesce(${courses.title}, '')), 'A') ||
+                setweight(to_tsvector('english', coalesce(${courses.code}, '')), 'A') ||
+                setweight(to_tsvector('english', coalesce(${courses.codePrefix}, '')), 'B') ||
+                setweight(to_tsvector('english', coalesce(${courses.description}, '')), 'C')
+            `
+            ),
     },
     (table) => [
         uniqueIndex("courses_code_unique").on(table.code),
         index("courses_program_id_idx").on(table.programId),
         index("courses_program_catalogue_id_idx").on(table.programCatalogueId),
         index("courses_created_by_idx").on(table.createdBy),
+
+        // GIN index for fast full-text search
+        index("courses_search_idx").using("gin", table.searchVector),
     ]
 );
 
@@ -107,7 +122,7 @@ export const courseSectionTeachers = pgTable(
         teacherId: uuid("teacher_id").notNull().references(() => users.id),
     },
     (table) => [
-        uniqueIndex("course_section_teacher_unique").on(table.courseId, table.section),
+        uniqueIndex("course_section_teacher_unique").on(table.courseId, table.section, table.teacherId),
         index("course_section_teacher_course_idx").on(table.courseId),
     ]
 );

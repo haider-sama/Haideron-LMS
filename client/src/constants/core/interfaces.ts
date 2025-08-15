@@ -183,7 +183,6 @@ export interface PEOFrontend {
 export interface ProgramWithCreator extends Program {
     createdByFirstName: string;
     createdByLastName: string;
-    createdByEmail: string;
 }
 
 export interface GetCataloguesListResponse {
@@ -262,10 +261,6 @@ export interface CreateCoursePayload {
     creditHours: number;
     knowledgeArea: KnowledgeAreaEnum;
     domain: DomainEnum;
-    preRequisites?: string[];
-    coRequisites?: string[];
-    clos: CLO[];
-    sections: ClassSectionEnum[];
 }
 
 export interface CourseFilters {
@@ -279,6 +274,7 @@ export interface CourseFilters {
     knowledgeArea?: string;
     domain?: string;
     programId?: string;
+    search?: string;
 }
 
 export interface GetCoursesResponse {
@@ -290,8 +286,6 @@ export interface GetCoursesResponse {
 }
 
 export interface UpdateCoursePayload {
-    program?: string;
-    programCatalogueId?: string;
     title?: string;
     code?: string;
     codePrefix?: string;

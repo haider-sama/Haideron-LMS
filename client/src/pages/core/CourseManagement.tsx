@@ -7,17 +7,20 @@ import { Helmet } from "react-helmet-async";
 import Breadcrumbs, { generateBreadcrumbs } from "../../components/ui/Breadcrumbs";
 import PageHeading from "../../components/ui/PageHeading";
 import TopCenterLoader from "../../components/ui/TopCenterLoader";
-import AddCard from "../../components/ui/AddCard";
 import { Pagination } from "../../components/ui/Pagination";
 import Modal from "../../components/ui/Modal";
 import { useQuery } from "@tanstack/react-query";
-import { CourseFilters, GetCoursesResponse } from "../../constants/core/interfaces";
+import { GetCoursesResponse } from "../../constants/core/interfaces";
 import { getCourseById, getCourses, updateCourseById } from "../../api/core/course-api";
 import CreateCourse from "../../components/pages/core/course/CreateCourse";
 import { truncateName } from "../../utils/truncate-name";
 import { FiEdit } from "react-icons/fi";
 import CourseProfile from "../../components/pages/core/course/CourseProfile";
 import { Course } from "../../../../server/src/shared/interfaces";
+import { Button } from "../../components/ui/Button";
+import { useUserManagement } from "../../hooks/admin/useUserManagement";
+import { AudienceEnum, DomainEnum, KnowledgeAreaEnum, SubjectLevelEnum, SubjectTypeEnum } from "../../../../server/src/shared/enums";
+import { SelectInput } from "../../components/ui/Input";
 
 
 const CourseManagement: React.FC = () => {
@@ -25,13 +28,18 @@ const CourseManagement: React.FC = () => {
     const { head: departmentHeadDashboard } = useDashboards(user?.role, isLoggedIn);
     const deptHeadProgram = departmentHeadDashboard.data?.program;
 
-    const [search, setSearch] = useState("");
-    const [debouncedSearch, setDebouncedSearch] = useState(search);
-    const [page, setPage] = useState(1);
+    const { page, setPage, search, setSearch, debouncedSearch } =
+        useUserManagement(user?.role as AudienceEnum);
+
     const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const toast = useToast();
+
+    const [subjectLevelFilter, setSubjectLevelFilter] = useState<string | null>(null);
+    const [subjectTypeFilter, setSubjectTypeFilter] = useState<string | null>(null);
+    const [knowledgeAreaFilter, setKnowledgeAreaFilter] = useState<string | null>(null);
+    const [domainFilter, setDomainFilter] = useState<string | null>(null);
 
     const handleViewCourse = (courseId: string) => {
         setSelectedCourseId(courseId);
@@ -52,18 +60,26 @@ const CourseManagement: React.FC = () => {
         queryKey: [
             'courses',
             page,
-            isDepartmentHead ? deptHeadProgram?._id : undefined,
+            isDepartmentHead ? deptHeadProgram?.id : undefined,
             debouncedSearch || undefined,
+            subjectLevelFilter,
+            subjectTypeFilter,
+            knowledgeAreaFilter,
+            domainFilter
         ],
         queryFn: () =>
             getCourses({
                 page,
                 limit: MAX_PAGE_LIMIT,
-                programId: isDepartmentHead ? deptHeadProgram?._id : undefined,
-                title: debouncedSearch || undefined,
+                programId: isDepartmentHead ? deptHeadProgram?.id : undefined,
+                search: debouncedSearch || undefined,
+                subjectLevel: subjectLevelFilter || undefined,
+                subjectType: subjectTypeFilter || undefined,
+                knowledgeArea: knowledgeAreaFilter || undefined,
+                domain: domainFilter || undefined,
             }),
-        retry: 1, // optional retry
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: 1,
+        staleTime: 1000 * 60 * 5,
     });
 
     // Handle errors manually
@@ -75,20 +91,6 @@ const CourseManagement: React.FC = () => {
 
     const courses = courseData?.courses || [];
     const totalPages = courseData?.totalPages || 1;
-    const totalCourses = courseData?.totalCourses || 0;
-
-    const filteredCourses = courses.filter((course) => {
-        const q = debouncedSearch.trim().toLowerCase();
-        return (
-            course.title.toLowerCase().includes(q) ||
-            course.code.toLowerCase().includes(q) ||
-            course.codePrefix.toLowerCase().includes(q) ||
-            course.subjectType.toLowerCase().includes(q) ||
-            course.subjectLevel.toLowerCase().includes(q) ||
-            course.knowledgeArea.toLowerCase().includes(q) ||
-            course.domain.toLowerCase().includes(q)
-        );
-    });
 
     return (
         <div className="p-8 max-w-6xl mx-auto overflow-x-auto">
@@ -97,51 +99,136 @@ const CourseManagement: React.FC = () => {
             </Helmet>
             <Breadcrumbs items={generateBreadcrumbs('/faculty/semesters/courses/')} />
 
-            <div className="mt-2 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-2">
+            <div className="mt-2 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                {/* Left: Heading */}
                 <PageHeading title="Course Management" />
-                <input
-                    type="text"
-                    placeholder="Search courses..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="border border-gray-300 rounded px-4 py-2 w-full md:max-w-xs focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm
-                    dark:bg-darkSurface dark:border-darkBorderLight dark:text-darkTextPrimary dark:placeholder-darkTextMuted"
-                />
+
+                {/* Right: Search + Button grouped together */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:ml-auto">
+                    <input
+                        type="text"
+                        placeholder="Search courses..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="border border-gray-300 rounded px-4 py-2 w-full sm:w-auto md:max-w-xs focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm
+                        dark:bg-darkSurface dark:border-darkBorderLight dark:text-darkTextPrimary dark:placeholder-darkTextMuted"
+                    />
+                    {(isAdmin || isDepartmentHead) && (
+                        <Button
+                            onClick={() => setShowRegisterModal(true)}
+                            fullWidth={false}
+                            variant="green"
+                            size="md"
+                        >
+                            Create Course
+                        </Button>
+                    )}
+                </div>
             </div>
 
-            <div className="mb-4 text-right">
-                {(isAdmin || isDepartmentHead) && (
-                    <button
-                        onClick={() => setShowRegisterModal(true)}
-                        className="inline-block bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-2 rounded transition"
-                    >
-                        + Add New Course
-                    </button>
-                )}
+            <div className="flex justify-end mt-8">
+                <div className="mt-8 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                    {/* Subject Level */}
+                    <div className="flex flex-col">
+                        <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
+                            Subject Level
+                        </label>
+                        <SelectInput
+                            value={subjectLevelFilter || ""}
+                            onChange={e => setSubjectLevelFilter(e.target.value || null)}
+                            options={[
+                                { label: "All", value: "" },
+                                ...Object.values(SubjectLevelEnum).map(level => ({ label: level, value: level })),
+                            ]}
+                            placeholder="Filter by Level"
+                            className="max-w-xs text-xs w-full"
+                        />
+                    </div>
+
+                    {/* Subject Type */}
+                    <div className="flex flex-col">
+                        <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
+                            Subject Type
+                        </label>
+                        <SelectInput
+                            value={subjectTypeFilter || ""}
+                            onChange={e => setSubjectTypeFilter(e.target.value || null)}
+                            options={[
+                                { label: "All", value: "" },
+                                ...Object.values(SubjectTypeEnum).map(type => ({ label: type, value: type })),
+                            ]}
+                            placeholder="Filter by Type"
+                            className="max-w-xs text-xs w-full"
+                        />
+                    </div>
+
+                    {/* Knowledge Area */}
+                    <div className="flex flex-col">
+                        <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
+                            Knowledge Area
+                        </label>
+                        <SelectInput
+                            value={knowledgeAreaFilter || ""}
+                            onChange={e => setKnowledgeAreaFilter(e.target.value || null)}
+                            options={[
+                                { label: "All", value: "" },
+                                ...Object.values(KnowledgeAreaEnum).map(area => ({ label: area, value: area })),
+                            ]}
+                            placeholder="Filter by Area"
+                            className="max-w-xs text-xs w-full"
+                        />
+                    </div>
+
+                    {/* Domain */}
+                    <div className="flex flex-col">
+                        <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
+                            Domain
+                        </label>
+                        <SelectInput
+                            value={domainFilter || ""}
+                            onChange={e => setDomainFilter(e.target.value || null)}
+                            options={[
+                                { label: "All", value: "" },
+                                ...Object.values(DomainEnum).map(domain => ({ label: domain, value: domain })),
+                            ]}
+                            placeholder="Filter by Domain"
+                            className="max-w-xs text-xs w-full"
+                        />
+                    </div>
+                </div>
             </div>
 
             {isCoursesLoading ? (
                 <TopCenterLoader />
-            ) : filteredCourses.length > 0 ? (
-                <>
-                    <div className="overflow-x-auto border border-gray-300 rounded-sm shadow-sm bg-white dark:bg-darkSurface dark:border-darkBorderLight">
-                        <table className="min-w-full text-sm text-left">
-                            <thead className="bg-gray-100 border-b border-gray-300 text-gray-600 uppercase text-xs tracking-wide dark:bg-darkMuted dark:text-darkTextMuted">
+            ) : (
+                <div className="overflow-x-auto mt-4 border border-gray-300 rounded-sm shadow-sm bg-white dark:bg-darkSurface dark:border-darkBorderLight">
+                    <table className="min-w-full text-sm text-left">
+                        <thead className="bg-gray-100 border-b border-gray-300 text-gray-600 uppercase text-xs tracking-wide dark:bg-darkMuted dark:text-darkTextMuted">
+                            <tr>
+                                <th className="px-4 py-2">Code Prefix</th>
+                                <th className="px-4 py-2">Code</th>
+                                <th className="px-4 py-2">Title</th>
+                                <th className="px-4 py-2">Level</th>
+                                <th className="px-4 py-2">Type</th>
+                                <th className="px-4 py-2">CrH</th>
+                                <th className="px-4 py-2">CtH</th>
+                                <th className="px-4 py-2">Knowledge Area</th>
+                                <th className="px-4 py-2">Domain</th>
+                                <th className="px-4 py-2 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {courses.length === 0 ? (
                                 <tr>
-                                    <th className="px-4 py-2">Code Prefix</th>
-                                    <th className="px-4 py-2">Code</th>
-                                    <th className="px-4 py-2">Title</th>
-                                    <th className="px-4 py-2">Level</th>
-                                    <th className="px-4 py-2">Type</th>
-                                    <th className="px-4 py-2">CrH</th>
-                                    <th className="px-4 py-2">CtH</th>
-                                    <th className="px-4 py-2">Knowledge Area</th>
-                                    <th className="px-4 py-2">Domain</th>
-                                    <th className="px-4 py-2 text-center">Actions</th>
+                                    <td
+                                        colSpan={10}
+                                        className="text-center py-6 text-gray-600 dark:text-darkTextSecondary"
+                                    >
+                                        No courses found.
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {filteredCourses.map((course) => (
+                            ) : (
+                                courses.map((course) => (
                                     <tr
                                         key={course.id}
                                         className="border-b last:border-0 hover:bg-gray-50 transition dark:border-darkBorderLight dark:hover:bg-darkMuted"
@@ -168,10 +255,10 @@ const CourseManagement: React.FC = () => {
                                             {course.contactHours || "-"}
                                         </td>
                                         <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
-                                            {truncateName((course.knowledgeArea) || "-", 20)}
+                                            {truncateName(course.knowledgeArea || "-", 20)}
                                         </td>
                                         <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
-                                            {truncateName((course.domain) || "-", 20)}
+                                            {truncateName(course.domain || "-", 20)}
                                         </td>
                                         <td className="px-4 py-2 text-center space-x-2">
                                             <button
@@ -181,19 +268,15 @@ const CourseManagement: React.FC = () => {
                                             >
                                                 <FiEdit className="w-4 h-4 text-blue-500" />
                                             </button>
-                                            {/* Optional additional actions, e.g., edit */}
                                         </td>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </>
-            ) : (
-                <p className="text-center text-gray-600 mt-8">No courses found.</p>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
-            
             {showModal && selectedCourseId && (
                 <Modal isOpen={showModal} onClose={closeModal}>
                     <CourseProfile

@@ -1,7 +1,8 @@
 import { pgTable, text, varchar, integer, boolean, timestamp, pgEnum, date, jsonb, uuid, index } from "drizzle-orm/pg-core";
 import { AudienceEnum, DegreeEnum, DepartmentEnum, FacultyTypeEnum, TeacherDesignationEnum } from "../../../shared/enums";
 import { ForumBadgeEnum, VisibilityEnum } from "../../../shared/social.enums";
-import { relations } from "drizzle-orm";
+import { relations, sql, SQL } from "drizzle-orm";
+import { tsvector } from "../core/tsvector";
 
 export const audienceEnum = pgEnum("audience_enum", Object.values(AudienceEnum) as [string, ...string[]]);
 export const departmentEnum = pgEnum("department_enum", Object.values(DepartmentEnum) as [string, ...string[]]);
@@ -34,7 +35,26 @@ export const users = pgTable("users", {
     tokenVersion: integer("token_version").default(0).notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
-});
+
+    // Always comment .notNull() when pushing tables if data already exists in the table 
+    // If the table has the searchVector already then you can safetly uncomment it, 
+    // (if the search vector doesn't exist in the table) #then
+    // Don't push the tables with .notNull() - Else all data will be removed
+    searchVector: tsvector("search_vector")
+        .notNull() 
+        .generatedAlwaysAs(
+            (): SQL => sql`
+          setweight(to_tsvector('english', coalesce(${users.firstName}, '')), 'A') ||
+          setweight(to_tsvector('english', coalesce(${users.lastName}, '')), 'A') ||
+          setweight(to_tsvector('english', coalesce(${users.email}, '')), 'B') ||
+          setweight(to_tsvector('english', coalesce(${users.city}, '')), 'C') ||
+          setweight(to_tsvector('english', coalesce(${users.country}, '')), 'C')
+        `
+    ),
+},
+    (table) => [
+        index("users_search_idx").using("gin", table.searchVector),
+    ]);
 
 export const teacherInfo = pgTable("teacher_info", {
     id: uuid("id").defaultRandom().primaryKey(),

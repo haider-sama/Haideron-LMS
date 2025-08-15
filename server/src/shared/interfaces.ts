@@ -145,11 +145,9 @@ export interface ProgramCatalogue {
     programId: string;
     catalogueYear: number;
     createdBy: {
-        id: string,
         firstName: string,
         lastName: string,
-        email: string,
-    }, // user ID
+    },
     isArchived: boolean;
     archivedAt?: Date | null;
     createdAt: Date;

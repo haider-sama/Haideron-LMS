@@ -157,12 +157,10 @@ export const getPrograms = async (req: Request, res: Response) => {
                     requirements: programs.requirements,
                     vision: programs.vision,
                     mission: programs.mission,
-                    createdById: programs.createdBy,
                     createdAt: programs.createdAt,
                     updatedAt: programs.updatedAt,
                     createdByFirstName: users.firstName,
                     createdByLastName: users.lastName,
-                    createdByEmail: users.email,
                 })
                 .from(programs)
                 .leftJoin(users, eq(users.id, programs.createdBy))
@@ -206,12 +204,10 @@ export const getPrograms = async (req: Request, res: Response) => {
                 requirements: programs.requirements,
                 vision: programs.vision,
                 mission: programs.mission,
-                createdById: programs.createdBy,
                 createdAt: programs.createdAt,
                 updatedAt: programs.updatedAt,
                 createdByFirstName: users.firstName,
                 createdByLastName: users.lastName,
-                createdByEmail: users.email,
             })
             .from(programs)
             .leftJoin(users, eq(users.id, programs.createdBy))

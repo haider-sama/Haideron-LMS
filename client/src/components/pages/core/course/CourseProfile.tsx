@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Course, Program, ProgramCatalogue } from "../../../../../../server/src/shared/interfaces";
+import { Course, ProgramCatalogue } from "../../../../../../server/src/shared/interfaces";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteCourseById, getCourses } from "../../../../api/core/course-api";
 import { getFacultyMembers } from "../../../../api/core/faculty-api";
@@ -7,12 +7,15 @@ import { getCataloguesByProgram } from "../../../../api/core/catalogueApi";
 import { getPLOsForProgram, getPrograms } from "../../../../api/core/program-api";
 import { useToast } from "../../../../context/ToastContext";
 import TopCenterLoader from "../../../ui/TopCenterLoader";
-import InternalError from "../../../../pages/forbidden/InternalError";
 import { Input, MultiSelectInput, SelectInput, TextAreaInput } from "../../../ui/Input";
 import { ClassSectionEnum, DomainEnum, KnowledgeAreaEnum, StrengthEnum, SubjectLevelEnum, SubjectTypeEnum } from "../../../../../../server/src/shared/enums";
 import React from "react";
 import { CLO, EditableCourse, PLOMapping, ProgramWithCreator, UpdateCoursePayload } from "../../../../constants/core/interfaces";
 import CLOEditor from "./CLOEditor";
+import ErrorStatus from "../../../ui/ErrorStatus";
+import { Button } from "../../../ui/Button";
+import Select from "react-select";
+import { MAX_PAGE_LIMIT } from "../../../../constants";
 
 interface CourseProfileProps {
     courseId: string;
@@ -27,9 +30,12 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
     const [editFields, setEditFields] = useState<EditableCourse>({});
 
     const [expandedCLOs, setExpandedCLOs] = useState<number[]>([]);
+    const [facultySearch, setFacultySearch] = useState("");
+    const [preReqSearch, setPreReqSearch] = useState("");
+    const [coReqSearch, setCoReqSearch] = useState("");
 
     // Fetch course
-    const { data: course, isLoading, error } = useQuery({
+    const { data: course, error: courseError } = useQuery({
         queryKey: ["course", courseId],
         queryFn: () => fetchCourse(courseId),
     });
@@ -52,15 +58,8 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
         queryFn: () => getPrograms(),
     });
 
-    // Handle errors with useEffect
-    useEffect(() => {
-        if (programsError) {
-            toast.error((programsError as Error).message || "Failed to fetch programs");
-        }
-    }, [programsError]);
-
     /** --- Fetch Catalogues and PLOs (enabled only if programId exists) --- */
-    const { data: catalogues } = useQuery({
+    const { data: catalogues, isLoading: cataloguesLoading, error: cataloguesError } = useQuery({
         queryKey: ["catalogues", editFields.programId],
         queryFn: () =>
             getCataloguesByProgram({ programId: editFields.programId! }),
@@ -84,32 +83,38 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
     })) || [];
 
     // Fetch all courses (for pre/co-requisites)
-    const { data: allCourses, isError: coursesError } = useQuery({
-        queryKey: ["courses"],
-        queryFn: () => getCourses({}),
+    const { data: preReqCourses } = useQuery({
+        queryKey: ["courses", preReqSearch],
+        queryFn: () => getCourses({ limit: MAX_PAGE_LIMIT, search: preReqSearch }),
     });
 
-    if (coursesError) toast.error("Failed to fetch courses");
+    const { data: coReqCourses } = useQuery({
+        queryKey: ["courses", coReqSearch],
+        queryFn: () => getCourses({ limit: MAX_PAGE_LIMIT, search: coReqSearch }),
+    });
 
-    const courseOptions = allCourses?.courses?.map(c => ({
+    const preReqOptions = preReqCourses?.courses?.map(c => ({
+        label: c.title,
+        value: c.id
+    })) || [];
+
+    const coReqOptions = coReqCourses?.courses?.map(c => ({
         label: c.title,
         value: c.id
     })) || [];
 
     // Fetch all faculty
-    const { data: allFaculty, isError: facultyError } = useQuery({
-        queryKey: ["faculty"],
-        queryFn: () => getFacultyMembers(),
+    const { data: facultyData, isError: facultyError } = useQuery({
+        queryKey: ["faculty", { limit: 10, search: facultySearch }],
+        queryFn: () => getFacultyMembers({ limit: MAX_PAGE_LIMIT, search: facultySearch }),
     });
 
     if (facultyError) toast.error("Failed to fetch faculty");
 
-    const facultyOptions = allFaculty?.data
-        .filter(f => f.firstName) // remove entries with null/undefined names
-        .map(f => ({
-            label: f.firstName!,  // now guaranteed to be string
-            value: f.id
-        })) || [];
+    const facultyOptions = facultyData?.data.map(f => ({
+        label: `${f.firstName} ${f.lastName || ""}`.trim(),
+        value: f.id
+    })) || [];
 
     // Update Course Mutation
     const updateMutation = useMutation({
@@ -246,13 +251,15 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
         }
     };
 
-    if (isLoading) return <TopCenterLoader />;
-    if (error) return <InternalError />;
+    if (programsLoading || cataloguesLoading) return <TopCenterLoader />;
+    if (programsError || cataloguesError || courseError) {
+        return <ErrorStatus message="Failed to fetch data, try refreshing..." />;
+    }
 
     return (
         <div className="flex flex-col items-center px-4 space-y-8 max-w-4xl mx-auto">
             <div className="w-full max-w-5xl p-6 space-y-6">
-                <h1 className="text-2xl font-bold text-center">Edit Course Details</h1>
+                <h1 className="text-2xl font-semibold text-center">Edit Course Details</h1>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <SelectInput
@@ -332,9 +339,10 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
 
                 <MultiSelectInput
                     label="Pre-Requisites"
-                    options={courseOptions}
+                    options={preReqOptions}
+                    onInputChange={(value: string) => setPreReqSearch(value)}
                     value={editFields.preRequisites?.map(id => ({
-                        label: allCourses?.courses?.find(c => c.id === id)?.title || id,
+                        label: preReqCourses?.courses?.find(c => c.id === id)?.title || id,
                         value: id
                     })) || []}
                     onChange={(selected) =>
@@ -347,9 +355,10 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
 
                 <MultiSelectInput
                     label="Co-Requisites"
-                    options={courseOptions}
+                    options={coReqOptions}
+                    onInputChange={(value: string) => setCoReqSearch(value)}
                     value={editFields.coRequisites?.map(id => ({
-                        label: allCourses?.courses?.find(c => c.id === id)?.title || id,
+                        label: coReqCourses?.courses?.find(c => c.id === id)?.title || id,
                         value: id
                     })) || []}
                     onChange={(selected) =>
@@ -375,18 +384,26 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
                 {/* Section Teachers */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                     {editFields.sections?.map(secObj => (
-                        <SelectInput
+                        <Select
                             key={secObj.section}
-                            label={`Teacher for Section ${secObj.section}`}
-                            value={editFields.sectionTeachers?.find(st => st.section === secObj.section)?.teacherId || ""}
-                            onChange={(e) => setEditFields(prev => ({
-                                ...prev,
-                                sectionTeachers: [
-                                    ...prev.sectionTeachers?.filter(st => st.section !== secObj.section) || [],
-                                    { section: secObj.section, teacherId: e.target.value }
-                                ]
-                            }))}
+                            placeholder={`Search teacher for Section ${secObj.section}`}
                             options={facultyOptions}
+                            isSearchable
+                            onInputChange={(value) => setFacultySearch(value)} // triggers refetch
+                            onChange={(option) => {
+                                if (option?.value) {
+                                    setEditFields(prev => ({
+                                        ...prev,
+                                        sectionTeachers: [
+                                            ...(prev.sectionTeachers?.filter(st => st.section !== secObj.section) || []),
+                                            { section: secObj.section, teacherId: option.value }
+                                        ]
+                                    }));
+                                }
+                            }}
+                            value={facultyOptions.find(opt =>
+                                opt.value === editFields.sectionTeachers?.find(st => st.section === secObj.section)?.teacherId
+                            )}
                         />
                     ))}
                 </div>
@@ -406,12 +423,20 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
                 />
 
                 {/* Save / Delete Buttons */}
-                <div className="flex justify-end gap-4 mt-6">
-                    <button type="button" onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">Delete Course</button>
-                    <button type="button" onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Save Changes</button>
+                <div className="flex justify-center gap-4 mt-6">
+                    <Button loadingText="Saving..." isLoading={updateMutation.isPending}
+                        disabled={updateMutation.isPending} fullWidth={false} variant="gray"
+                        onClick={handleSave}>
+                        Save Changes
+                    </Button>
+                    <Button loadingText="Deleting..." isLoading={deleteMutation.isPending}
+                        disabled={deleteMutation.isPending} fullWidth={false} variant="red"
+                        onClick={handleDelete}>
+                        Delete Course
+                    </Button>
                 </div>
-            </div>
 
+            </div>
         </div >
     );
 };

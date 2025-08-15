@@ -165,11 +165,15 @@ export const getSemestersInCatalogue = async (req: Request, res: Response) => {
         const semesters = await db.query.semesters.findMany({
             where: (s, { eq }) => eq(s.programCatalogueId, catalogueId),
             with: {
-                courses: {
-                    columns: {
-                        code: true,
-                        title: true,
-                        creditHours: true,
+                semesterCourses: {
+                    with: {
+                        course: {
+                            columns: {
+                                code: true,
+                                title: true,
+                                creditHours: true,
+                            },
+                        },
                     },
                 },
             },
@@ -331,17 +335,20 @@ export const updateSemesterById = async (req: Request, res: Response) => {
         const updatedSemester = await db.query.semesters.findFirst({
             where: (s, { eq }) => eq(s.id, semesterId),
             with: {
-                courses: {
-                    columns: {
-                        id: true,
-                        code: true,
-                        title: true,
-                        creditHours: true,
+                semesterCourses: {
+                    with: {
+                        course: {
+                            columns: {
+                                id: true,
+                                code: true,
+                                title: true,
+                                creditHours: true,
+                            },
+                        },
                     },
                 },
             },
         });
-
         return res.status(OK).json({
             message: "Semester updated successfully",
             semester: updatedSemester,

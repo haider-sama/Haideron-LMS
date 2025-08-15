@@ -31,14 +31,14 @@ const CLOEditor: React.FC<CLOEditorProps> = ({
 }) => {
     return (
         <div>
-            <h2 className="text-2xl font-bold text-center pt-8">Edit Course Learning Outcomes (CLOs)</h2>
+            <h2 className="text-2xl font-semibold text-center pt-8">Edit Course Learning Outcomes (CLOs)</h2>
             <button type="button" onClick={addCLO} className="text-blue-600 hover:underline text-sm">
                 + Add CLO
             </button>
 
-            <div className="overflow-x-auto border rounded-lg shadow-sm bg-white dark:bg-darkSurface dark:border-darkBorderLight mt-4">
+            <div className="overflow-x-auto border border-gray-300 rounded-sm shadow-sm bg-white dark:bg-darkSurface dark:border-darkBorderLight mt-4">
                 <table className="min-w-full text-left">
-                    <thead className="bg-gray-100 text-gray-700 dark:bg-darkMuted dark:text-darkTextMuted uppercase text-xs tracking-wider">
+                    <thead className="bg-gray-100 border-b border-gray-300 text-gray-700 dark:bg-darkMuted dark:text-darkTextMuted uppercase text-xs tracking-wider">
                         <tr>
                             <th className="px-4 py-2 w-1/5">CLO</th>
                             <th className="px-4 py-2">Title</th>
@@ -59,7 +59,7 @@ const CLOEditor: React.FC<CLOEditorProps> = ({
                                 return (
                                     <React.Fragment key={ci}>
                                         {/* Display Row */}
-                                        <tr className="border-b hover:bg-gray-50 dark:hover:bg-darkMuted transition border-gray-200 dark:border-darkBorderLight">
+                                        <tr className="border-b last:border-0 hover:bg-gray-50 dark:hover:bg-darkMuted transition border-gray-200 dark:border-darkBorderLight">
                                             <td className="px-4 py-2 font-medium text-gray-900 dark:text-darkTextPrimary whitespace-nowrap">
                                                 {clo.code || `CLO ${ci + 1}`}
                                             </td>

@@ -11,6 +11,7 @@ import { getPrograms } from "../../../../api/core/program-api";
 import { createCourse } from "../../../../api/core/course-api";
 import { Button } from "../../../ui/Button";
 import TopCenterLoader from "../../../ui/TopCenterLoader";
+import ErrorStatus from "../../../ui/ErrorStatus";
 
 const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
     const { user, isLoggedIn, isAdmin, isDepartmentHead } = usePermissions();
@@ -20,10 +21,11 @@ const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
 
     const queryClient = useQueryClient();
     const toast = useToast();
+    const initialProgramId = isDepartmentHead && dashboard?.program?.id ? dashboard.program.id : "";
 
     // Form state
     const [form, setForm] = useState<CreateCoursePayload & { programmeId?: string }>({
-        programId: "",
+        programId: initialProgramId,
         programCatalogueId: "",
         title: "",
         code: "",
@@ -35,20 +37,16 @@ const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
         creditHours: 3,
         knowledgeArea: "" as KnowledgeAreaEnum,
         domain: "" as DomainEnum,
-        preRequisites: [],
-        coRequisites: [],
-        clos: [],
-        sections: [],
     });
 
     // Fetch programs
     const { data: programsData, isLoading: programsLoading, error: programsError } = useQuery({
-        queryKey: ["programs", isAdmin, isDepartmentHead, dashboard?.program?._id],
+        queryKey: ["programs", isAdmin, isDepartmentHead, dashboard?.program?.id],
         queryFn: async () => {
             if (isAdmin) {
                 const res = await getPrograms();
                 return res.programs || [];
-            } else if (isDepartmentHead && dashboard?.program?._id) {
+            } else if (isDepartmentHead && dashboard?.program?.id) {
                 return [dashboard.program];
             }
             return [];
@@ -57,17 +55,13 @@ const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
     });
 
     useEffect(() => {
-        if (programsError) {
-            toast.error("Failed to fetch programs");
-        }
-        // Pre-fill department head program
-        if (isDepartmentHead && dashboard?.program?._id) {
-            setForm((prev) => ({
+        if (isDepartmentHead && dashboard?.program?.id) {
+            setForm(prev => ({
                 ...prev,
-                programId: dashboard.program._id,
+                programId: dashboard.program.id,
             }));
         }
-    }, [programsError, isDepartmentHead, dashboard?.program, toast]);
+    }, [isDepartmentHead, dashboard?.program?.id]);
 
     // Fetch catalogues for selected program
     const { data: cataloguesData, isLoading: cataloguesLoading, error: cataloguesError } = useQuery({
@@ -77,15 +71,9 @@ const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
             const res = await getCataloguesByProgram({ programId: form.programId });
             return res.data || [];
         },
-        enabled: !!form.programId, // only fetch if program selected
+        enabled: !!form.programId, // wait until programId is valid
         staleTime: 1000 * 60 * 5,
     });
-
-    useEffect(() => {
-        if (cataloguesError) {
-            toast.error("Failed to fetch catalogues");
-        }
-    }, [cataloguesError, toast]);
 
     // Form change handler
     const handleChange = (
@@ -102,7 +90,7 @@ const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
     const mutation = useMutation({
         mutationFn: (payload: CreateCoursePayload) => createCourse(payload),
         onSuccess: () => {
-            toast.success("Course added to semester!");
+            toast.success("Course created!");
             setForm({
                 programId: isDepartmentHead && dashboard?.program?.id ? dashboard.program.id : "",
                 programCatalogueId: "",
@@ -116,10 +104,6 @@ const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
                 creditHours: 3,
                 knowledgeArea: "" as KnowledgeAreaEnum,
                 domain: "" as DomainEnum,
-                preRequisites: [],
-                coRequisites: [],
-                clos: [],
-                sections: [],
             });
             onSuccess?.();
             queryClient.invalidateQueries({ queryKey: ["courses"] }); // Refresh courses list
@@ -141,8 +125,17 @@ const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
         mutation.mutate(form);
     };
 
-    if (programsLoading || cataloguesLoading) return <TopCenterLoader />
+    const cataloguesArray = cataloguesData
+        ? Array.isArray(cataloguesData)
+            ? cataloguesData
+            : [cataloguesData]
+        : [];
 
+    if (programsLoading || cataloguesLoading) return <TopCenterLoader />
+    if (programsError || cataloguesError) {
+        return <ErrorStatus message="Failed to fetch data, try refreshing..." />
+    }
+    
     return (
         <div className="max-w-4xl mx-auto p-4">
             <h2 className="text-2xl font-semibold text-center mb-8">Create Course</h2>
@@ -162,7 +155,7 @@ const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
                         name="programCatalogueId"
                         value={form.programCatalogueId}
                         onChange={handleChange}
-                        options={(cataloguesData || []).map((c) => ({ label: `Catalogue ${c.catalogueYear}`, value: c.id }))}
+                        options={cataloguesArray.map(c => ({ label: `Catalogue ${c.catalogueYear}`, value: c.id }))}
                     />
 
                     <Input label="Course Title" name="title" value={form.title} onChange={handleChange} />
@@ -201,13 +194,13 @@ const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
                     />
                 </div>
 
-                <TextAreaInput label="Description" name="description" value={form.description} 
-                onChange={handleChange} rows={4}/>
+                <TextAreaInput label="Description" name="description" value={form.description}
+                    onChange={handleChange} rows={4} />
 
                 <div className="flex justify-center">
                     <Button isLoading={mutation.isPending} loadingText="Creating..."
-                    disabled={mutation.isPending} fullWidth={false} size="md"
-                    extra="max-w-xs w-full">
+                        disabled={mutation.isPending} fullWidth={false} size="md"
+                        extra="max-w-xs w-full">
                         Create Course
                     </Button>
                 </div>

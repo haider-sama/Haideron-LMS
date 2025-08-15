@@ -58,7 +58,9 @@ export async function getCourses(
             throw new Error(error.message || "Failed to fetch courses");
         }
 
-        return await res.json();
+        const data = await res.json();
+        
+        return data;
     } catch (err) {
         console.error("getCoursesInSemester error:", err);
         throw err;
@@ -78,7 +80,7 @@ export async function getCourseById(courseId: string): Promise<Course> {
         }
 
         const data = await res.json();
-        console.log(data)
+
         return data.course;
     } catch (err) {
         console.error("getCourseById error:", err);

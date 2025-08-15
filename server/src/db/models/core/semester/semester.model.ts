@@ -1,6 +1,8 @@
 import { pgTable, integer, timestamp, uuid, index, uniqueIndex, boolean } from "drizzle-orm/pg-core";
 import { programCatalogues } from "../program/program.catalogue.model";
 import { courses } from "../course/course.model";
+import { relations } from "drizzle-orm";
+import { programs } from "../program/program.model";
 
 export const semesters = pgTable(
     "semesters",
@@ -34,3 +36,25 @@ export const semesterCourses = pgTable(
         index("semester_courses_course_id_idx").on(table.courseId),
     ]
 );
+
+// Semester -> ProgramCatalogue
+export const semestersRelations = relations(semesters, ({ one, many }) => ({
+    programCatalogue: one(programCatalogues, {
+        fields: [semesters.programCatalogueId],
+        references: [programCatalogues.id],
+    }),
+    semesterCourses: many(semesterCourses),
+}));
+
+// ProgramCatalogue -> Program
+export const programCataloguesRelations = relations(programCatalogues, ({ one }) => ({
+    program: one(programs, {
+        fields: [programCatalogues.programId],  // assuming programCatalogues has programId
+        references: [programs.id],
+    }),
+}));
+
+export const semesterCoursesRelations = relations(semesterCourses, ({ one }) => ({
+    semester: one(semesters, { fields: [semesterCourses.semesterId], references: [semesters.id] }),
+    course: one(courses, { fields: [semesterCourses.courseId], references: [courses.id] }),
+}));

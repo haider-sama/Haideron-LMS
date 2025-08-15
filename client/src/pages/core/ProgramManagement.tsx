@@ -15,11 +15,11 @@ import RegisterProgramForm from "../../components/pages/core/program/RegisterPro
 import { Pagination } from "../../components/ui/Pagination";
 import { useQuery } from "@tanstack/react-query";
 import { truncateName } from "../../utils/truncate-name";
-import SearchBar from "../../components/ui/SearchBar";
 import { useUserManagement } from "../../hooks/admin/useUserManagement";
 import { AudienceEnum } from "../../../../server/src/shared/enums";
 import OutcomeManagement from "../../components/pages/core/program/OutcomeManagement";
 import { ProgramWithCreator } from "../../constants/core/interfaces";
+import { Button } from "../../components/ui/Button";
 
 
 const ProgramManagement: React.FC = () => {
@@ -71,29 +71,30 @@ const ProgramManagement: React.FC = () => {
 
             <Breadcrumbs items={generateBreadcrumbs('/faculty/programs')} />
 
-            <div className="mt-2 mb-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                    <div className="flex justify-start">
-                        <PageHeading title="Program Management" />
-                    </div>
+            <div className="mt-2 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                {/* Left: Heading */}
+                <PageHeading title="Program Management" />
 
-                    <div className="w-full md:w-auto flex md:justify-end justify-start gap-2">
-                        <SearchBar
-                            value={search}
-                            onSearch={setSearch}
-                            showAdvanced={false}
-                        />
-                        {(isAdmin || isDepartmentHead) && (
-                            <button
-                                onClick={() => setShowRegisterModal(true)}
-                                className="relative w-32 rounded-md border border-gray-200 bg-green-500 text-white text-sm py-1 px-4
-                                hover:bg-white hover:text-green-600 focus:outline-none focus:ring-2 focus:ring-green-200 transition cursor-pointer"
-                                type="button"
-                            >
-                                Add Program
-                            </button>
-                        )}
-                    </div>
+                {/* Right: Search + Button grouped together */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:ml-auto">
+                    <input
+                        type="text"
+                        placeholder="Search programs..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="border border-gray-300 rounded px-4 py-2 w-full sm:w-auto md:max-w-xs focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm
+                        dark:bg-darkSurface dark:border-darkBorderLight dark:text-darkTextPrimary dark:placeholder-darkTextMuted"
+                    />
+                    {(isAdmin || isDepartmentHead) && (
+                        <Button
+                            onClick={() => setShowRegisterModal(true)}
+                            fullWidth={false}
+                            variant="green"
+                            size="md"
+                        >
+                            Add Program
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -135,14 +136,9 @@ const ProgramManagement: React.FC = () => {
                                         {program.maxDurationYears || "-"} yrs
                                     </td>
                                     <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
-                                        <div className="flex flex-col">
-                                            <span className="font-medium">
-                                                {truncateName(`${program.createdByFirstName} ${program.createdByLastName} ` || "-", 20)}
-                                            </span>
-                                            <span className="text-sm text-gray-400 dark:text-darkTextSecondary/70">
-                                                {program.createdByEmail || "-"}
-                                            </span>
-                                        </div>
+                                        <span className="font-medium">
+                                            {truncateName(`${program.createdByFirstName} ${program.createdByLastName} ` || "-", 20)}
+                                        </span>
                                     </td>
                                     <td className="px-4 py-2 text-center space-x-2">
                                         <button

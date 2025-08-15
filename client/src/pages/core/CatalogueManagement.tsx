@@ -18,9 +18,9 @@ import Modal from "../../components/ui/Modal";
 import CreateCatalogueForm from "../../components/pages/core/catalogue/CreateCatalogueForm";
 import CatalogueProfile from "../../components/pages/core/catalogue/CatalogueProfile";
 import { truncateName } from "../../utils/truncate-name";
-import SearchBar from "../../components/ui/SearchBar";
 import { AudienceEnum } from "../../../../server/src/shared/enums";
 import { useUserManagement } from "../../hooks/admin/useUserManagement";
+import { Button } from "../../components/ui/Button";
 
 
 const CatalogueManagement: React.FC = () => {
@@ -91,19 +91,30 @@ const CatalogueManagement: React.FC = () => {
             </Helmet>
             <Breadcrumbs items={generateBreadcrumbs('/faculty/catalogues')} />
 
-            <div className="mt-2 mb-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                    <div className="flex justify-start">
-                        <PageHeading title="Catalogue Management" />
-                    </div>
+            <div className="mt-2 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                {/* Left: Heading */}
+                <PageHeading title="Catalogue Management" />
 
-                    <div className="w-full md:w-auto flex md:justify-end justify-start gap-2">
-                        <SearchBar
-                            value={search}
-                            onSearch={setSearch}
-                            showAdvanced={false}
-                        />
-                    </div>
+                {/* Right: Search + Button grouped together */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:ml-auto">
+                    <input
+                        type="text"
+                        placeholder="Search catalogues..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="border border-gray-300 rounded px-4 py-2 w-full sm:w-auto md:max-w-xs focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm
+                        dark:bg-darkSurface dark:border-darkBorderLight dark:text-darkTextPrimary dark:placeholder-darkTextMuted"
+                    />
+                    {(isAdmin || isDepartmentHead) && (
+                        <Button
+                            onClick={() => setShowRegisterModal(true)}
+                            fullWidth={false}
+                            variant="green"
+                            size="md"
+                        >
+                            Add Catalogue
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -118,17 +129,6 @@ const CatalogueManagement: React.FC = () => {
                     />
                 </div>
             )}
-
-            <div className="mb-4 text-right">
-                {(isAdmin || isDepartmentHead) && (
-                    <button
-                        onClick={() => setShowRegisterModal(true)}
-                        className="inline-block bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-2 rounded transition"
-                    >
-                        + Add New Catalogue
-                    </button>
-                )}
-            </div>
 
             <div className="relative">
                 {loading && <TopCenterLoader />}
@@ -181,14 +181,9 @@ const CatalogueManagement: React.FC = () => {
                                             )}
                                         </td>
                                         <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
-                                            <div className="flex flex-col">
-                                                <span className="font-medium">
-                                                    {truncateName(`${catalogue.createdBy?.firstName} ${catalogue.createdBy?.lastName} ` || "-", 20)}
-                                                </span>
-                                                <span className="text-sm text-gray-400 dark:text-darkTextSecondary/70">
-                                                    {catalogue.createdBy?.email || "-"}
-                                                </span>
-                                            </div>
+                                            <span className="font-medium">
+                                                {truncateName(`${catalogue.createdBy?.firstName} ${catalogue.createdBy?.lastName} ` || "-", 20)}
+                                            </span>
                                         </td>
                                         <td className="px-4 py-2 text-center">
                                             <button

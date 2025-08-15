@@ -113,6 +113,7 @@ export const getCourses = async (req: Request, res: Response) => {
             knowledgeArea,
             domain,
             programId,
+            search,
         } = req.query;
 
         // Base filter conditions for courses table
@@ -150,19 +151,18 @@ export const getCourses = async (req: Request, res: Response) => {
             const semester = await db.query.semesters.findFirst({
                 where: (s, { eq }) => eq(s.id, semesterId),
                 with: {
-                    programCatalogue: {
-                        columns: { programId: true },
+                    semesterCourses: {
                         with: {
-                            program: {
-                                columns: { departmentTitle: true },
-                            },
+                            course: true, // directly get the course object
                         },
                     },
-                    semesterCourses: {
-                        columns: { courseId: true },
+                    programCatalogue: {
+                        with: {
+                            program: true,
+                        },
                     },
                 },
-            }) as Semester | null;
+            });
 
             if (!semester) {
                 return res.status(NOT_FOUND).json({ message: "Semester not found" });
@@ -230,17 +230,26 @@ export const getCourses = async (req: Request, res: Response) => {
             baseConditions.push(eq(courses.domain, domain));
         }
 
+        // NEW: Optional full-text search
+        if (search && typeof search === "string" && search.trim().length > 0) {
+            baseConditions.push(
+                sql`${courses.searchVector} @@ plainto_tsquery('simple', ${search.trim()})`
+            );
+        }
+
+        const finalWhere = baseConditions.length > 0 ? and(...baseConditions) : undefined;
+
         // Query total count
         const totalCourses = await db
             .select({
                 count: sql<number>`count(*)`.mapWith(Number),  // map to number
             })
             .from(courses)
-            .where(baseConditions.length > 0 ? and(...baseConditions) : undefined);
+            .where(finalWhere);
 
         // Query paginated courses
         const coursesList = await db.query.courses.findMany({
-            where: baseConditions.length > 0 ? and(...baseConditions) : undefined,
+            where: finalWhere,
             orderBy: (c) => desc(c.createdAt),
             limit,
             offset,
@@ -362,20 +371,21 @@ export const updateCourseById = async (req: Request, res: Response) => {
         const { courseId } = req.params;
         const userId = req.userId;
 
-        // console.log("🚀 updateCourseById called");
-        // console.log("Course ID:", courseId);
-        // console.log("User ID:", userId);
-        // console.log("Request body:", JSON.stringify(req.body, null, 2));
+        console.log("🚀 updateCourseById called");
+        console.log("Course ID:", courseId);
+        console.log("User ID:", userId);
+        console.log("Request body:", JSON.stringify(req.body, null, 2));
 
         const user = await db.query.users.findFirst({
             where: (u, { eq }) => eq(u.id, userId),
             columns: { role: true, id: true, department: true },
         });
 
-        // console.log("Fetched user:", user);
+        console.log("Fetched user:", user);
 
         if (!user) {
-            // console.warn("User not found");
+            console.warn("User not found");
+
             return res.status(NOT_FOUND).json({ message: "User not found" });
         }
 
@@ -383,10 +393,11 @@ export const updateCourseById = async (req: Request, res: Response) => {
         const isDeptHead = user.role === AudienceEnum.DepartmentHead;
         const isFaculty = user.role === AudienceEnum.DepartmentTeacher;
 
-        // console.log("Roles:", { isAdmin, isDeptHead, isFaculty });
+        console.log("Roles:", { isAdmin, isDeptHead, isFaculty });
 
         if (!isAdmin && !isDeptHead && !isFaculty) {
-            // console.warn("User not authorized based on role");
+            console.warn("User not authorized based on role");
+
             return res.status(FORBIDDEN).json({ message: "You are not authorized to update a course" });
         }
 
@@ -398,7 +409,7 @@ export const updateCourseById = async (req: Request, res: Response) => {
             },
         });
 
-        // console.log("Fetched existing course:", existingCourse);
+        console.log("Fetched existing course:", existingCourse);
 
         if (!existingCourse) {
             return res.status(NOT_FOUND).json({ message: "Course not found" });
@@ -418,7 +429,7 @@ export const updateCourseById = async (req: Request, res: Response) => {
                 where: (st, { eq }) => eq(st.courseId, courseId),
             });
 
-            // console.log("Faculty section teachers:", sectionTeachers);
+            console.log("Faculty section teachers:", sectionTeachers);
         }
 
         // Role-based access checks
@@ -444,22 +455,28 @@ export const updateCourseById = async (req: Request, res: Response) => {
             });
         }
 
-        // console.log("Validating payload with Zod schema...");
+        console.log("Validating payload with Zod schema...");
+
         const parsed = updateCourseSchema.safeParse(req.body);
         if (!parsed.success) {
-            // console.error("Validation FAILED");
-            // console.error("Zod error object:", parsed.error);
-            // console.error("Flattened field errors:", parsed.error.flatten().fieldErrors);
+
+            console.error("Validation FAILED");
+            console.error("Zod error object:", parsed.error);
+            console.error("Flattened field errors:", parsed.error.flatten().fieldErrors);
+
             return res.status(BAD_REQUEST).json({
                 message: "Validation failed",
                 errors: parsed.error.flatten().fieldErrors,
             });
         }
         const data = parsed.data;
-        // console.log("Validation SUCCESS, parsed data:", JSON.stringify(data, null, 2));
+
+        console.log("Validation SUCCESS, parsed data:", JSON.stringify(data, null, 2));
 
         // Update the course
-        // console.log("Updating course in DB...");
+
+        console.log("Updating course in DB...");
+
         const updatedCourse = await db.update(courses)
             .set({
                 title: data.title,
@@ -475,7 +492,8 @@ export const updateCourseById = async (req: Request, res: Response) => {
                 updatedAt: new Date(),
             })
             .where(eq(courses.id, courseId));
-            // console.log("Course updated successfully:", updatedCourse);
+
+        console.log("Course updated successfully:", updatedCourse);
 
         if (data.clos) {
             const existingClos = await db.query.clos.findMany({
@@ -572,15 +590,15 @@ export const updateCourseById = async (req: Request, res: Response) => {
                 });
 
                 const existingIds = existing.map(pr => pr.preReqCourseId);
-                const incomingIds = data.preRequisites;
+                const incomingIds = data.preRequisites.map(pr => pr.preReqCourseId);
 
                 // Insert new prerequisites
-                const toInsert = incomingIds.filter(id => !existingIds.includes(id));
+                const toInsert = data.preRequisites.filter(pr => !existingIds.includes(pr.preReqCourseId));
                 if (toInsert.length > 0) {
                     await db.insert(coursePreRequisites).values(
-                        toInsert.map(id => ({
+                        toInsert.map(pr => ({
                             courseId,
-                            preReqCourseId: id,
+                            preReqCourseId: pr.preReqCourseId,
                         }))
                     );
                 }
@@ -603,18 +621,20 @@ export const updateCourseById = async (req: Request, res: Response) => {
                 });
 
                 const existingIds = existing.map(cr => cr.coReqCourseId);
-                const incomingIds = data.coRequisites;
+                const incomingIds = data.coRequisites.map(cr => cr.coReqCourseId);
 
-                const toInsert = incomingIds.filter(id => !existingIds.includes(id));
+                // Insert new co-requisites
+                const toInsert = data.coRequisites.filter(cr => !existingIds.includes(cr.coReqCourseId));
                 if (toInsert.length > 0) {
                     await db.insert(courseCoRequisites).values(
-                        toInsert.map(id => ({
+                        toInsert.map(cr => ({
                             courseId,
-                            coReqCourseId: id,
+                            coReqCourseId: cr.coReqCourseId,
                         }))
                     );
                 }
 
+                // Delete removed co-requisites
                 const toDelete = existingIds.filter(id => !incomingIds.includes(id));
                 if (toDelete.length > 0) {
                     await db.delete(courseCoRequisites)
@@ -655,6 +675,49 @@ export const updateCourseById = async (req: Request, res: Response) => {
                             eq(courseSections.courseId, courseId),
                             inArray(courseSections.section, toDelete)
                         ));
+                }
+            }
+
+            if (data.sectionTeachers) {
+                // Fetch existing from DB
+                const existing = await db.query.courseSectionTeachers.findMany({
+                    where: (st, { eq }) => eq(st.courseId, courseId),
+                    columns: { id: true, section: true, teacherId: true },
+                });
+
+                // For quick lookups by section
+                const existingBySection = new Map(existing.map(st => [st.section, st]));
+
+                // Track sections in incoming payload
+                const incomingSections = new Set(data.sectionTeachers.map(st => st.section));
+
+                // 1. UPDATE existing section rows if teacher changed
+                for (const st of data.sectionTeachers) {
+                    const match = existingBySection.get(st.section);
+                    if (match) {
+                        if (match.teacherId !== st.teacherId) {
+                            await db.update(courseSectionTeachers)
+                                .set({ teacherId: st.teacherId })
+                                .where(eq(courseSectionTeachers.id, match.id));
+                        }
+                    } else {
+                        // 2. INSERT if section not found at all
+                        await db.insert(courseSectionTeachers).values({
+                            courseId,
+                            section: st.section,
+                            teacherId: st.teacherId,
+                        });
+                    }
+                }
+
+                // 3. DELETE rows where the section is missing from incoming
+                const toDeleteIds = existing
+                    .filter(e => !incomingSections.has(e.section as ClassSectionEnum))
+                    .map(e => e.id);
+
+                if (toDeleteIds.length > 0) {
+                    await db.delete(courseSectionTeachers)
+                        .where(inArray(courseSectionTeachers.id, toDeleteIds));
                 }
             }
         }

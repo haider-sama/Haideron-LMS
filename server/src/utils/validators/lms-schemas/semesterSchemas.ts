@@ -48,12 +48,6 @@ export const createCourseSchema = z.object({
     creditHours: z.number().min(0),
     knowledgeArea: z.nativeEnum(KnowledgeAreaEnum),
     domain: z.nativeEnum(DomainEnum),
-    preRequisites: z.array(uuidSchema).optional(),
-    coRequisites: z.array(uuidSchema).optional(),
-    sections: z.array(z.nativeEnum(ClassSectionEnum)).optional()
-        .refine((arr) => !arr || new Set(arr).size === arr.length, {
-            message: "Duplicate sections are not allowed",
-        }),
 }).refine((data) => data.creditHours >= data.contactHours, {
     message: "Credit hours must be greater than or equal to contact hours"
 });
@@ -69,14 +63,33 @@ export const updateCourseSchema = z.object({
     creditHours: z.number({ required_error: "Credit hours are required" }).min(0, "Credit hours must be >= 0"),
     knowledgeArea: z.nativeEnum(KnowledgeAreaEnum, { required_error: "Knowledge area is required" }),
     domain: z.nativeEnum(DomainEnum, { required_error: "Domain is required" }),
-    preRequisites: z.array(uuidSchema).optional(),
-    coRequisites: z.array(uuidSchema).optional(),
+
+    preRequisites: z.array(
+        z.object({
+            courseId: z.string().uuid({ message: "Invalid courseId" }),
+            preReqCourseId: z.string().uuid({ message: "Invalid preReqCourseId" })
+        })
+    ).optional(),
+
+    coRequisites: z.array(
+        z.object({
+            courseId: z.string().uuid({ message: "Invalid courseId" }),
+            coReqCourseId: z.string().uuid({ message: "Invalid coReqCourseId" })
+        })
+    ).optional(),
+    
     sections: z.array(
         z.object({ section: z.nativeEnum(ClassSectionEnum) })
     ).optional()
         .refine(arr => !arr || new Set(arr.map(s => s.section)).size === arr.length, {
             message: "Duplicate sections are not allowed",
         }),
+    sectionTeachers: z.array(
+        z.object({
+            section: z.nativeEnum(ClassSectionEnum),
+            teacherId: z.string().uuid({ message: "Invalid teacher ID" }),
+        })
+    ).optional(),
     clos: z.array(cloSchema).optional()
 }).refine(data => {
     if (data.creditHours !== undefined && data.contactHours !== undefined) {
@@ -86,24 +99,3 @@ export const updateCourseSchema = z.object({
 }, {
     message: "Credit hours must be greater than or equal to contact hours",
 });
-
-export const facultyCourseUpdateSchema = z.object({
-    title: z.string().min(1).optional(),
-    code: z.string().min(1).optional(),
-    codePrefix: z.string().min(1).optional(),
-    description: z.string().min(1).optional(),
-    subjectLevel: z.nativeEnum(SubjectLevelEnum).optional(),
-    subjectType: z.nativeEnum(SubjectTypeEnum).optional(),
-    contactHours: z.number().min(0).optional(),
-    creditHours: z.number().min(0).optional(),
-    knowledgeArea: z.nativeEnum(KnowledgeAreaEnum).optional(),
-    domain: z.nativeEnum(DomainEnum).optional(),
-}).refine((data) => {
-    if (data.creditHours !== undefined && data.contactHours !== undefined) {
-        return data.creditHours >= data.contactHours;
-    }
-    return true;
-}, {
-    message: "Credit hours must be greater than or equal to contact hours",
-});
-

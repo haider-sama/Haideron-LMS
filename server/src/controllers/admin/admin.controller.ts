@@ -415,7 +415,7 @@ export async function fetchPaginatedUsers(req: Request, res: Response) {
 
         // Build searchFilter (OR ilike on multiple fields)
         let searchFilter = undefined;
-        if (search) {
+        if (search && typeof search === "string" && search.trim().length > 0) {
             // const likePattern = `%${search}%`;
             // searchFilter = or(
             //     ilike(users.email, likePattern),
@@ -430,7 +430,7 @@ export async function fetchPaginatedUsers(req: Request, res: Response) {
             // );
 
             // plainto_tsquery automatically tokenizes & sanitizes
-            searchFilter = sql`search_vector @@ plainto_tsquery('simple', ${search})`;
+            searchFilter = sql`${users.searchVector} @@ plainto_tsquery('simple', ${search.trim()})`;
         }
 
         // Build exact filters (AND)

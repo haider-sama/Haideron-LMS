@@ -18,7 +18,7 @@ import { AudienceEnum, FacultyTypeEnum, TeacherDesignationEnum } from "../../../
 import { useUserManagement } from "../../hooks/admin/useUserManagement";
 import { usePermissions } from "../../hooks/usePermissions";
 import { SelectInput } from "../../components/ui/Input";
-import SearchBar from "../../components/ui/SearchBar";
+import { Button } from "../../components/ui/Button";
 
 
 const FacultyManagement: React.FC = () => {
@@ -104,129 +104,131 @@ const FacultyManagement: React.FC = () => {
             </Helmet>
             <Breadcrumbs items={generateBreadcrumbs('/faculty/members')} />
 
-            <div className="mt-2 mb-6">
-                {/* Top row: Heading left, Search right */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                    <div className="flex justify-start">
-                        <PageHeading title="Faculty Management" />
-                    </div>
+            <div className="mt-2 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                {/* Left: Heading */}
+                <PageHeading title="Faculty Management" />
 
-                    {/* On mobile: full width and aligned left; on md+: auto width and aligned right */}
-                    <div className="w-full md:w-auto flex md:justify-end justify-start gap-2">
-                        <SearchBar
-                            value={search}
-                            onSearch={setSearch}
-                            showAdvanced={false}
-                        />
-                        <button
-                            onClick={() => setShowRegisterModal(true)}
-                            className="relative w-32 rounded-md border border-gray-200 bg-green-500 text-white text-sm py-1 px-4
-                            hover:bg-white hover:text-green-600 focus:outline-none focus:ring-2 focus:ring-green-200 transition cursor-pointer"
-                            type="button"
-                        >
-                            Add Faculty
-                        </button>
-                    </div>
+                {/* Right: Search + Button grouped together */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:ml-auto">
+                    <input
+                        type="text"
+                        placeholder="Search faculty..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="border border-gray-300 rounded px-4 py-2 w-full sm:w-auto md:max-w-xs focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm
+                        dark:bg-darkSurface dark:border-darkBorderLight dark:text-darkTextPrimary dark:placeholder-darkTextMuted"
+                    />
+
+                    <Button
+                        onClick={() => setShowRegisterModal(true)}
+                        fullWidth={false}
+                        variant="green"
+                        size="md"
+                    >
+                        Add Faculty
+                    </Button>
+
                 </div>
+            </div>
 
-                {/* Filters below in a responsive grid */}
-                <div className="flex justify-end mt-8">
-                    <div className="mt-8 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                        <div className="flex flex-col">
-                            <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
-                                Department
-                            </label>
-                            <SelectInput
-                                value={departmentFilter || ""}
-                                onChange={e => setDepartmentFilter(e.target.value || null)}
-                                options={departmentOptions}
-                                placeholder="Filter by Department"
-                                className="max-w-xs text-xs w-full"
-                            />
-                        </div>
 
-                        <div className="flex flex-col">
-                            <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
-                                Designation
-                            </label>
-                            <SelectInput
-                                value={designationFilter || ""}
-                                onChange={e => setDesignationFilter(e.target.value || null)}
-                                options={[
-                                    { label: "All", value: "" },
-                                    ...Object.values(TeacherDesignationEnum).map(des => ({ label: des, value: des })),
-                                ]}
-                                placeholder="Filter by Designation"
-                                className="max-w-xs text-xs w-full"
-                            />
-                        </div>
+            <div className="flex justify-end mt-8">
+                <div className="mt-8 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                    <div className="flex flex-col">
+                        <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
+                            Department
+                        </label>
+                        <SelectInput
+                            value={departmentFilter || ""}
+                            onChange={e => setDepartmentFilter(e.target.value || null)}
+                            options={departmentOptions}
+                            placeholder="Filter by Department"
+                            className="max-w-xs text-xs w-full"
+                        />
+                    </div>
 
-                        <div className="flex flex-col">
-                            <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
-                                Faculty Type
-                            </label>
-                            <SelectInput
-                                value={facultyTypeFilter || ""}
-                                onChange={e => setFacultyTypeFilter(e.target.value || null)}
-                                options={[
-                                    { label: "All", value: "" },
-                                    ...Object.values(FacultyTypeEnum).map(type => ({ label: type, value: type })),
-                                ]}
-                                placeholder="Filter by Faculty Type"
-                                className="max-w-xs text-xs w-full"
-                            />
-                        </div>
+                    <div className="flex flex-col">
+                        <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
+                            Designation
+                        </label>
+                        <SelectInput
+                            value={designationFilter || ""}
+                            onChange={e => setDesignationFilter(e.target.value || null)}
+                            options={[
+                                { label: "All", value: "" },
+                                ...Object.values(TeacherDesignationEnum).map(des => ({ label: des, value: des })),
+                            ]}
+                            placeholder="Filter by Designation"
+                            className="max-w-xs text-xs w-full"
+                        />
+                    </div>
 
-                        <div className="flex flex-col">
-                            <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
-                                Subject Owner
-                            </label>
-                            <SelectInput
-                                value={subjectOwnerFilter || ""}
-                                onChange={e => setSubjectOwnerFilter(e.target.value || null)}
-                                options={[
-                                    { label: "All", value: "" },
-                                    { label: "Yes", value: "true" },
-                                    { label: "No", value: "false" },
-                                ]}
-                                placeholder="Subject Owner?"
-                                className="max-w-xs text-xs w-full"
-                            />
-                        </div>
+                    <div className="flex flex-col">
+                        <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
+                            Faculty Type
+                        </label>
+                        <SelectInput
+                            value={facultyTypeFilter || ""}
+                            onChange={e => setFacultyTypeFilter(e.target.value || null)}
+                            options={[
+                                { label: "All", value: "" },
+                                ...Object.values(FacultyTypeEnum).map(type => ({ label: type, value: type })),
+                            ]}
+                            placeholder="Filter by Faculty Type"
+                            className="max-w-xs text-xs w-full"
+                        />
+                    </div>
 
-                        <div className="flex flex-col">
-                            <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
-                                Joining Date From
-                            </label>
-                            <input
-                                type="date"
-                                value={joiningDateFromFilter || ""}
-                                onChange={e => setJoiningDateFromFilter(e.target.value || null)}
-                                placeholder="Joining Date From"
-                                className="border border-gray-300 rounded px-2 py-1 text-xs max-w-xs w-full"
-                            />
-                        </div>
+                    <div className="flex flex-col">
+                        <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
+                            Subject Owner
+                        </label>
+                        <SelectInput
+                            value={subjectOwnerFilter || ""}
+                            onChange={e => setSubjectOwnerFilter(e.target.value || null)}
+                            options={[
+                                { label: "All", value: "" },
+                                { label: "Yes", value: "true" },
+                                { label: "No", value: "false" },
+                            ]}
+                            placeholder="Subject Owner?"
+                            className="max-w-xs text-xs w-full"
+                        />
+                    </div>
 
-                        <div className="flex flex-col">
-                            <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
-                                Joining Date To
-                            </label>
-                            <input
-                                type="date"
-                                value={joiningDateToFilter || ""}
-                                onChange={e => setJoiningDateToFilter(e.target.value || null)}
-                                placeholder="Joining Date To"
-                                className="border border-gray-300 rounded px-2 py-1 text-xs max-w-xs w-full"
-                            />
-                        </div>
+                    <div className="flex flex-col">
+                        <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
+                            Joining Date From
+                        </label>
+                        <input
+                            type="date"
+                            value={joiningDateFromFilter || ""}
+                            onChange={e => setJoiningDateFromFilter(e.target.value || null)}
+                            placeholder="Joining Date From"
+                            className="border border-gray-300 rounded px-2 py-1 text-xs max-w-xs w-full"
+                        />
+                    </div>
+
+                    <div className="flex flex-col">
+                        <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
+                            Joining Date To
+                        </label>
+                        <input
+                            type="date"
+                            value={joiningDateToFilter || ""}
+                            onChange={e => setJoiningDateToFilter(e.target.value || null)}
+                            placeholder="Joining Date To"
+                            className="border border-gray-300 rounded px-2 py-1 text-xs max-w-xs w-full"
+                        />
                     </div>
                 </div>
             </div>
 
-            <div className="relative">
+
+
                 {isLoading && <TopCenterLoader />}
 
-                <div className={`overflow-x-auto rounded-sm border border-gray-300 dark:border-darkBorderLight shadow-sm bg-white dark:bg-darkSurface ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className={`overflow-x-auto mt-4 rounded-sm border border-gray-300 dark:border-darkBorderLight shadow-sm bg-white dark:bg-darkSurface `}>
                     <table className="min-w-full text-sm text-left">
                         <thead className="bg-gray-50 dark:bg-darkMuted text-gray-600 dark:text-darkTextMuted uppercase text-xs tracking-wider border-b border-gray-300 dark:border-darkBorderLight">
                             <tr>
@@ -293,7 +295,7 @@ const FacultyManagement: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
-            </div>
+
 
             <div className="flex justify-end">
                 <Pagination

@@ -203,7 +203,6 @@ export async function getCatalogues(req: Request, res: Response) {
             .select({
                 id: programCatalogues.id,
                 catalogueYear: programCatalogues.catalogueYear,
-                isArchived: programCatalogues.isArchived,
                 createdAt: programCatalogues.createdAt,
                 program: {
                     id: programs.id,
@@ -211,10 +210,8 @@ export async function getCatalogues(req: Request, res: Response) {
                     departmentTitle: programs.departmentTitle,
                 },
                 createdBy: {
-                    id: users.id,
                     firstName: users.firstName,
                     lastName: users.lastName,
-                    email: users.email,
                 },
             })
             .from(programCatalogues)
@@ -267,7 +264,6 @@ export async function getCatalogueById(req: Request, res: Response) {
             .select({
                 id: programCatalogues.id,
                 catalogueYear: programCatalogues.catalogueYear,
-                isArchived: programCatalogues.isArchived,
                 createdAt: programCatalogues.createdAt,
                 updatedAt: programCatalogues.updatedAt,
                 program: {
@@ -276,10 +272,8 @@ export async function getCatalogueById(req: Request, res: Response) {
                     departmentTitle: programs.departmentTitle,
                 },
                 createdBy: {
-                    id: users.id,
                     firstName: users.firstName,
                     lastName: users.lastName,
-                    email: users.email,
                 },
             })
             .from(programCatalogues)

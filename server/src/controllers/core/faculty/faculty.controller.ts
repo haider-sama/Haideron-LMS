@@ -183,8 +183,11 @@ export const fetchFacultyMembers = async (req: Request, res: Response) => {
         }
 
         // Full-text search on users.search_vector using PostgreSQL `to_tsquery`
-        if (search) {
-            whereClauses.push(sql`search_vector @@ plainto_tsquery('simple', ${search})`);
+        // Full-text search on users.searchVector using PostgreSQL `plainto_tsquery`
+        if (search && typeof search === "string" && search.trim().length > 0) {
+            whereClauses.push(
+                sql`${users.searchVector} @@ plainto_tsquery('simple', ${search.trim()})`
+            );
         }
 
         // Filters from teacherInfo
