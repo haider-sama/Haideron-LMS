@@ -114,7 +114,7 @@ const Sidebar = () => {
                                 <li>
                                     <Link
                                         to="/login"
-                                        className="flex items-center w-full text-sm px-4 h-10 rounded hover:bg-gray-100 dark:hover:bg-darkMuted transition-colors text-gray-800 dark:text-darkTextPrimary"
+                                        className="flex items-center w-full text-sm px-4 h-10 rounded hover:bg-gray-100 dark:hover:bg-darkSurface transition-colors text-gray-800 dark:text-darkTextPrimary"
                                         data-tooltip-id="sidebar-tooltip"
                                         data-tooltip-content={collapsed ? 'Login' : ''}
                                     >
@@ -131,7 +131,7 @@ const Sidebar = () => {
                                     <li>
                                         <Link
                                             to="/register"
-                                            className="flex items-center w-full text-sm px-4 h-10 rounded hover:bg-gray-100 dark:hover:bg-darkMuted transition-colors text-gray-800 dark:text-darkTextPrimary"
+                                            className="flex items-center w-full text-sm px-4 h-10 rounded hover:bg-gray-100 dark:hover:bg-darkSurface transition-colors text-gray-800 dark:text-darkTextPrimary"
                                             data-tooltip-id="sidebar-tooltip"
                                             data-tooltip-content={collapsed ? 'Register' : ''}
                                         >

@@ -1,6 +1,7 @@
 import { pgTable, integer, timestamp, uuid, index, uniqueIndex, pgEnum, boolean } from "drizzle-orm/pg-core";
 import { TermEnum } from "../../../../shared/enums";
 import { programBatches } from "../program/program.batch.model";
+import { relations } from "drizzle-orm";
 
 export const termEnum = pgEnum("term_enum", Object.values(TermEnum) as [string, ...string[]]);
 
@@ -23,3 +24,10 @@ export const activatedSemesters = pgTable(
     index("activated_semesters_program_batch_id_idx").on(table.programBatchId),
   ]
 );
+
+export const activatedSemestersRelations = relations(activatedSemesters, ({ one }) => ({
+  programBatch: one(programBatches, {
+    fields: [activatedSemesters.programBatchId],
+    references: [programBatches.id],
+  }),
+}));

@@ -1,12 +1,15 @@
 // src/controllers/index.ts
 
-export * as facultyController from './core/faculty/faculty.controller';
-export * as courseController from './core/course/course.controller';
-export * as semesterController from './core/semester/semester.controller'
+export * as facultyController from './core/faculty.controller';
+export * as courseController from './core/course.controller';
+export * as semesterController from './core/semester.controller'
 import * as peoController from "./core/program//peo.controller";
 import * as ploController from "./core/program/plo.controller";
 import * as programControl from "./core/program/program.controller";
 export * as catalogueController from "./core/program/catalogue.controller";
+export * as batchController from "./core/batch/batch.controller";
+export * as batchSemesterController from "./core/batch/batch.semester.controller";
+export * as courseOfferingController from "./core/batch/course.offering.controller";
 
 export const programController = {
   ...peoController,

@@ -34,9 +34,9 @@ export const Pagination: React.FC<PaginationProps> = ({
                 <button
                     key={page}
                     onClick={() => onPageChange(page)}
-                    className={`px-3 py-1 border rounded text-xs ${currentPage === page
+                    className={`px-3 py-1 border dark:border-darkBorderLight rounded text-xs ${currentPage === page
                         ? "bg-primary text-white border-primary"
-                        : "hover:bg-gray-100"
+                        : "hover:bg-gray-100 dark:hover:bg-darkMuted"
                         }`}
                 >
                     {page}
@@ -47,9 +47,9 @@ export const Pagination: React.FC<PaginationProps> = ({
             <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`px-3 py-1 border rounded text-sm uppercase ${currentPage === totalPages
+                className={`px-3 py-1 border rounded dark:border-darkBorderLight text-sm uppercase ${currentPage === totalPages
                     ? "text-gray-400 border-gray-300"
-                    : "hover:bg-gray-100"
+                    : "hover:bg-gray-100 dark:hover:bg-darkMuted"
                     }`}
             >
                 Next
@@ -59,7 +59,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             <button
                 onClick={() => onPageChange(totalPages)}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 border rounded text-sm hover:bg-gray-100"
+                className="px-3 py-1 border rounded text-sm hover:bg-gray-100 dark:hover:bg-darkMuted dark:border-darkBorderLight "
                 title="Go to last page"
             >
                 <BsChevronDoubleRight size={16} />
@@ -69,14 +69,14 @@ export const Pagination: React.FC<PaginationProps> = ({
             <div className="relative">
                 <button
                     onClick={() => setShowDropdown(!showDropdown)}
-                    className="flex items-center gap-2 px-4 py-1 border rounded text-sm hover:bg-gray-100"
+                    className="flex items-center gap-2 px-4 py-1 border rounded text-sm hover:bg-gray-100 dark:hover:bg-darkMuted dark:border-darkBorderLight dark:text-darkTextSecondary"
                 >
                     Page {currentPage} of {totalPages}
                     {showDropdown ? <BsChevronUp size={14} /> : <BsChevronDown size={14} />}
                 </button>
 
                 {showDropdown && (
-                    <div className="absolute top-full right-0 mt-2 w-40 bg-white border border-gray-200 shadow-lg rounded p-4 z-10">
+                    <div className="absolute top-full right-0 mt-2 w-40 bg-white border border-gray-200 shadow-lg rounded p-4 z-10 dark:bg-darkSurface dark:border-darkBorderLight">
                         <input
                             type="number"
                             min={1}
@@ -84,11 +84,11 @@ export const Pagination: React.FC<PaginationProps> = ({
                             placeholder="Page number"
                             value={customPage}
                             onChange={(e) => setCustomPage(e.target.value)}
-                            className="w-full px-2 py-1 border rounded text-sm mb-2"
+                            className="w-full px-2 py-1 border rounded text-sm mb-2 dark:bg-darkMuted dark:border-darkBorderLight"
                         />
                         <button
                             onClick={handleGo}
-                            className="w-full bg-primary text-white rounded py-1 text-sm hover:opacity-90"
+                            className="w-full bg-primary text-white rounded py-1 text-sm hover:opacity-90 dark:bg-darkSidebar"
                         >
                             Go
                         </button>

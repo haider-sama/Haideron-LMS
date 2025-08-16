@@ -156,23 +156,6 @@ export interface ProgramCatalogue {
     program?: Program | null;
 }
 
-export interface SemesterCourse {
-    courseId: string;
-}
-
-export interface Semester {
-    id: string;
-    programCatalogueId: string;
-    semesterNo: number;
-    isArchived: boolean;
-    archivedAt?: Date | null;
-    createdAt: Date;
-    updatedAt: Date;
-
-    programCatalogue?: ProgramCatalogue | null;
-    semesterCourses?: SemesterCourse[];
-}
-
 export interface Course {
     id: string;
     programId: string;
@@ -214,6 +197,5 @@ export interface Course {
         courseId: string;
         section: ClassSectionEnum;
     }>;
-
-
+    
 }

@@ -132,7 +132,7 @@ const UserRegistration = () => {
                                     <th
                                         key={header}
                                         className={`p-2 border dark:border-darkBorderLight cursor-pointer select-none 
-                                            text-gray-800 uppercase text-xs
+                                            text-gray-800 uppercase text-xs dark:text-darkTextPrimary
                                             }`}
                                         title="Double click a cell in this column to edit entire column"
                                     >

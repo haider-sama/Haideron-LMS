@@ -6,7 +6,7 @@ import { Input, SelectInput, TextAreaInput } from "../../../ui/Input";
 import { DomainEnum, KnowledgeAreaEnum, SubjectLevelEnum, SubjectTypeEnum } from "../../../../../../server/src/shared/enums";
 import { CreateCoursePayload } from "../../../../constants/core/interfaces";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCataloguesByProgram } from "../../../../api/core/catalogueApi";
+import { getCataloguesByProgram } from "../../../../api/core/catalogue-api";
 import { getPrograms } from "../../../../api/core/program-api";
 import { createCourse } from "../../../../api/core/course-api";
 import { Button } from "../../../ui/Button";

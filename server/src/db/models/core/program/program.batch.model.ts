@@ -2,6 +2,7 @@ import { pgTable, integer, boolean, timestamp, uuid, index, uniqueIndex } from "
 import { users } from "../../auth/user.model";
 import { programs } from "./program.model";
 import { programCatalogues } from "./program.catalogue.model";
+import { relations } from "drizzle-orm";
 
 export const programBatches = pgTable(
     "program_batches",
@@ -23,3 +24,14 @@ export const programBatches = pgTable(
         index("program_batches_created_by_idx").on(table.createdBy),
     ]
 );
+
+export const programBatchesRelations = relations(programBatches, ({ one }) => ({
+    program: one(programs, {
+        fields: [programBatches.programId],
+        references: [programs.id],
+    }),
+    programCatalogue: one(programCatalogues, {
+        fields: [programBatches.programCatalogueId],
+        references: [programCatalogues.id],
+    }),
+}));

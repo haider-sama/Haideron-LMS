@@ -44,6 +44,11 @@ export const semestersRelations = relations(semesters, ({ one, many }) => ({
         references: [programCatalogues.id],
     }),
     semesterCourses: many(semesterCourses),
+
+    // computed many-to-many relation
+    courses: many(courses, {
+        relationName: "semesterCourses", // must match semesterCoursesRelations below
+    }),
 }));
 
 // ProgramCatalogue -> Program
@@ -55,6 +60,14 @@ export const programCataloguesRelations = relations(programCatalogues, ({ one })
 }));
 
 export const semesterCoursesRelations = relations(semesterCourses, ({ one }) => ({
-    semester: one(semesters, { fields: [semesterCourses.semesterId], references: [semesters.id] }),
-    course: one(courses, { fields: [semesterCourses.courseId], references: [courses.id] }),
+    semester: one(semesters, {
+        fields: [semesterCourses.semesterId],
+        references: [semesters.id],
+        relationName: "semesterCourses",
+    }),
+    course: one(courses, {
+        fields: [semesterCourses.courseId],
+        references: [courses.id],
+        relationName: "semesterCourses",
+    }),
 }));

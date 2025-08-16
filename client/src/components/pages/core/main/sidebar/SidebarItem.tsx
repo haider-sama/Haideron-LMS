@@ -37,7 +37,7 @@ const SidebarItem = ({
             <>
                 <button
                     onClick={() => collapsed ? setCollapsed(false) : toggleSubMenu(label)}
-                    className="flex items-center w-full text-sm px-4 h-10 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200"
+                    className="flex items-center w-full text-sm px-4 h-10 rounded hover:bg-gray-100 dark:hover:bg-darkSurface text-gray-800 dark:text-gray-200"
                     data-tooltip-id="sidebar-tooltip"
                     data-tooltip-content={collapsed ? label : ''}
                 >
@@ -66,7 +66,7 @@ const SidebarItem = ({
                                 <li key={idx}>
                                     <Link
                                         to={sub.href}
-                                        className="flex items-center px-2 py-1 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
+                                        className="flex items-center px-2 py-1 text-sm rounded hover:bg-gray-100 dark:hover:bg-darkSurface text-gray-800 dark:text-gray-200"
                                         data-tooltip-id="sidebar-tooltip"
                                         data-tooltip-content={collapsed ? sub.label : ''}
                                     >
@@ -85,7 +85,7 @@ const SidebarItem = ({
     return (
         <Link
             to={href!}
-            className="flex items-center px-4 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200"
+            className="flex items-center px-4 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-darkSurface text-gray-800 dark:text-gray-200"
             data-tooltip-id="sidebar-tooltip"
             data-tooltip-content={collapsed ? label : ''}
         >

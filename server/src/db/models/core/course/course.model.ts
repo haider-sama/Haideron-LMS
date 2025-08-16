@@ -141,15 +141,47 @@ export const courseSections = pgTable(
 export const coursesRelations = relations(courses, ({ one, many }) => ({
     program: one(programs, { fields: [courses.programId], references: [programs.id] }),
     sectionTeachers: many(courseSectionTeachers),
-    preRequisites: many(coursePreRequisites),
-    coRequisites: many(courseCoRequisites),
     sections: many(courseSections),
     clos: many(clos),
+
+    // Join tables
+    preRequisiteLinks: many(coursePreRequisites),
+    coRequisiteLinks: many(courseCoRequisites),
+
+    // Actual related courses
+    preRequisites: many(courses, { relationName: "isPreRequisiteOf" }),
+    coRequisites: many(courses, { relationName: "isCoRequisiteOf" }),
 }));
 
 export const closRelations = relations(clos, ({ one, many }) => ({
     course: one(courses, { fields: [clos.courseId], references: [courses.id] }),
     ploMappings: many(cloPloMappings),
+}));
+
+export const coursePreRequisitesRelations = relations(coursePreRequisites, ({ one }) => ({
+    course: one(courses, {
+        fields: [coursePreRequisites.courseId],
+        references: [courses.id],
+        relationName: "mainCoursePreReqs",
+    }),
+    preReqCourse: one(courses, {
+        fields: [coursePreRequisites.preReqCourseId],
+        references: [courses.id],
+        relationName: "isPreRequisiteOf",
+    }),
+}));
+
+export const courseCoRequisitesRelations = relations(courseCoRequisites, ({ one }) => ({
+    course: one(courses, {
+        fields: [courseCoRequisites.courseId],
+        references: [courses.id],
+        relationName: "mainCourseCoReqs",
+    }),
+    coReqCourse: one(courses, {
+        fields: [courseCoRequisites.coReqCourseId],
+        references: [courses.id],
+        relationName: "isCoRequisiteOf",
+    }),
 }));
 
 

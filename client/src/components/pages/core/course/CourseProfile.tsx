@@ -3,7 +3,7 @@ import { Course, ProgramCatalogue } from "../../../../../../server/src/shared/in
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteCourseById, getCourses } from "../../../../api/core/course-api";
 import { getFacultyMembers } from "../../../../api/core/faculty-api";
-import { getCataloguesByProgram } from "../../../../api/core/catalogueApi";
+import { getCataloguesByProgram } from "../../../../api/core/catalogue-api";
 import { getPLOsForProgram, getPrograms } from "../../../../api/core/program-api";
 import { useToast } from "../../../../context/ToastContext";
 import TopCenterLoader from "../../../ui/TopCenterLoader";

@@ -100,7 +100,7 @@ const ProgramManagement: React.FC = () => {
 
             <div className="overflow-x-auto border border-gray-300 rounded-sm shadow-sm bg-white dark:bg-darkSurface dark:border-darkBorderLight">
                 <table className="min-w-full text-sm text-left">
-                    <thead className="bg-gray-100 border-b border-gray-300 text-gray-600 uppercase text-xs tracking-wide dark:bg-darkMuted dark:text-darkTextMuted">
+                    <thead className="bg-gray-100 border-b border-gray-300 dark:border-darkBorderLight text-gray-600 uppercase text-xs tracking-wide dark:bg-darkMuted dark:text-darkTextMuted">
                         <tr>
                             <th className="px-4 py-2">Title</th>
                             <th className="px-4 py-2">Level</th>
@@ -153,7 +153,7 @@ const ProgramManagement: React.FC = () => {
                                             className="inline-flex items-center justify-center p-2 rounded hover:bg-gray-100 transition dark:hover:bg-darkMuted"
                                             title="Manage outcomes"
                                         >
-                                            <FiTarget className="w-4 h-4 text-purple-500 dark:text-darkBlurple" />
+                                            <FiTarget className="w-4 h-4 text-purple-500 dark:text-blue-600" />
                                         </button>
                                     </td>
                                 </tr>

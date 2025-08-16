@@ -78,7 +78,7 @@ const UserManagementTable: React.FC = () => {
                 <div className="mt-4 overflow-x-auto border rounded-sm border-gray-300 bg-white dark:bg-darkSurface dark:border-darkBorderLight">
                     <table className="min-w-full text-sm text-left">
                         <thead className="bg-gray-100 text-gray-700 uppercase text-xs tracking-wide dark:bg-darkMuted dark:text-darkTextSecondary">
-                            <tr className="border-b border-gray-300">
+                            <tr className="border-b border-gray-300 dark:border-darkBorderLight">
                                 <th className="px-4 py-2">Avatar</th>
                                 <th className="px-4 py-2">First Name</th>
                                 <th className="px-4 py-2">Last Name</th>
@@ -221,7 +221,7 @@ const UserManagementTable: React.FC = () => {
                                     <input
                                         type="password"
                                         placeholder="Enter new password"
-                                        className="w-full max-w-sm p-2 border rounded mb-6"
+                                        className="w-full max-w-sm p-2 border rounded mb-6 dark:border-darkBorderLight dark:bg-darkMuted"
                                         value={newPassword}
                                         onChange={(e) => setNewPassword(e.target.value)}
                                     />
@@ -251,7 +251,7 @@ const UserManagementTable: React.FC = () => {
 
                             {modalType === "delete" && (
                                 <>
-                                    <p className="mb-6 max-w-sm text-center text-sm text-gray-600">
+                                    <p className="mb-6 max-w-sm text-center text-sm text-gray-600 dark:text-darkTextSecondary">
                                         Are you sure you want to delete{" "}
                                         <strong>
                                             {selectedUser.firstName} {selectedUser.lastName}

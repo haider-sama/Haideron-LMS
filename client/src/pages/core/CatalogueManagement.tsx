@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { usePermissions } from "../../hooks/usePermissions";
 import { useDashboards } from "../../hooks/auth/useDashboards";
 import { useToast } from "../../context/ToastContext";
 import { useQuery } from "@tanstack/react-query";
-import { getCatalogueById, getCataloguesByProgram, updateCatalogueById } from "../../api/core/catalogueApi";
+import { getCatalogueById, getCataloguesByProgram, updateCatalogueById } from "../../api/core/catalogue-api";
 import { getPrograms } from "../../api/core/program-api";
 import { Helmet } from "react-helmet-async";
 import { GLOBAL_TITLE, MAX_PAGE_LIMIT } from "../../constants";
@@ -55,7 +55,16 @@ const CatalogueManagement: React.FC = () => {
             : [];
 
     // Selected program ID (first program by default)
-    const selectedProgramId = programs.length ? programs[0].id : "";
+    const [selectedProgramId, setSelectedProgramId] = useState<string>(
+        programs.length ? programs[0].id : ""
+    );
+
+    // Update whenever programs change (optional)
+    useEffect(() => {
+        if (programs.length && !selectedProgramId) {
+            setSelectedProgramId(programs[0].id);
+        }
+    }, [programs]);
 
     // Catalogues Query (always runs when selectedProgramId exists)
     const { data: catalogueData, error: cataloguesError, isPending: cataloguesLoading } = useQuery({
@@ -124,7 +133,10 @@ const CatalogueManagement: React.FC = () => {
                         label="Select Program"
                         name="program"
                         value={selectedProgramId}
-                        onChange={() => setPage(1)}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                            setSelectedProgramId(e.target.value);
+                            setPage(1); // reset page
+                        }}
                         options={programs.map((p) => ({ label: p.title, value: p.id }))}
                     />
                 </div>
@@ -135,7 +147,7 @@ const CatalogueManagement: React.FC = () => {
 
                 <div className={`overflow-x-auto border border-gray-300 rounded-sm shadow-sm bg-white dark:bg-darkSurface dark:border-darkBorderLight`}>
                     <table className="min-w-full text-left">
-                        <thead className="bg-gray-100 border-b border-gray-300 text-gray-700 dark:bg-darkMuted dark:text-darkTextMuted uppercase text-xs tracking-wider">
+                        <thead className="bg-gray-100 border-b border-gray-300 dark:border-darkBorderLight text-gray-700 dark:bg-darkMuted dark:text-darkTextMuted uppercase text-xs tracking-wider">
                             <tr>
                                 <th className="px-4 py-2">Program Title</th>
                                 <th className="px-4 py-2">Catalogue Year</th>

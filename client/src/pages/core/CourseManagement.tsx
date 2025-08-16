@@ -198,84 +198,83 @@ const CourseManagement: React.FC = () => {
                 </div>
             </div>
 
-            {isCoursesLoading ? (
-                <TopCenterLoader />
-            ) : (
-                <div className="overflow-x-auto mt-4 border border-gray-300 rounded-sm shadow-sm bg-white dark:bg-darkSurface dark:border-darkBorderLight">
-                    <table className="min-w-full text-sm text-left">
-                        <thead className="bg-gray-100 border-b border-gray-300 text-gray-600 uppercase text-xs tracking-wide dark:bg-darkMuted dark:text-darkTextMuted">
+            <div className="overflow-x-auto mt-4 border border-gray-300 rounded-sm shadow-sm bg-white dark:bg-darkSurface dark:border-darkBorderLight">
+                <table className="min-w-full text-sm text-left">
+                    <thead className="bg-gray-100 border-b border-gray-300 dark:border-darkBorderLight text-gray-600 uppercase text-xs tracking-wide dark:bg-darkMuted dark:text-darkTextMuted">
+                        <tr>
+                            <th className="px-4 py-2">Code Prefix</th>
+                            <th className="px-4 py-2">Code</th>
+                            <th className="px-4 py-2">Title</th>
+                            <th className="px-4 py-2">Level</th>
+                            <th className="px-4 py-2">Type</th>
+                            <th className="px-4 py-2">CrH</th>
+                            <th className="px-4 py-2">CtH</th>
+                            <th className="px-4 py-2">Knowledge Area</th>
+                            <th className="px-4 py-2">Domain</th>
+                            <th className="px-4 py-2 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {isCoursesLoading ? (
                             <tr>
-                                <th className="px-4 py-2">Code Prefix</th>
-                                <th className="px-4 py-2">Code</th>
-                                <th className="px-4 py-2">Title</th>
-                                <th className="px-4 py-2">Level</th>
-                                <th className="px-4 py-2">Type</th>
-                                <th className="px-4 py-2">CrH</th>
-                                <th className="px-4 py-2">CtH</th>
-                                <th className="px-4 py-2">Knowledge Area</th>
-                                <th className="px-4 py-2">Domain</th>
-                                <th className="px-4 py-2 text-center">Actions</th>
+                                <td colSpan={10} className="text-center py-6">
+                                    <TopCenterLoader />
+                                    <p className="mt-2 text-gray-600 dark:text-darkTextSecondary">
+                                        Loading Courses...
+                                    </p>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {courses.length === 0 ? (
-                                <tr>
-                                    <td
-                                        colSpan={10}
-                                        className="text-center py-6 text-gray-600 dark:text-darkTextSecondary"
-                                    >
-                                        No courses found.
+                        ) : courses.length === 0 ? (
+                            <tr>
+                                <td colSpan={10} className="text-center py-6 text-gray-600 dark:text-darkTextSecondary">
+                                    No courses found.
+                                </td>
+                            </tr>
+                        ) : (
+                            courses.map((course) => (
+                                <tr key={course.id} className="border-b last:border-0 hover:bg-gray-50 transition dark:border-darkBorderLight dark:hover:bg-darkMuted">
+                                    <td className="px-4 py-2 font-medium text-gray-800 dark:text-darkTextPrimary">
+                                        {course.codePrefix || "-"}
+                                    </td>
+                                    <td className="px-4 py-2 font-medium text-gray-800 dark:text-darkTextPrimary">
+                                        {course.code}
+                                    </td>
+                                    <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
+                                        {truncateName(course.title) || "-"}
+                                    </td>
+                                    <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
+                                        {course.subjectLevel || "-"}
+                                    </td>
+                                    <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
+                                        {course.subjectType || "-"}
+                                    </td>
+                                    <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
+                                        {course.creditHours || "-"}
+                                    </td>
+                                    <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
+                                        {course.contactHours || "-"}
+                                    </td>
+                                    <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
+                                        {truncateName(course.knowledgeArea || "-", 20)}
+                                    </td>
+                                    <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
+                                        {truncateName(course.domain || "-", 20)}
+                                    </td>
+                                    <td className="px-4 py-2 text-center space-x-2">
+                                        <button
+                                            onClick={() => handleViewCourse(course.id)}
+                                            className="inline-flex items-center justify-center p-2 rounded hover:bg-gray-100 transition dark:hover:bg-darkMuted"
+                                            title="Edit course"
+                                        >
+                                            <FiEdit className="w-4 h-4 text-blue-500" />
+                                        </button>
                                     </td>
                                 </tr>
-                            ) : (
-                                courses.map((course) => (
-                                    <tr
-                                        key={course.id}
-                                        className="border-b last:border-0 hover:bg-gray-50 transition dark:border-darkBorderLight dark:hover:bg-darkMuted"
-                                    >
-                                        <td className="px-4 py-2 font-medium text-gray-800 dark:text-darkTextPrimary">
-                                            {course.codePrefix || "-"}
-                                        </td>
-                                        <td className="px-4 py-2 font-medium text-gray-800 dark:text-darkTextPrimary">
-                                            {course.code}
-                                        </td>
-                                        <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
-                                            {truncateName(course.title) || "-"}
-                                        </td>
-                                        <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
-                                            {course.subjectLevel || "-"}
-                                        </td>
-                                        <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
-                                            {course.subjectType || "-"}
-                                        </td>
-                                        <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
-                                            {course.creditHours || "-"}
-                                        </td>
-                                        <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
-                                            {course.contactHours || "-"}
-                                        </td>
-                                        <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
-                                            {truncateName(course.knowledgeArea || "-", 20)}
-                                        </td>
-                                        <td className="px-4 py-2 text-gray-600 dark:text-darkTextSecondary">
-                                            {truncateName(course.domain || "-", 20)}
-                                        </td>
-                                        <td className="px-4 py-2 text-center space-x-2">
-                                            <button
-                                                onClick={() => handleViewCourse(course.id)}
-                                                className="inline-flex items-center justify-center p-2 rounded hover:bg-gray-100 transition dark:hover:bg-darkMuted"
-                                                title="Edit course"
-                                            >
-                                                <FiEdit className="w-4 h-4 text-blue-500" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
 
             {showModal && selectedCourseId && (
                 <Modal isOpen={showModal} onClose={closeModal}>

@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../../constants/http";
-import { AudienceEnum } from "../../../shared/enums";
-import { semesterCourses, semesters } from "../../../db/schema";
-import { db } from "../../../db/db";
+import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../constants/http";
+import { AudienceEnum } from "../../shared/enums";
+import { semesterCourses, semesters } from "../../db/schema";
+import { db } from "../../db/db";
 import { eq, and, inArray } from "drizzle-orm";
-import { addSemesterSchema, updateSemesterSchema } from "../../../utils/validators/lms-schemas/semesterSchemas";
+import { addSemesterSchema, updateSemesterSchema } from "../../utils/validators/lms-schemas/semesterSchemas";
 
 type CatalogueWithProgram = {
     id: string;

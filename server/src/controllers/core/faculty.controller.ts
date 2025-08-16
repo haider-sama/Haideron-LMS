@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED } from "../../../constants/http";
-import { AudienceEnum, DepartmentEnum, FacultyTypeEnum, TeacherDesignationEnum } from "../../../shared/enums";
-import { teacherInfo, teacherQualifications, users } from "../../../db/schema";
-import { db } from "../../../db/db";
+import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED } from "../../constants/http";
+import { AudienceEnum, DepartmentEnum, FacultyTypeEnum, TeacherDesignationEnum } from "../../shared/enums";
+import { teacherInfo, teacherQualifications, users } from "../../db/schema";
+import { db } from "../../db/db";
 import { eq, sql, and, ilike, gte, lte, inArray } from "drizzle-orm";
-import { facultyRegisterSchema, updateFacultySchema } from "../../../utils/validators/lms-schemas/facultySchemas";
-import { hashValue } from "../../../utils/bcrypt";
+import { facultyRegisterSchema, updateFacultySchema } from "../../utils/validators/lms-schemas/facultySchemas";
+import { hashValue } from "../../utils/bcrypt";
 
 export const registerFacultyMember = async (req: Request, res: Response) => {
     const userId = req.userId;

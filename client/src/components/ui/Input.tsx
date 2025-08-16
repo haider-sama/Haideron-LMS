@@ -105,7 +105,7 @@ export const SelectInput: React.FC<SelectInputProps> = ({
                 disabled={false}
                 className="w-full px-2 py-1.5 rounded-md
       bg-white text-gray-800 border border-gray-300
-      dark:bg-darkMuted dark:text-darkTextPrimary dark:border-darkBorderLight"
+      dark:bg-darkMuted dark:text-darkTextSecondary dark:border-darkBorderLight"
             >
                 <option value="" disabled>
                     {placeholder}

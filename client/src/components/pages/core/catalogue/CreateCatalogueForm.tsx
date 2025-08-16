@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { usePermissions } from "../../../../hooks/usePermissions";
 import { useToast } from "../../../../context/ToastContext";
-import { createProgramCatalogue } from "../../../../api/core/catalogueApi";
+import { createProgramCatalogue } from "../../../../api/core/catalogue-api";
 import { SelectInput } from "../../../ui/Input";
 import { Button } from "../../../ui/Button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

@@ -1,11 +1,10 @@
 import { Request, Response } from "express";
-import { BAD_REQUEST, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../../constants/http";
-import { AudienceEnum, ClassSectionEnum, DepartmentEnum } from "../../../shared/enums";
-import { cloPloMappings, clos, courseCoRequisites, coursePreRequisites, courses, courseSections, courseSectionTeachers, semesterCourses } from "../../../db/schema";
-import { db } from "../../../db/db";
+import { BAD_REQUEST, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../constants/http";
+import { AudienceEnum, ClassSectionEnum, DepartmentEnum } from "../../shared/enums";
+import { cloPloMappings, clos, courseCoRequisites, coursePreRequisites, courses, courseSections, courseSectionTeachers, semesterCourses } from "../../db/schema";
+import { db } from "../../db/db";
 import { eq, and, inArray, sql, desc } from "drizzle-orm";
-import { createCourseSchema, updateCourseSchema } from "../../../utils/validators/lms-schemas/semesterSchemas";
-import { Course, Semester } from "../../../shared/interfaces";
+import { createCourseSchema, updateCourseSchema } from "../../utils/validators/lms-schemas/semesterSchemas";
 
 export const createCourse = async (req: Request, res: Response) => {
     try {

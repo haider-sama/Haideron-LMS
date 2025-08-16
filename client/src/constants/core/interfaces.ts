@@ -1,5 +1,5 @@
 import { AssessmentTypeEnum, AudienceEnum, BatchEnrollmentStatus, ClassSectionEnum, DegreeEnum, DepartmentEnum, DomainEnum, FacultyTypeEnum, FinalizedResultStatusEnum, KnowledgeAreaEnum, StrengthEnum, SubjectLevelEnum, SubjectTypeEnum, TeacherDesignationEnum, TermEnum } from "../../../../server/src/shared/enums";
-import { Course, Program, ProgramCatalogue, Semester, TeacherInfo, TeacherInfoWithQualifications, User } from "../../../../server/src/shared/interfaces";
+import { Course, Program, ProgramCatalogue, TeacherInfo, TeacherInfoWithQualifications, User } from "../../../../server/src/shared/interfaces";
 
 export interface RegisterFormData {
     email: string;
@@ -401,6 +401,25 @@ export interface PaginatedFacultyResponse {
     page: number;
     totalPages: number;
     totalFaculty: number;
+}
+
+export interface SemesterCourse {
+    courseId: string;
+    semesterId: string;
+    course: Course; // the full course object
+}
+
+export interface Semester {
+    id: string;
+    programCatalogueId: string;
+    semesterNo: number;
+    isArchived: boolean;
+    archivedAt?: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+
+    courses?: string[];
+    semesterCourses?: SemesterCourse[];
 }
 
 export interface UserPreview {

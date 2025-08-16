@@ -442,7 +442,7 @@ const FacultyProfile =
 
                 {/* Buttons */}
                 <div className="mt-6 flex justify-center gap-4">
-                    <Button disabled={mutation.isPending} size="md" variant="blue"
+                    <Button disabled={mutation.isPending} size="md" variant="gray"
                         fullWidth={false}
                         onClick={handleSave}
                         loadingText="Saving..." isLoading={mutation.isPending}>

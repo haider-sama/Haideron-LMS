@@ -2,7 +2,7 @@ import { pgTable, timestamp, uuid, index, uniqueIndex, boolean, jsonb } from "dr
 import { courses } from "./course.model";
 import { programBatches } from "../program/program.batch.model";
 import { activatedSemesters } from "../semester/activated.semester.model";
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 export const scheduleSlotType = {
     // JSON: { [section: string]: ScheduleSlot[] }
@@ -31,3 +31,18 @@ export const courseOfferings = pgTable(
         uniqueIndex("course_offerings_unique").on(table.courseId, table.programBatchId, table.activatedSemesterId),
     ]
 );
+
+export const courseOfferingsRelations = relations(courseOfferings, ({ one }) => ({
+    activatedSemester: one(activatedSemesters, {
+        fields: [courseOfferings.activatedSemesterId],
+        references: [activatedSemesters.id],
+    }),
+    programBatch: one(programBatches, {
+        fields: [courseOfferings.programBatchId],
+        references: [programBatches.id],
+    }),
+    course: one(courses, {
+        fields: [courseOfferings.courseId],
+        references: [courses.id],
+    }),
+}));

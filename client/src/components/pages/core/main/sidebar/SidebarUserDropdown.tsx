@@ -56,7 +56,7 @@ const SidebarUserDropdown: React.FC<SideBarUserDropdownProps> = ({
             <button
                 onClick={() => !collapsed && setOpen(!open)}
                 className="flex items-center w-full px-4 py-2 text-sm rounded transition-all
-               hover:bg-gray-200 dark:hover:bg-darkMuted"
+               hover:bg-gray-200 dark:hover:bg-darkSurface"
                 aria-haspopup="true"
                 aria-expanded={open}
             >

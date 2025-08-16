@@ -197,7 +197,7 @@ const FacultyManagement: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col">
-                        <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
+                        <label className="mb-2 text-xs font-semibold text-gray-800 dark:text-gray-300">
                             Joining Date From
                         </label>
                         <input
@@ -205,12 +205,12 @@ const FacultyManagement: React.FC = () => {
                             value={joiningDateFromFilter || ""}
                             onChange={e => setJoiningDateFromFilter(e.target.value || null)}
                             placeholder="Joining Date From"
-                            className="border border-gray-300 rounded px-2 py-1 text-xs max-w-xs w-full"
+                            className="border border-gray-300 rounded-md px-2 py-1.5 text-xs max-w-xs w-full dark:bg-darkMuted dark:border-darkBorderLight dark:text-darkTextSecondary"
                         />
                     </div>
 
                     <div className="flex flex-col">
-                        <label className="mb-1 text-xs font-semibold text-gray-800 dark:text-gray-300">
+                        <label className="mb-2 text-xs font-semibold text-gray-800 dark:text-gray-300">
                             Joining Date To
                         </label>
                         <input
@@ -218,7 +218,7 @@ const FacultyManagement: React.FC = () => {
                             value={joiningDateToFilter || ""}
                             onChange={e => setJoiningDateToFilter(e.target.value || null)}
                             placeholder="Joining Date To"
-                            className="border border-gray-300 rounded px-2 py-1 text-xs max-w-xs w-full"
+                            className="border border-gray-300 rounded-md px-2 py-1.5 text-xs max-w-xs w-full dark:bg-darkMuted dark:border-darkBorderLight dark:text-darkTextSecondary"
                         />
                     </div>
                 </div>

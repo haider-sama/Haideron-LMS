@@ -30,9 +30,7 @@ export const UpdateCourseOfferingSchema = z.object({
       required_error: "Course ID is required",
       invalid_type_error: "Course must be a string",
     })
-    .regex(/^[0-9a-fA-F]{24}$/, {
-      message: "Invalid Course ID format",
-    })
+    .uuid()
     .optional(),
 
   programBatch: z
@@ -40,9 +38,7 @@ export const UpdateCourseOfferingSchema = z.object({
       required_error: "Program Batch ID is required",
       invalid_type_error: "Program Batch must be a string",
     })
-    .regex(/^[0-9a-fA-F]{24}$/, {
-      message: "Invalid Program Batch ID format",
-    })
+    .uuid()
     .optional(),
 
   activatedSemester: z
@@ -50,8 +46,6 @@ export const UpdateCourseOfferingSchema = z.object({
       required_error: "Activated Semester ID is required",
       invalid_type_error: "Activated Semester must be a string",
     })
-    .regex(/^[0-9a-fA-F]{24}$/, {
-      message: "Invalid Activated Semester ID format",
-    })
+    .uuid()
     .optional(),
 });

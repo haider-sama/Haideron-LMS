@@ -5,14 +5,14 @@ import { usePermissions } from "../../../../hooks/usePermissions";
 import { useDashboards } from "../../../../hooks/auth/useDashboards";
 import { useToast } from "../../../../context/ToastContext";
 import { AudienceEnum } from "../../../../../../server/src/shared/enums";
-import { deleteCatalogueById } from "../../../../api/core/catalogueApi";
+import { deleteCatalogueById } from "../../../../api/core/catalogue-api";
 import TopCenterLoader from "../../../ui/TopCenterLoader";
 import InternalError from "../../../../pages/forbidden/InternalError";
 import { ReadOnlyInput, SelectInput } from "../../../ui/Input";
-import { getButtonClass } from "../../../ui/ButtonClass";
-import { FiTrash2 } from "react-icons/fi";
 import Modal from "../../../ui/Modal";
 import { Button } from "../../../ui/Button";
+import AddSemesterForm from "./AddSemesterForm";
+import SemesterCourseTable from "./SemesterCourseTable";
 
 interface CatalogueProfileProps {
     catalogueId: string;
@@ -204,35 +204,28 @@ const CatalogueProfile: React.FC<CatalogueProfileProps> = ({
                 </div>
             </div>
 
-            {/* <div className="w-full max-w-5xl py-4">
+            <div className="w-full max-w-5xl py-4">
                 <SemesterCourseTable catalogueId={catalogueId} />
-            </div> */}
-
-            <div className="flex justify-center gap-4 pt-8">
-                <button
-                    onClick={openSemesterModal}
-                    className={getButtonClass({
-                        bg: "bg-primary dark:bg-darkBlurple",
-                        hoverBg: "hover:bg-white dark:hover:bg-darkBlurpleHover",
-                        text: "text-white dark:text-darkTextPrimary",
-                        hoverText: "hover:text-gray-900 dark:hover:text-darkTextPrimary",
-                        focusRing: "focus:ring-4 focus:ring-blue-200 dark:focus:ring-darkTextSecondary/30",
-                        extra: "text-sm px-4 py-2 rounded font-medium border border-gray-200 dark:border-darkBorderLight flex items-center gap-2",
-                    })}
-                >
-                    Add Semesters
-                </button>
             </div>
 
-            {/* 
+            <div className="flex justify-center gap-4 pt-8">
+                <Button 
+                    onClick={openSemesterModal} 
+                    fullWidth={false}
+                >
+                    Add Semesters
+                </Button>
+            </div>
+
+            
             {showSemesterModal && (
                 <Modal isOpen={showSemesterModal} onClose={closeSemesterModal}>
-                    <CreateSemesterForm
+                    <AddSemesterForm
                         catalogueId={catalogueId}
                         onSuccess={closeSemesterModal}
                     />
                 </Modal>
-            )} */}
+            )}
 
         </div >
     );

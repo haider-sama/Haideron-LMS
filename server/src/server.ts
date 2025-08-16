@@ -12,9 +12,12 @@ import authRouter from './routes/auth.routes';
 import adminRouter from './routes/admin.routes';
 import facultyRouter from './routes/core/faculty.routes';
 import courseRouter from './routes/core/course.routes';
-import programRouter from './routes/core/program.routes';
-import catalogueRouter from './routes/core/catalogue.routes';
+import programRouter from './routes/core/program/program.routes';
+import catalogueRouter from './routes/core/program/catalogue.routes';
 import semesterRouter from './routes/core/semester.routes';
+import batchRouter from './routes/core/batch/batch.routes';
+import batchSemesterRouter from './routes/core/batch/batch.semester.routes';
+import courseOfferingRouter from './routes/core/batch/course.offering.routes';
 
 dotenv.config();
 
@@ -36,11 +39,15 @@ cloudinary.config({
 app.use('/api/v1/auth/', authRouter);
 app.use('/api/v1/admin/', adminRouter);
 
-app.use('/api/v1/faculty/', facultyRouter);
-app.use('/api/v1/course/', courseRouter);
 app.use('/api/v1/program/', programRouter);
 app.use('/api/v1/catalogue/', catalogueRouter);
 app.use('/api/v1/semester/', semesterRouter);
+app.use('/api/v1/course/', courseRouter);
+app.use('/api/v1/faculty/', facultyRouter);
+
+app.use('/api/v1/batch/', batchRouter);
+app.use('/api/v1/batch/semesters/', batchSemesterRouter);
+app.use('/api/v1/offerings/', courseOfferingRouter);
 
 const startServer = async () => {
     console.time("Total Startup Time");
