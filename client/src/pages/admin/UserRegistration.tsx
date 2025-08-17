@@ -1,5 +1,5 @@
 import { AudienceEnum, DepartmentEnum } from "../../../../server/src/shared/enums";
-import UserAddForm from "../../components/pages/core/admin/UserAddForm";
+import UserAddForm from "../../components/admin/UserAddForm";
 import { GLOBAL_TITLE } from "../../constants";
 import { BulkUser } from "../../constants/core/interfaces";
 import PageHeading from "../../components/ui/PageHeading";

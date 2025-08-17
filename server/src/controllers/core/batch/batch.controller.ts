@@ -130,6 +130,8 @@ export const getBatchesByProgram = async (req: Request, res: Response) => {
     try {
         const userId = req.userId;
         const programId = req.query.programId as string;
+        const departmentFilter = req.query.department as string; // optional filter
+        const search = (req.query.search as string)?.toLowerCase(); // optional search text
 
         if (!programId) {
             return res.status(BAD_REQUEST).json({ message: "Invalid ProgramId" });
@@ -259,10 +261,7 @@ export const getBatchById = async (req: Request, res: Response) => {
             return res.status(FORBIDDEN).json({ message: err.message });
         }
 
-        return res.status(OK).json({
-            message: "Batch fetched successfully",
-            batch,
-        });
+        return res.status(OK).json({ batch });
     } catch (err: any) {
         console.error("Error while fetching batch:", err.message);
         return res.status(INTERNAL_SERVER_ERROR).json({

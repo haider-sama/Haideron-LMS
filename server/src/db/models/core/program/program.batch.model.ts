@@ -2,7 +2,8 @@ import { pgTable, integer, boolean, timestamp, uuid, index, uniqueIndex } from "
 import { users } from "../../auth/user.model";
 import { programs } from "./program.model";
 import { programCatalogues } from "./program.catalogue.model";
-import { relations } from "drizzle-orm";
+import { relations, SQL, sql } from "drizzle-orm";
+import { tsvector } from "../tsvector";
 
 export const programBatches = pgTable(
     "program_batches",

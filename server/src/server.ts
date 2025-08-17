@@ -18,6 +18,7 @@ import semesterRouter from './routes/core/semester.routes';
 import batchRouter from './routes/core/batch/batch.routes';
 import batchSemesterRouter from './routes/core/batch/batch.semester.routes';
 import courseOfferingRouter from './routes/core/batch/course.offering.routes';
+import batchEnrollmentRouter from './routes/core/batch/batch.enrollment.routes';
 
 dotenv.config();
 
@@ -47,6 +48,7 @@ app.use('/api/v1/faculty/', facultyRouter);
 
 app.use('/api/v1/batch/', batchRouter);
 app.use('/api/v1/batch/semesters/', batchSemesterRouter);
+app.use('/api/v1/batch/enrollments/', batchEnrollmentRouter);
 app.use('/api/v1/offerings/', courseOfferingRouter);
 
 const startServer = async () => {
@@ -57,7 +59,7 @@ const startServer = async () => {
         // await connectRedis(); // If you're using Redis
 
         // Example: test DB query
-        const firstUser = await db.select().from(users).limit(1);
+        // const firstUser = await db.select().from(users).limit(1);
         // console.log(
         //     "Drizzle user model test:",
         //     firstUser.length ? firstUser[0] : "No users found"

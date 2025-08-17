@@ -1,9 +1,9 @@
 import React from "react";
-import { AudienceEnum, DepartmentEnum } from "../../../../../../server/src/shared/enums";
+import { AudienceEnum, DepartmentEnum } from "../../../../server/src/shared/enums";
 import { FiTrash2 } from "react-icons/fi";
-import { Input, SelectInput } from "../../../ui/Input";
-import { BulkUser } from "../../../../constants/core/interfaces";
-import { RoleOption } from "../../../../constants";
+import { Input, SelectInput } from "../ui/Input";
+import { BulkUser } from "../../constants/core/interfaces";
+import { RoleOption } from "../../constants";
 
 
 type UserAddFormProps = {

@@ -3,7 +3,7 @@ import { users } from "../../auth/user.model";
 import { courseOfferings } from "../course/course.offering.model";
 import { programBatches } from "../program/program.batch.model";
 import { BatchEnrollmentStatus } from "../../../../shared/enums";
-
+import { relations } from "drizzle-orm";
 
 export const enrollments = pgTable(
     "enrollments",
@@ -52,3 +52,18 @@ export const studentBatchEnrollments = pgTable(
         index("student_batch_enrollments_program_batch_idx").on(table.programBatchId),
     ]
 );
+
+export const enrollmentsUsersRelations = relations(users, ({ many }) => ({
+    enrollments: many(studentBatchEnrollments), // one user can have many batch enrollments
+}));
+
+export const studentBatchEnrollmentsRelations = relations(studentBatchEnrollments, ({ one }) => ({
+    student: one(users, {
+        fields: [studentBatchEnrollments.studentId],
+        references: [users.id],
+    }),
+    programBatch: one(programBatches, {
+        fields: [studentBatchEnrollments.programBatchId],
+        references: [programBatches.id],
+    }),
+}));

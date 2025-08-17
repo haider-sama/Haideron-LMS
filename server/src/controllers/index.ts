@@ -10,6 +10,7 @@ export * as catalogueController from "./core/program/catalogue.controller";
 export * as batchController from "./core/batch/batch.controller";
 export * as batchSemesterController from "./core/batch/batch.semester.controller";
 export * as courseOfferingController from "./core/batch/course.offering.controller";
+export * as batchEnrollmentController from "./core/batch/batch.enrollment.controller";
 
 export const programController = {
   ...peoController,

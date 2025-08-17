@@ -179,7 +179,7 @@ export const updateBatchSemester = async (req: Request, res: Response) => {
         const { batchSemesterId } = req.params;
         const userId = req.userId;
 
-        if (batchSemesterId) {
+        if (!batchSemesterId) {
             return res.status(BAD_REQUEST).json({ message: "Invalid batchSemesterId format" });
         }
 
@@ -441,24 +441,27 @@ export const getCatalogueCoursesForActivatedSemester = async (req: Request, res:
         }
 
         // Find corresponding catalogue semester
-        const semester = await db.query.semesters.findFirst({
+        const semesterWithCourses = await db.query.semesters.findFirst({
             where: and(
                 eq(semesters.programCatalogueId, activatedSemester.programBatch!.programCatalogueId),
                 eq(semesters.semesterNo, activatedSemester.semesterNo)
             ),
             with: {
-                courses: true,  // directly fetch courses
+                semesterCourses: {
+                    with: {
+                        course: true,
+                    },
+                },
             },
         });
 
-        if (!semester) {
+        if (!semesterWithCourses) {
             return res.status(NOT_FOUND).json({
                 message: "Corresponding catalogue semester not found",
             });
         }
 
-        // Flatten out courses from pivot table
-        const courseList = semester.courses; // Course[]
+        const courseList = semesterWithCourses.semesterCourses.map(sc => sc.course);
 
         return res.status(OK).json({
             message: `Found ${courseList.length} catalogue courses`,

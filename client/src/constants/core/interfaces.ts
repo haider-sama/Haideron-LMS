@@ -422,74 +422,46 @@ export interface Semester {
     semesterCourses?: SemesterCourse[];
 }
 
-export interface UserPreview {
-    _id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-}
-
-export interface ProgramCataloguePreview {
-    catalogueYear: number;
-}
-
-export interface ProgramPreview {
-    _id: string;
-    title: string;
-    departmentTitle: string;
-}
-
 export interface ProgramBatch {
-    _id: string;
-    program: ProgramPreview;
-    programCatalogue: ProgramCataloguePreview;
+    id: string;
     sessionYear: number;
     isActive: boolean;
-    createdBy: UserPreview;
     createdAt: string;
     updatedAt: string;
+
+    programId: string;
+    programTitle: string;
+    programDepartment: string;
+
+    catalogueYear: number;
+    createdByFirstName: string;
+    createdByLastName: string;
 }
 
 export interface PaginatedBatches {
+    message: string;
     batches: ProgramBatch[];
     page: number;
     totalPages: number;
     totalBatches: number;
 }
 
-export interface CourseUpdatePayload {
-    _id: string;
-    title: string;
-    code: string;
-    creditHours: number;
-    department: DepartmentEnum;
-    semester: string; // e.g., "Fall 2025"
-    sectionTeachers: { [section in ClassSectionEnum]?: string };
-    sections: ClassSectionEnum[];
-    isActive: boolean;
-    enrollmentDeadline: string | null; // Dates are usually ISO strings from APIs
-    createdBy: string; // ObjectId as string
-    createdAt?: string; // optional, from Mongoose timestamps
-    updatedAt?: string;
-}
-
-
 export interface ActivatedSemester {
-    _id: string;
-    programBatch: string;
+    id: string;
+    programBatchId: string;
     semesterNo: number;
-    isActive: boolean;
     term: TermEnum;
-    startedAt?: string;
-    endedAt?: string;
-    enrollmentDeadline?: string;
-    createdAt?: string;
-    updatedAt?: string;
+    isActive: boolean;
+    startedAt: string | null;          // ISO 8601 string (or null)
+    endedAt: string | null;            // ISO 8601 string (or null)
+    enrollmentDeadline: string | null; // ISO 8601 string (or null)
+    createdAt: string;                 // ISO 8601 string
+    updatedAt: string;                 // ISO 8601 string
 }
 
-export interface ActivateSemesterResponse {
+export interface GetActivatedSemestersResponse {
     message: string;
-    activatedSemester: ActivatedSemester;
+    semesters: ActivatedSemester[];
 }
 
 export interface ScheduleSlot {
@@ -505,18 +477,14 @@ export interface CourseOfferingCreateInput {
 }
 
 export interface CourseOffering {
-    _id: string;
-    course: Course; // You can replace `any` with your `Course` interface if defined
+    id: string;
+    course: Course;
     activatedSemester: string;
     sectionSchedules?: Record<string, ScheduleSlot[]>;
     capacityPerSection?: Record<string, number>;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
-}
-
-export interface CourseOfferingListResponse {
-    offerings: CourseOffering[];
 }
 
 export interface CourseOfferingUpdateInput {
@@ -528,304 +496,395 @@ export interface CourseOfferingUpdateInput {
     activatedSemester?: string; // semester ID
 }
 
-export interface StudentBatchEnrollment {
-    _id: string;
-    student: string;
-    programBatch: string;
-    status: BatchEnrollmentStatus;
-    enrolledAt: string;
-    createdAt: string;
-    updatedAt: string;
-}
-
 export interface EnrollStudentPayload {
-    studentId: string;
+    studentId?: string;          // optional single student
+    studentIds?: string[];       // optional multiple students
     programBatchId: string;
     status?: BatchEnrollmentStatus;
 }
 
-export interface ModifyEnrollmentPayload {
-    studentId: string;
-    programBatchId: string;
-}
-
-export interface EnrollInCoursePayload {
-    section: string;
-}
-
-export interface SectionSchedule {
-    day: string;
-    startTime: string;
-    endTime: string;
-    room: string;
-}
-
-export interface EnrolledCourse {
-    _id: string;
-    enrolledAt: string;
-    section: string;
-    sectionTeacher: {
-        _id: string;
-        name: string;
-        email: string;
-    } | null;
-    courseOffering: CourseOffering;
-}
-
-export interface StudentDashboardContextResponse {
-    program: Program;
-    programBatch: ProgramBatch;
-    activatedSemesters: ActivatedSemester[];
-}
-
-export interface CourseInfo {
-    _id: string;
-    title: string;
-    code: string;
-}
-
-export interface AssignedCourseOffering {
-    offeringId: string;
-    course: Course;
-    assignedSections: string[];
-    programBatch: string;
-    activatedSemester: string;
-    sectionSchedules: Record<string, ScheduleSlot[]>;
-    capacityPerSection: Record<string, number>;
-}
-
-export interface GetAssignedCourseOfferingsResponse {
-    offerings: AssignedCourseOffering[];
-}
-
-export interface FacultyDashboardContextResponse {
-    program: Program;
-    programBatch: ProgramBatch;
-    activatedSemesters: ActivatedSemester[];
-}
-
-export interface EnrolledStudent {
-    _id: string;
-    name: string;
-    email: string;
-    enrolledAt: string;
-}
-
-export interface EnrolledStudentsResponse {
-    students: EnrolledStudent[];
-    total: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
-}
-
-export interface Assessment {
-    _id: string;
-    courseOfferingId: string; // or a populated CourseOffering object if populated
-    type: AssessmentTypeEnum;
-    title: string;
-    weightage: number;
-    dueDate: string; // ISO string returned from backend
-    clos: string[]; // CLO ObjectIds or populate later as needed
-    createdAt: string;
-    updatedAt: string;
-}
-
-export interface GetCourseAssessmentsResponse {
-    message: string;
-    assessments: Assessment[];
-}
-
-export interface AssessmentResultEntry {
-    studentId: string;
-    marksObtained: number;
-    totalMarks: number;
-}
-
-export interface SubmitBulkResultsResponse {
-    message: string;
-}
-
-export interface AssessmentResultStudent {
-    _id: string;
+export type EnrolledStudent = {
+    id: string;
     firstName: string;
+    lastName: string;
     email: string;
-}
+    role: string;
+};
 
-export interface GetAssessmentResultsResponse {
-    results: AssessmentResultApiResponseEntry[];
-}
+export type StudentEnrollment = {
+    student: EnrolledStudent;
+    status: BatchEnrollmentStatus;
+};
 
-export interface AssessmentResultApiResponseEntry {
-    _id: string;
-    assessmentId: string;
-    studentId: {
-        _id: string;
-        name: string;
-        email: string;
-    };
-    marksObtained: number;
-    totalMarks: number;
-    createdAt: string;
-    updatedAt: string;
-}
+export type PaginatedStudentsByDepartmentResponse = {
+    data: User[];
+    page: number;
+    totalPages: number;
+    totalUsers: number;
+};
 
-export interface GradingRule {
-    grade: string;          // e.g., "A+", "A", "B-", etc.
-    minPercentage: number;  // e.g., 75
-    gradePoint: number;     // e.g., 4.0
-}
+// export interface UserPreview {
+//     _id: string;
+//     firstName: string;
+//     lastName: string;
+//     email: string;
+// }
 
-export interface SaveGradingSchemeResponse {
-    success: boolean;
-    message: string;
-    scheme?: {
-        _id: string;
-        courseOffering: string;
-        createdBy: string;
-        rules: GradingRule[];
-        createdAt: string;
-        updatedAt: string;
-    };
-}
+// export interface ProgramCataloguePreview {
+//     catalogueYear: number;
+// }
 
-export interface FinalGrade {
-    studentId: string;
-    courseOfferingId: string;
-    weightedPercentage: number;  // e.g., 78.5
-    gradePoint: number;          // e.g., 3.7
-    grade: string;               // e.g., "A"
-}
+// export interface ProgramPreview {
+//     _id: string;
+//     title: string;
+//     departmentTitle: string;
+// }
 
-export interface FinalizeResultsResponse {
-    success: boolean;
-    message: string;
-    grades?: FinalGrade[];
-}
+// export interface ProgramBatch {
+//     _id: string;
+//     program: ProgramPreview;
+//     programCatalogue: ProgramCataloguePreview;
+//     sessionYear: number;
+//     isActive: boolean;
+//     createdBy: UserPreview;
+//     createdAt: string;
+//     updatedAt: string;
+// }
 
-export interface FinalizedGrade {
-    studentId: string;
-    grade: string;
-    gradePoint: number;
-    weightedPercentage: number;
-}
+// export interface PaginatedBatches {
+//     batches: ProgramBatch[];
+//     page: number;
+//     totalPages: number;
+//     totalBatches: number;
+// }
 
-export interface FinalizedResult {
-    _id: string;
-    courseOffering: {
-        _id: string;
-        course: {
-            _id: string;
-            code: string;
-            title: string;
-            creditHours: number;
-        };
-        programBatch: {
-            _id: string;
-            sessionYear: number,
-            program: {
-                _id: string;
-                title: string;
-                departmentTitle: string;
-            };
-        };
-    };
-    section: string;
-    submittedBy: {
-        _id: string;
-        firstName: string;
-        lastName: string;
-        email: string;
-    };
-    status: FinalizedResultStatusEnum;
-    reviewedBy?: string;
-    reviewedAt?: string;
-    results: {
-        studentId: string;
-        grade: string;
-        gradePoint: number;
-        weightedPercentage: number;
-    }[];
-}
+// export interface CourseUpdatePayload {
+//     _id: string;
+//     title: string;
+//     code: string;
+//     creditHours: number;
+//     department: DepartmentEnum;
+//     semester: string; // e.g., "Fall 2025"
+//     sectionTeachers: { [section in ClassSectionEnum]?: string };
+//     sections: ClassSectionEnum[];
+//     isActive: boolean;
+//     enrollmentDeadline: string | null; // Dates are usually ISO strings from APIs
+//     createdBy: string; // ObjectId as string
+//     createdAt?: string; // optional, from Mongoose timestamps
+//     updatedAt?: string;
+// }
 
-export interface CourseGrade {
-    courseTitle: string;
-    courseCode: string;
-    creditHours: number;
-    grade: string;
-    gradePoint: number;
-    status: string;
-}
 
-export interface SemesterTranscript {
-    semesterNo: number;
-    term: string;
-    sessionYear: number;
-    startedAt: string;
-    endedAt: string;
-    courses: CourseGrade[];
-    totalCredits: number;
-    totalGradePoints: number;
-    gpa: string;
-}
+// export interface ActivatedSemester {
+//     _id: string;
+//     programBatch: string;
+//     semesterNo: number;
+//     isActive: boolean;
+//     term: TermEnum;
+//     startedAt?: string;
+//     endedAt?: string;
+//     enrollmentDeadline?: string;
+//     createdAt?: string;
+//     updatedAt?: string;
+// }
 
-export interface TranscriptResponse {
-    semesters: SemesterTranscript[];
-    cgpa: string;
-}
+// export interface ActivateSemesterResponse {
+//     message: string;
+//     activatedSemester: ActivatedSemester;
+// }
 
-export interface AttendanceSessionResponse {
-    message: string;
-    session?: any;
-    errors?: Record<string, string[]>;
-}
+// export interface StudentBatchEnrollment {
+//     _id: string;
+//     student: string;
+//     programBatch: string;
+//     status: BatchEnrollmentStatus;
+//     enrolledAt: string;
+//     createdAt: string;
+//     updatedAt: string;
+// }
 
-export interface AttendanceRecordInput {
-    studentId: string;
-    present: boolean;
-}
+// export interface ModifyEnrollmentPayload {
+//     studentId: string;
+//     programBatchId: string;
+// }
 
-export interface MarkAttendanceResponse {
-    message: string;
-    upsertedCount?: number;
-    modifiedCount?: number;
-    errors?: Record<string, string[]>;
-}
+// export interface EnrollInCoursePayload {
+//     section: string;
+// }
 
-export interface PLOAchievement {
-    ploId: string;
-    title: string;
-    achievedByPercentage: number;
-    threshold: number;
-    contributingCLOs: {
-        cloId: string;
-        cloCode: string;
-        cloTitle: string;
-        percentage: number;
-        weight: number;
-    }[];
-}
+// export interface SectionSchedule {
+//     day: string;
+//     startTime: string;
+//     endTime: string;
+//     room: string;
+// }
 
-export interface PLOAchievementResponse {
-    batchId: string;
-    programId: string;
-    ploAchievements: PLOAchievement[];
-    pagination: {
-        total: number;
-        page: number;
-        limit: number;
-        totalPages: number;
-    };
-    summary: {
-        totalStudents: number;
-        totalAssessments: number;
-        totalCLOs: number;
-        totalPLOs: number;
-        averagePLOAchievement: number;
-    };
-    interpretation: {
-        strongPLOs: string[];
-        weakPLOs: string[];
-        message: string;
-    };
-}
+// export interface EnrolledCourse {
+//     _id: string;
+//     enrolledAt: string;
+//     section: string;
+//     sectionTeacher: {
+//         _id: string;
+//         name: string;
+//         email: string;
+//     } | null;
+//     courseOffering: CourseOffering;
+// }
+
+// export interface StudentDashboardContextResponse {
+//     program: Program;
+//     programBatch: ProgramBatch;
+//     activatedSemesters: ActivatedSemester[];
+// }
+
+// export interface CourseInfo {
+//     _id: string;
+//     title: string;
+//     code: string;
+// }
+
+// export interface AssignedCourseOffering {
+//     offeringId: string;
+//     course: Course;
+//     assignedSections: string[];
+//     programBatch: string;
+//     activatedSemester: string;
+//     sectionSchedules: Record<string, ScheduleSlot[]>;
+//     capacityPerSection: Record<string, number>;
+// }
+
+// export interface GetAssignedCourseOfferingsResponse {
+//     offerings: AssignedCourseOffering[];
+// }
+
+// export interface FacultyDashboardContextResponse {
+//     program: Program;
+//     programBatch: ProgramBatch;
+//     activatedSemesters: ActivatedSemester[];
+// }
+
+// export interface EnrolledStudent {
+//     _id: string;
+//     name: string;
+//     email: string;
+//     enrolledAt: string;
+// }
+
+// export interface EnrolledStudentsResponse {
+//     students: EnrolledStudent[];
+//     total: number;
+//     page: number;
+//     pageSize: number;
+//     totalPages: number;
+// }
+
+// export interface Assessment {
+//     _id: string;
+//     courseOfferingId: string; // or a populated CourseOffering object if populated
+//     type: AssessmentTypeEnum;
+//     title: string;
+//     weightage: number;
+//     dueDate: string; // ISO string returned from backend
+//     clos: string[]; // CLO ObjectIds or populate later as needed
+//     createdAt: string;
+//     updatedAt: string;
+// }
+
+// export interface GetCourseAssessmentsResponse {
+//     message: string;
+//     assessments: Assessment[];
+// }
+
+// export interface AssessmentResultEntry {
+//     studentId: string;
+//     marksObtained: number;
+//     totalMarks: number;
+// }
+
+// export interface SubmitBulkResultsResponse {
+//     message: string;
+// }
+
+// export interface AssessmentResultStudent {
+//     _id: string;
+//     firstName: string;
+//     email: string;
+// }
+
+// export interface GetAssessmentResultsResponse {
+//     results: AssessmentResultApiResponseEntry[];
+// }
+
+// export interface AssessmentResultApiResponseEntry {
+//     _id: string;
+//     assessmentId: string;
+//     studentId: {
+//         _id: string;
+//         name: string;
+//         email: string;
+//     };
+//     marksObtained: number;
+//     totalMarks: number;
+//     createdAt: string;
+//     updatedAt: string;
+// }
+
+// export interface GradingRule {
+//     grade: string;          // e.g., "A+", "A", "B-", etc.
+//     minPercentage: number;  // e.g., 75
+//     gradePoint: number;     // e.g., 4.0
+// }
+
+// export interface SaveGradingSchemeResponse {
+//     success: boolean;
+//     message: string;
+//     scheme?: {
+//         _id: string;
+//         courseOffering: string;
+//         createdBy: string;
+//         rules: GradingRule[];
+//         createdAt: string;
+//         updatedAt: string;
+//     };
+// }
+
+// export interface FinalGrade {
+//     studentId: string;
+//     courseOfferingId: string;
+//     weightedPercentage: number;  // e.g., 78.5
+//     gradePoint: number;          // e.g., 3.7
+//     grade: string;               // e.g., "A"
+// }
+
+// export interface FinalizeResultsResponse {
+//     success: boolean;
+//     message: string;
+//     grades?: FinalGrade[];
+// }
+
+// export interface FinalizedGrade {
+//     studentId: string;
+//     grade: string;
+//     gradePoint: number;
+//     weightedPercentage: number;
+// }
+
+// export interface FinalizedResult {
+//     _id: string;
+//     courseOffering: {
+//         _id: string;
+//         course: {
+//             _id: string;
+//             code: string;
+//             title: string;
+//             creditHours: number;
+//         };
+//         programBatch: {
+//             _id: string;
+//             sessionYear: number,
+//             program: {
+//                 _id: string;
+//                 title: string;
+//                 departmentTitle: string;
+//             };
+//         };
+//     };
+//     section: string;
+//     submittedBy: {
+//         _id: string;
+//         firstName: string;
+//         lastName: string;
+//         email: string;
+//     };
+//     status: FinalizedResultStatusEnum;
+//     reviewedBy?: string;
+//     reviewedAt?: string;
+//     results: {
+//         studentId: string;
+//         grade: string;
+//         gradePoint: number;
+//         weightedPercentage: number;
+//     }[];
+// }
+
+// export interface CourseGrade {
+//     courseTitle: string;
+//     courseCode: string;
+//     creditHours: number;
+//     grade: string;
+//     gradePoint: number;
+//     status: string;
+// }
+
+// export interface SemesterTranscript {
+//     semesterNo: number;
+//     term: string;
+//     sessionYear: number;
+//     startedAt: string;
+//     endedAt: string;
+//     courses: CourseGrade[];
+//     totalCredits: number;
+//     totalGradePoints: number;
+//     gpa: string;
+// }
+
+// export interface TranscriptResponse {
+//     semesters: SemesterTranscript[];
+//     cgpa: string;
+// }
+
+// export interface AttendanceSessionResponse {
+//     message: string;
+//     session?: any;
+//     errors?: Record<string, string[]>;
+// }
+
+// export interface AttendanceRecordInput {
+//     studentId: string;
+//     present: boolean;
+// }
+
+// export interface MarkAttendanceResponse {
+//     message: string;
+//     upsertedCount?: number;
+//     modifiedCount?: number;
+//     errors?: Record<string, string[]>;
+// }
+
+// export interface PLOAchievement {
+//     ploId: string;
+//     title: string;
+//     achievedByPercentage: number;
+//     threshold: number;
+//     contributingCLOs: {
+//         cloId: string;
+//         cloCode: string;
+//         cloTitle: string;
+//         percentage: number;
+//         weight: number;
+//     }[];
+// }
+
+// export interface PLOAchievementResponse {
+//     batchId: string;
+//     programId: string;
+//     ploAchievements: PLOAchievement[];
+//     pagination: {
+//         total: number;
+//         page: number;
+//         limit: number;
+//         totalPages: number;
+//     };
+//     summary: {
+//         totalStudents: number;
+//         totalAssessments: number;
+//         totalCLOs: number;
+//         totalPLOs: number;
+//         averagePLOAchievement: number;
+//     };
+//     interpretation: {
+//         strongPLOs: string[];
+//         weakPLOs: string[];
+//         message: string;
+//     };
+// }

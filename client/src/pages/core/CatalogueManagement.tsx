@@ -11,7 +11,7 @@ import Breadcrumbs, { generateBreadcrumbs } from "../../components/ui/Breadcrumb
 import PageHeading from "../../components/ui/PageHeading";
 import { SelectInput } from "../../components/ui/Input";
 import TopCenterLoader from "../../components/ui/TopCenterLoader";
-import { FiEye } from "react-icons/fi";
+import { FiEdit } from "react-icons/fi";
 import { Pagination } from "../../components/ui/Pagination";
 import { Program, ProgramCatalogue } from "../../../../server/src/shared/interfaces";
 import Modal from "../../components/ui/Modal";
@@ -203,7 +203,7 @@ const CatalogueManagement: React.FC = () => {
                                                 className="inline-flex items-center justify-center text-sm text-blue-500 dark:text-darkBlurple hover:text-blue-700 dark:hover:text-darkBlurpleHover"
                                                 title="View Catalogue"
                                             >
-                                                <FiEye className="w-4 h-4" />
+                                                <FiEdit className="w-4 h-4" />
                                             </button>
                                         </td>
                                     </tr>

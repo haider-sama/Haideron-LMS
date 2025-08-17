@@ -115,6 +115,7 @@ const ProgramManagement: React.FC = () => {
                             <tr>
                                 <td colSpan={6} className="text-center px-4 py-6">
                                     <TopCenterLoader />
+                                    Loading programs...
                                 </td>
                             </tr>
                         ) : programs.length > 0 ? (

@@ -1,9 +1,8 @@
 import { Request, Response } from "express";
-import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../../constants/http";
-import { activatedSemesters, courseOfferings, programBatches, semesters, users } from "../../../db/schema";
+import { BAD_REQUEST, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../../constants/http";
+import { activatedSemesters, courseOfferings, users } from "../../../db/schema";
 import { db } from "../../../db/db";
-import { eq, and, asc } from "drizzle-orm";
-import { activateSemesterSchema, updateBatchSemesterSchema } from "../../../utils/validators/lms-schemas/batchSchemas";
+import { eq, and } from "drizzle-orm";
 import { checkDepartmentAccess } from "./batch.controller";
 import { UpdateCourseOfferingSchema } from "../../../utils/validators/lms-schemas/courseOfferingSchemas";
 
@@ -130,23 +129,9 @@ export const getCourseOfferings = async (req: Request, res: Response) => {
                 course: {
                     with: {
                         clos: true,
-                        preRequisites: {
-                            columns: {
-                                id: true,
-                                code: true,
-                                title: true,
-                            },
-                        },
-                        coRequisites: {
-                            columns: {
-                                id: true,
-                                code: true,
-                                title: true,
-                            },
-                        },
-                    },
-                },
-            },
+                    }
+                }
+            }
         });
 
         // Filter out offerings where course is missing

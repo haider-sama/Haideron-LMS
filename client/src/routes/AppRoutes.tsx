@@ -24,6 +24,9 @@ import FacultyManagement from "../pages/core/FacultyManagement";
 import ProgramManagement from "../pages/core/ProgramManagement";
 import CatalogueManagement from "../pages/core/CatalogueManagement";
 import CourseManagement from "../pages/core/CourseManagement";
+import BatchManagement from "../pages/core/batch/BatchManagement";
+import EnrolledStudentsList from "../pages/core/batch/EnrolledStudentsList";
+import StudentBatchRegistration from "../pages/core/batch/StudentBatchRegistration";
 // import SocialShell from "../pages/main/SocialShell";
 
 interface AppRoutesProps {
@@ -175,7 +178,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
 
 
                 {/* ProgramBatch routes */}
-                {/* <Route
+                <Route
                     path="/batches"
                     element={
                         <ProtectedRoute
@@ -184,18 +187,18 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                             element={<BatchManagement />}
                         />
                     }
-                /> */}
-                {/* <Route
+                />
+                <Route
                     path="/batches/enrollments/student-batch"
                     element={
                         <ProtectedRoute
                             isAllowed={isLoggedIn && (role === AudienceEnum.Admin || role === AudienceEnum.DepartmentHead)}
                             redirectTo="/forbidden"
-                            element={<StudentBatchEnrollmentForm />}
+                            element={<StudentBatchRegistration />}
                         />
                     }
-                /> */}
-                {/* <Route
+                />
+                <Route
                     path="/batches/enrollments/student-list"
                     element={
                         <ProtectedRoute
@@ -204,7 +207,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                             element={<EnrolledStudentsList />}
                         />
                     }
-                /> */}
+                />
 
 
                 {/* Student routes */}
