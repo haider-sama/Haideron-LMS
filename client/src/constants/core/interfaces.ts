@@ -523,6 +523,81 @@ export type PaginatedStudentsByDepartmentResponse = {
     totalUsers: number;
 };
 
+export interface EnrollInCoursePayload {
+    section: string;
+}
+
+export interface SectionTeacher {
+    name: string;
+    email: string;
+}
+
+export interface CourseRequirement {
+    id: string;
+    title: string;
+    code: string;
+}
+
+export interface EnrolledCourse {
+    id: string;
+    enrolledAt: Date;
+    section: string;
+    sectionTeacher: SectionTeacher | null;
+    courseOffering: {
+        id: string;
+        programBatch: ProgramBatch;
+        activatedSemester: ActivatedSemester;
+        sectionSchedules: Record<string, ScheduleSlot[]>;
+        capacityPerSection: number | null;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        course: {
+            id: string;
+            title: string;
+            code: string;
+            preRequisites: CourseRequirement[];
+            coRequisites: CourseRequirement[];
+            sectionTeachers: {
+                section: string;
+                teacherId: string;
+            }[];
+        };
+    };
+}
+
+export interface StudentDashboardContextResponse {
+    program: Program;
+    programBatch: ProgramBatch;
+    activatedSemesters: ActivatedSemester[];
+}
+
+export interface TranscriptCourse {
+    courseTitle: string;
+    courseCode: string;
+    creditHours: number;
+    grade: string;
+    gradePoint: number;
+    status: string;
+}
+
+export interface TranscriptSemester {
+    semesterNo: number;
+    term: string;
+    sessionYear: string;
+    startedAt: string; // ISO string from API
+    endedAt: string;   // ISO string from API
+    gpa: string;
+    totalCredits: number;
+    totalGradePoints: number;
+    courses: TranscriptCourse[];
+}
+
+export interface TranscriptResponse {
+    semesters: TranscriptSemester[];
+    cgpa: string;
+}
+
 // export interface UserPreview {
 //     _id: string;
 //     firstName: string;
@@ -606,10 +681,6 @@ export type PaginatedStudentsByDepartmentResponse = {
 // export interface ModifyEnrollmentPayload {
 //     studentId: string;
 //     programBatchId: string;
-// }
-
-// export interface EnrollInCoursePayload {
-//     section: string;
 // }
 
 // export interface SectionSchedule {

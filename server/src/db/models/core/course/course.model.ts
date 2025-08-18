@@ -145,8 +145,8 @@ export const coursesRelations = relations(courses, ({ one, many }) => ({
     clos: many(clos),
 
     // Join tables
-    preRequisiteLinks: many(coursePreRequisites),
-    coRequisiteLinks: many(courseCoRequisites),
+    preRequisiteLinks: many(coursePreRequisites, { relationName: "mainCoursePreReqs" }),
+    coRequisiteLinks: many(courseCoRequisites, { relationName: "mainCourseCoReqs" }),
 
     // Actual related courses
     preRequisites: many(courses, { relationName: "isPreRequisiteOf" }),
@@ -184,6 +184,23 @@ export const courseCoRequisitesRelations = relations(courseCoRequisites, ({ one 
     }),
 }));
 
+export const courseSectionTeachersRelations = relations(courseSectionTeachers, ({ one }) => ({
+    course: one(courses, {
+        fields: [courseSectionTeachers.courseId],
+        references: [courses.id],
+    }),
+    teacher: one(users, {
+        fields: [courseSectionTeachers.teacherId],
+        references: [users.id],
+    }),
+}));
+
+export const courseSectionsRelations = relations(courseSections, ({ one }) => ({
+    course: one(courses, {
+        fields: [courseSections.courseId],
+        references: [courses.id],
+    }),
+}));
 
 // TODO:
 // Validation like creditHours >= contactHours

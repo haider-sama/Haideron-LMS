@@ -19,6 +19,11 @@ import batchRouter from './routes/core/batch/batch.routes';
 import batchSemesterRouter from './routes/core/batch/batch.semester.routes';
 import courseOfferingRouter from './routes/core/batch/course.offering.routes';
 import batchEnrollmentRouter from './routes/core/batch/batch.enrollment.routes';
+import studentRouter from './routes/core/student.routes';
+import teacherRouter from './routes/core/teacher/teacher.routes';
+import attendanceRouter from './routes/core/teacher/attendance.routes';
+import assessmentRouter from './routes/core/teacher/assessment.routes';
+import resultRouter from './routes/core/teacher/result.routes';
 
 dotenv.config();
 
@@ -50,6 +55,12 @@ app.use('/api/v1/batch/', batchRouter);
 app.use('/api/v1/batch/semesters/', batchSemesterRouter);
 app.use('/api/v1/batch/enrollments/', batchEnrollmentRouter);
 app.use('/api/v1/offerings/', courseOfferingRouter);
+
+app.use('/api/v1/student/', studentRouter);
+app.use('/api/v1/teacher/', teacherRouter);
+app.use('/api/v1/attendance/', attendanceRouter);
+app.use('/api/v1/assessment/', assessmentRouter);
+app.use('/api/v1/results/', resultRouter);
 
 const startServer = async () => {
     console.time("Total Startup Time");

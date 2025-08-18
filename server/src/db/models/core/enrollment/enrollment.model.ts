@@ -67,3 +67,14 @@ export const studentBatchEnrollmentsRelations = relations(studentBatchEnrollment
         references: [programBatches.id],
     }),
 }));
+
+export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
+    courseOffering: one(courseOfferings, {
+        fields: [enrollments.courseOfferingId],
+        references: [courseOfferings.id],
+    }),
+    student: one(users, {
+        fields: [enrollments.studentId],
+        references: [users.id],
+    }),
+}));

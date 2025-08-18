@@ -251,7 +251,6 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
         }
     };
 
-    if (programsLoading || cataloguesLoading) return <TopCenterLoader />;
     if (programsError || cataloguesError || courseError) {
         return <ErrorStatus message="Failed to fetch data, try refreshing..." />;
     }
@@ -261,6 +260,8 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
             <div className="w-full max-w-5xl p-6 space-y-6">
                 <h1 className="text-2xl font-semibold text-center">Edit Course Details</h1>
 
+                {(programsLoading || cataloguesLoading) && <TopCenterLoader />}
+                
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <SelectInput
                         label="Program"

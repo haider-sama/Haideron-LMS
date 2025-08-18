@@ -11,6 +11,11 @@ export * as batchController from "./core/batch/batch.controller";
 export * as batchSemesterController from "./core/batch/batch.semester.controller";
 export * as courseOfferingController from "./core/batch/course.offering.controller";
 export * as batchEnrollmentController from "./core/batch/batch.enrollment.controller";
+export * as assessmentController from "./core/teacher/assessment.controller";
+export * as attendanceController from "./core/teacher/attendance.controller";
+export * as resultController from "./core/teacher/result.controller";
+export * as teacherCourseController from "./core/teacher/teacher.course.controller";
+export * as studentController from "./core/student/student.controller";
 
 export const programController = {
   ...peoController,

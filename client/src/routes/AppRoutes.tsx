@@ -27,6 +27,8 @@ import CourseManagement from "../pages/core/CourseManagement";
 import BatchManagement from "../pages/core/batch/BatchManagement";
 import EnrolledStudentsList from "../pages/core/batch/EnrolledStudentsList";
 import StudentBatchRegistration from "../pages/core/batch/StudentBatchRegistration";
+import StudentCourseEnrollment from "../pages/core/student/StudentCourseEnrollment";
+import StudentTranscriptPage from "../pages/core/student/StudentTranscriptPage";
 // import SocialShell from "../pages/main/SocialShell";
 
 interface AppRoutesProps {
@@ -211,7 +213,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
 
 
                 {/* Student routes */}
-                {/* <Route
+                <Route
                     path="/student/course-enrollment"
                     element={
                         <ProtectedRoute
@@ -220,8 +222,8 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                             element={<StudentCourseEnrollment />}
                         />
                     }
-                /> */}
-                {/* <Route
+                />
+                <Route
                     path="/student/transcript"
                     element={
                         <ProtectedRoute
@@ -230,7 +232,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                             element={<StudentTranscriptPage />}
                         />
                     }
-                /> */}
+                />
                 {/* <Route
                     path="/student/dashboard"
                     element={

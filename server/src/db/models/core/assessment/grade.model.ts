@@ -1,8 +1,8 @@
-import { pgTable, timestamp, uuid, index, uniqueIndex, pgEnum, integer, varchar, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, timestamp, uuid, index, uniqueIndex, pgEnum, integer, varchar, jsonb, numeric } from "drizzle-orm/pg-core";
 import { users } from "../../auth/user.model";
 import { courseOfferings } from "../course/course.offering.model";
-import { AssessmentTypeEnum, FinalizedResultStatusEnum } from "../../../../shared/enums";
-import { clos } from "../course/course.model";
+import { FinalizedResultStatusEnum } from "../../../../shared/enums";
+import { relations } from "drizzle-orm";
 
 export const finalizedResultStatusEnumPg = pgEnum(
     "finalized_result_status_enum",
@@ -42,6 +42,24 @@ export const finalizedResults = pgTable(
     ]
 );
 
+// -------------------------
+// Finalized Results Entries
+// -------------------------
+
+export const finalizedResultEntries = pgTable("finalized_result_entries", {
+    id: uuid("id").defaultRandom().primaryKey(),
+    finalizedResultId: uuid("finalized_result_id")
+        .notNull()
+        .references(() => finalizedResults.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    grade: varchar("grade", { length: 2 }).notNull(),  // e.g. "A", "B+"
+    gradePoint: numeric("grade_point", { precision: 3, scale: 2 }).notNull(), // e.g. 3.67
+    weightedPercentage: numeric("weighted_percentage", { precision: 5, scale: 2 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
 // ------------------
 // Custom Grading Scheme
 // ------------------
@@ -67,3 +85,18 @@ export const customGradingSchemes = pgTable(
         index("custom_grading_schemes_created_by_idx").on(table.createdBy),
     ]
 );
+
+export const finalizedResultsRelations = relations(finalizedResults, ({ one }) => ({
+    courseOffering: one(courseOfferings, {
+        fields: [finalizedResults.courseOfferingId],
+        references: [courseOfferings.id],
+    }),
+    submittedByUser: one(users, {
+        fields: [finalizedResults.submittedBy],
+        references: [users.id],
+    }),
+    reviewedByUser: one(users, {
+        fields: [finalizedResults.reviewedBy],
+        references: [users.id],
+    }),
+}));
