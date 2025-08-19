@@ -39,15 +39,6 @@ assessmentRouter
         assessmentController.deleteAssessment
     );
 
-
-assessmentRouter.get(
-    "/course/:courseOfferingId",
-    safeLimiter,
-    verifyToken,
-    authorizeRoles(AudienceEnum.DepartmentTeacher, AudienceEnum.Student),
-    assessmentController.getCourseAssessments
-);
-
 assessmentRouter
     .post(
         "/:id/results",

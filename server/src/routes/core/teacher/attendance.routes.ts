@@ -2,7 +2,7 @@ import express from "express";
 import { attendanceController } from "../../../controllers";
 import dotenv from "dotenv";
 import { authorizeRoles, verifyToken } from "../../../middleware/auth";
-import { safeLimiter, normalLimiter, strictLimiter } from "../../../utils/limiter/rateLimiter";
+import { safeLimiter, normalLimiter } from "../../../utils/limiter/rateLimiter";
 import { AudienceEnum } from "../../../shared/enums";
 
 dotenv.config();
@@ -10,13 +10,13 @@ const attendanceRouter = express.Router();
 
 attendanceRouter
     .post(
-        "/:courseOfferingId/attendance-sessions",
+        "/:courseOfferingId",
         normalLimiter,
         verifyToken,
         authorizeRoles(AudienceEnum.DepartmentTeacher),
         attendanceController.createAttendanceSession
     ).get(
-        "/:courseOfferingId/attendance-sessions",
+        "/:courseOfferingId",
         safeLimiter,
         verifyToken,
         authorizeRoles(AudienceEnum.DepartmentTeacher, AudienceEnum.DepartmentHead, AudienceEnum.Student),
@@ -25,13 +25,13 @@ attendanceRouter
 
 attendanceRouter
     .post(
-        "/attendance-sessions/:id/records",
+        "/:id/records",
         safeLimiter,
         verifyToken,
         authorizeRoles(AudienceEnum.DepartmentTeacher),
         attendanceController.markAttendanceRecords
     ).get(
-        "/attendance-sessions/:id/records",
+        "/:id/records",
         safeLimiter,
         verifyToken,
         authorizeRoles(AudienceEnum.DepartmentTeacher, AudienceEnum.DepartmentHead),

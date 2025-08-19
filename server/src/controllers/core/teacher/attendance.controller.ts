@@ -83,10 +83,7 @@ export const createAttendanceSession = async (req: Request, res: Response) => {
             })
             .returning();
 
-        return res.status(CREATED).json({
-            message: "Attendance session created successfully.",
-            session: newSession,
-        });
+        return res.status(CREATED).json({ message: "Attendance session created successfully." });
     } catch (error) {
         console.error("Create Attendance Session Error:", error);
         return res.status(INTERNAL_SERVER_ERROR).json({ message: "Server error while creating attendance session." });

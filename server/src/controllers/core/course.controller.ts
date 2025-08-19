@@ -282,7 +282,9 @@ export const getCourseById = async (req: Request, res: Response) => {
         const userId = req.userId;
         const { courseId } = req.params;
 
-        if (!courseId) return res.status(BAD_REQUEST).json({ message: "Course ID is required" });
+        if (!courseId) {
+            return res.status(BAD_REQUEST).json({ message: "Course ID is required" });
+        }
 
         // Fetch user
         const user = await db.query.users.findFirst({
@@ -306,56 +308,106 @@ export const getCourseById = async (req: Request, res: Response) => {
             with: { program: true },
         });
 
-        if (!course) return res.status(NOT_FOUND).json({ message: "Course not found" });
+        if (!course) {
+            return res.status(NOT_FOUND).json({ message: "Course not found" });
+        }
 
-        // --- Fetch related data ---
-        const [preRequisites, coRequisites, sections, sectionTeachers, clos] = await Promise.all([
-            db.query.coursePreRequisites.findMany({ where: (pr, { eq }) => eq(pr.courseId, courseId) }),
-            db.query.courseCoRequisites.findMany({ where: (cr, { eq }) => eq(cr.courseId, courseId) }),
-            db.query.courseSections.findMany({ where: (sec, { eq }) => eq(sec.courseId, courseId) }),
-            db.query.courseSectionTeachers.findMany({ where: (st, { eq }) => eq(st.courseId, courseId) }),
-            db.query.clos.findMany({ where: (clo, { eq }) => eq(clo.courseId, courseId) }),
-        ]);
-
-        // Attach PLO mappings
+        // --- Always fetch CLOs (since faculty also needs them) ---
+        const clos = await db.query.clos.findMany({ where: (clo, { eq }) => eq(clo.courseId, courseId) });
         const cloIds = clos.map(c => c.id);
+
         const cloPloMappingsRows = cloIds.length > 0
             ? await db.query.cloPloMappings.findMany({
                 where: (m, { inArray }) => inArray(m.cloId, cloIds),
             })
             : [];
+
         const closWithMappings = clos.map(c => ({
             ...c,
             ploMappings: cloPloMappingsRows.filter(m => m.cloId === c.id),
         }));
 
-        const fullCourse = {
-            ...course,
-            preRequisites,
-            coRequisites,
-            sections,
-            sectionTeachers,
-            clos: closWithMappings,
-        };
+        // ----------------------
+        // ROLE BASED RESPONSES
+        // ----------------------
 
-        // --- Role-based access checks ---
-        if (isAdmin) return res.status(OK).json({ message: "Course fetched successfully", course: fullCourse });
+        // 1. Admin → full access
+        if (isAdmin) {
+            const [preRequisites, coRequisites, sections, sectionTeachers] = await Promise.all([
+                db.query.coursePreRequisites.findMany({ where: (pr, { eq }) => eq(pr.courseId, courseId) }),
+                db.query.courseCoRequisites.findMany({ where: (cr, { eq }) => eq(cr.courseId, courseId) }),
+                db.query.courseSections.findMany({ where: (sec, { eq }) => eq(sec.courseId, courseId) }),
+                db.query.courseSectionTeachers.findMany({ where: (st, { eq }) => eq(st.courseId, courseId) }),
+            ]);
 
+            const fullCourse = {
+                ...course,
+                preRequisites,
+                coRequisites,
+                sections,
+                sectionTeachers,
+                clos: closWithMappings,
+            };
+
+            return res.status(OK).json({ message: "Course fetched successfully", course: fullCourse });
+        }
+
+        // 2. Department Head → full access but only for their own department
         if (isDeptHead) {
             if (course.program?.departmentTitle !== user.department) {
                 return res.status(FORBIDDEN).json({ message: "You cannot access courses from another department" });
             }
+
+            const [preRequisites, coRequisites, sections, sectionTeachers] = await Promise.all([
+                db.query.coursePreRequisites.findMany({ where: (pr, { eq }) => eq(pr.courseId, courseId) }),
+                db.query.courseCoRequisites.findMany({ where: (cr, { eq }) => eq(cr.courseId, courseId) }),
+                db.query.courseSections.findMany({ where: (sec, { eq }) => eq(sec.courseId, courseId) }),
+                db.query.courseSectionTeachers.findMany({ where: (st, { eq }) => eq(st.courseId, courseId) }),
+            ]);
+
+            const fullCourse = {
+                ...course,
+                preRequisites,
+                coRequisites,
+                sections,
+                sectionTeachers,
+                clos: closWithMappings,
+            };
+
             return res.status(OK).json({ message: "Course fetched successfully", course: fullCourse });
         }
 
+        // 3. Faculty → only basic course info + CLOs (if assigned)
         if (isFaculty) {
+            const sectionTeachers = await db.query.courseSectionTeachers.findMany({ where: (st, { eq }) => eq(st.courseId, courseId) });
+
             const isAssigned = sectionTeachers.some(st => String(st.teacherId) === String(user.id));
-            if (!isAssigned) return res.status(FORBIDDEN).json({ message: "You are not assigned to teach this course" });
-            return res.status(OK).json({ message: "Course fetched successfully", course: fullCourse });
+            if (!isAssigned) {
+                return res.status(FORBIDDEN).json({ message: "You are not assigned to teach this course" });
+            }
+
+            const basicCourse = {
+                id: course.id,
+                title: course.title,
+                code: course.code,
+                codePrefix: course.codePrefix,
+                description: course.description,
+                creditHours: course.creditHours,
+                contactHours: course.contactHours,
+                knowledgeArea: course.knowledgeArea,
+                domain: course.domain,
+                subjectType: course.subjectType,
+                subjectLevel: course.subjectLevel,
+                program: course.program,
+                clos: closWithMappings,
+            };
+
+            return res.status(OK).json({ message: "Course fetched successfully", course: basicCourse });
         }
 
-        // Default deny
+        // 4. Everyone else → deny
         return res.status(FORBIDDEN).json({ message: "You do not have permission to view this course" });
+
     } catch (err: any) {
         console.error("Error fetching course by ID:", err);
         return res.status(INTERNAL_SERVER_ERROR).json({

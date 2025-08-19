@@ -122,10 +122,7 @@ export const createAssessment = async (req: Request, res: Response) => {
             );
         }
 
-        res.status(CREATED).json({
-            message: "Assessment created successfully.",
-            assessment: newAssessment,
-        });
+        res.status(CREATED).json({ message: "Assessment created successfully." });
     } catch (error) {
         console.error(error);
         res.status(INTERNAL_SERVER_ERROR).json({ message: "Server error while creating assessment." });
@@ -203,9 +200,29 @@ export const getCourseAssessments = async (req: Request, res: Response) => {
             .where(eq(assessments.courseOfferingId, courseOfferingId))
             .orderBy(asc(assessments.dueDate)); // earliest first
 
+        // For each assessment, fetch its clos
+        const assessmentsWithClos = await Promise.all(
+            courseAssessments.map(async (a) => {
+                const rows = await db
+                    .select({
+                        id: clos.id,
+                        code: clos.code,
+                        title: clos.title,
+                    })
+                    .from(assessmentClos)
+                    .innerJoin(clos, eq(assessmentClos.cloId, clos.id))
+                    .where(eq(assessmentClos.assessmentId, a.id));
+
+                return {
+                    ...a,
+                    clos: rows, // now contains full CLO objects
+                };
+            })
+        );
+        
         return res.status(OK).json({
             message: "Assessments retrieved successfully.",
-            assessments: courseAssessments,
+            assessments: assessmentsWithClos,
         });
     } catch (error) {
         console.error(error);
@@ -351,7 +368,6 @@ export const updateAssessment = async (req: Request, res: Response) => {
 
         return res.status(OK).json({
             message: "Assessment updated successfully.",
-            assessment: updatedAssessment,
         });
     } catch (error) {
         console.error(error);

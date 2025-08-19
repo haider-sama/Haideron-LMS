@@ -30,7 +30,7 @@ courseRouter
         "/:courseId",
         safeLimiter,
         verifyToken,
-        authorizeRoles(AudienceEnum.Admin, AudienceEnum.DepartmentHead),
+        authorizeRoles(AudienceEnum.Admin, AudienceEnum.DepartmentHead, AudienceEnum.DepartmentTeacher),
         courseController.getCourseById
     ).put(
         "/:courseId",

@@ -292,6 +292,7 @@ export interface UpdateCoursePayload {
     description?: string;
     subjectLevel?: SubjectLevelEnum;
     subjectType?: SubjectTypeEnum;
+    creditHours?: number;
     contactHours?: number;
     knowledgeArea?: KnowledgeAreaEnum;
     domain?: DomainEnum;
@@ -314,6 +315,7 @@ export interface UpdateCourseResponse {
 }
 
 export interface EditableCourse {
+    id?: string;
     programId?: string;
     programCatalogueId?: string;
 
@@ -596,6 +598,183 @@ export interface TranscriptSemester {
 export interface TranscriptResponse {
     semesters: TranscriptSemester[];
     cgpa: string;
+}
+
+export interface CourseWithCLOs extends Course {
+    clos: CLO[];
+}
+
+export interface AssignedCourseOffering {
+    offeringId: string;
+    course: CourseWithCLOs;
+    assignedSections: string[];
+    activatedSemesterId: string;
+    programBatchId: string;
+    sectionSchedules: Record<string, ScheduleSlot[]>;
+    capacityPerSection: Record<string, number>;
+}
+
+export interface GetAssignedCourseOfferingsResponse {
+    offerings: AssignedCourseOffering[];
+}
+
+export interface FacultyDashboardContextResponse {
+    program: Program;
+    programBatch: ProgramBatch;
+    activatedSemesters: ActivatedSemester[];
+}
+
+export interface CourseEnrolledStudent {
+    id: string;
+    name: string;
+    email: string;
+    enrolledAt: string; // ISO date string
+}
+
+export interface EnrolledStudentsResponse {
+    students: CourseEnrolledStudent[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+}
+
+export interface AssessmentPayload {
+    type: AssessmentTypeEnum;
+    title: string;
+    weightage: number;
+    dueDate: string; // ISO string
+    clos: string[]; // array of CLO IDs
+}
+
+export interface Assessment {
+    id: string;
+    courseOfferingId: string;
+    type: AssessmentTypeEnum;
+    title: string;
+    weightage: number;
+    dueDate: string;
+    createdAt: string;
+    updatedAt: string;
+
+    clos: CLO[];
+}
+
+export interface GetCourseAssessmentsResponse {
+    message: string;
+    assessments: Assessment[];
+}
+
+export interface AssessmentResultEntry {
+    studentId: string;
+    marksObtained: number;
+    totalMarks: number;
+}
+
+export interface AssessmentResult {
+    id: string;
+    assessmentId: string;
+    studentId: string;
+    marksObtained: number;
+    totalMarks: number;
+    firstName: string;
+    email: string;
+}
+
+export interface GetAssessmentResultsResponse {
+    message: string;
+    results: AssessmentResult[];
+}
+
+export interface GradingRule {
+    name: string;
+    weightage: number; // percentage
+}
+
+export interface SaveGradingSchemeResponse {
+    success: boolean;
+    message: string;
+    scheme?: {
+        id: string;
+        courseOfferingId: string;
+        section: string;
+        rules: GradingRule[];
+        createdBy: string;
+        createdAt: string;
+        updatedAt?: string;
+    };
+}
+
+export interface GradeSubmission {
+    studentId: string;
+    grade: string;
+    gradePoint: number;
+    weightedPercentage: number;
+}
+
+export interface FinalizeResultsResponse {
+    success: boolean;
+    message: string;
+    grades?: GradeSubmission[];
+}
+
+export interface WithdrawFinalizedResultResponse {
+    success: boolean;
+    message: string;
+}
+
+export interface FinalizedResult {
+    id: string;
+    courseOfferingId: string;
+    section: string;
+    submittedBy: string;
+    results: GradeSubmission[]; // JSONB array of student grades
+    status: FinalizedResultStatusEnum;
+    reviewedBy?: string | null;
+    reviewedAt?: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface FetchPendingFinalizedResultsResponse {
+    results: FinalizedResult[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+}
+
+export interface AttendanceSession {
+    id: string;
+    courseOfferingId: string;
+    date: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface GetAttendanceSessionsResponse {
+    message: string;
+    sessions: AttendanceSession[];
+}
+
+export interface MarkAttendanceRecordInput {
+  studentId: string;
+  present: boolean;
+}
+
+export interface MarkAttendanceResponse {
+  message: string;
+  updatedCount: number;
+}
+
+export interface AttendanceRecord {
+  studentId: string;
+  present: boolean;
+}
+
+export interface GetAttendanceRecordsResponse {
+  message: string;
+  records: AttendanceRecord[];
 }
 
 // export interface UserPreview {

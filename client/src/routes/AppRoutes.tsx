@@ -29,6 +29,7 @@ import EnrolledStudentsList from "../pages/core/batch/EnrolledStudentsList";
 import StudentBatchRegistration from "../pages/core/batch/StudentBatchRegistration";
 import StudentCourseEnrollment from "../pages/core/student/StudentCourseEnrollment";
 import StudentTranscriptPage from "../pages/core/student/StudentTranscriptPage";
+import OfferedCoursesList from "../pages/core/teacher/OfferedCoursesList";
 // import SocialShell from "../pages/main/SocialShell";
 
 interface AppRoutesProps {
@@ -245,7 +246,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                 /> */}
 
                 {/* Teacher routes */}
-                {/* <Route
+                <Route
                     path="/teacher/assigned-courses"
                     element={
                         <ProtectedRoute
@@ -254,7 +255,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                             element={<OfferedCoursesList />}
                         />
                     }
-                /> */}
+                />
 
 
                 {/* Error routes */}

@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED } from "../../../constants/http";
-import { activatedSemesters, courseOfferings, courses, courseSectionTeachers, enrollments, programBatches, programs, users } from "../../../db/schema";
+import { activatedSemesters, clos, courseOfferings, courses, courseSectionTeachers, enrollments, programBatches, programs, users } from "../../../db/schema";
 import { db } from "../../../db/db";
-import { eq, and, sql, asc } from "drizzle-orm";
+import { eq, and, sql, asc, inArray } from "drizzle-orm";
 
 export const getAssignedCourseOfferings = async (req: Request, res: Response) => {
     const { activatedSemesterId } = req.params;
@@ -113,6 +113,7 @@ export const getAllAssignedCourseOfferings = async (req: Request, res: Response)
                 courseId: courses.id,
                 courseTitle: courses.title,
                 courseCode: courses.code,
+                courseDescription: courses.description,
 
                 section: courseSectionTeachers.section,
             })
@@ -127,16 +128,28 @@ export const getAllAssignedCourseOfferings = async (req: Request, res: Response)
             )
             .where(eq(courseOfferings.activatedSemesterId, semesterId));
 
+        // Fetch all CLOs for these courses
+        const courseIds = [...new Set(offerings.map((o) => o.courseId))];
+
+        const closList = await db
+            .select({
+                id: clos.id,
+                code: clos.code,
+                title: clos.title,
+                courseId: clos.courseId,
+            })
+            .from(clos)
+            .where(inArray(clos.courseId, courseIds));
+
+        // Map courseId -> CLOs
+        const cloMap: Record<string, typeof closList> = {};
+        for (const c of closList) {
+            if (!cloMap[c.courseId]) cloMap[c.courseId] = [];
+            cloMap[c.courseId].push(c);
+        }
+
         // Group by offering and collect assigned sections
-        const offeringMap: Record<string, {
-            offeringId: string;
-            course: { id: string; title: string; code: string };
-            assignedSections: string[];
-            activatedSemesterId: string;
-            programBatchId: string;
-            sectionSchedules: any;
-            capacityPerSection: any;
-        }> = {};
+        const offeringMap: Record<string, any> = {};
 
         for (const off of offerings) {
             if (!offeringMap[off.offeringId]) {
@@ -146,6 +159,8 @@ export const getAllAssignedCourseOfferings = async (req: Request, res: Response)
                         id: off.courseId,
                         title: off.courseTitle,
                         code: off.courseCode,
+                        description: off.courseDescription,
+                        clos: cloMap[off.courseId] || [],
                     },
                     assignedSections: [],
                     activatedSemesterId: off.activatedSemesterId,
