@@ -5,6 +5,9 @@ import { cloPloMappings, clos, courseCoRequisites, coursePreRequisites, courses,
 import { db } from "../../db/db";
 import { eq, and, inArray, sql, desc } from "drizzle-orm";
 import { createCourseSchema, updateCourseSchema } from "../../utils/validators/lms-schemas/semesterSchemas";
+import { writeAuditLog } from "../../utils/logs/writeAuditLog";
+import { isValidUUID } from "../../utils/validators/lms-schemas/isValidUUID";
+import { getNumberQueryParam, getStringQueryParam } from "../../utils/validators/sanitizer/queryParams";
 
 export const createCourse = async (req: Request, res: Response) => {
     try {
@@ -59,6 +62,30 @@ export const createCourse = async (req: Request, res: Response) => {
             })
             .returning();
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "COURSE_CREATED",
+            actorId: userId,
+            entityType: "course",
+            entityId: newCourse.id,
+            metadata: {
+                ip: req.ip,
+                programId: newCourse.programId,
+                programCatalogueId: newCourse.programCatalogueId,
+                title: newCourse.title,
+                code: newCourse.code,
+                codePrefix: newCourse.codePrefix,
+                subjectLevel: newCourse.subjectLevel,
+                subjectType: newCourse.subjectType,
+                contactHours: newCourse.contactHours,
+                creditHours: newCourse.creditHours,
+                knowledgeArea: newCourse.knowledgeArea,
+                domain: newCourse.domain,
+                createdBy: newCourse.createdBy,
+                createdAt: newCourse.createdAt,
+            },
+        });
+
         return res.status(CREATED).json({
             message: "Course created successfully",
         });
@@ -97,23 +124,37 @@ export const getCourses = async (req: Request, res: Response) => {
         const isAdmin = user.role === AudienceEnum.Admin;
         const isDeptHead = user.role === AudienceEnum.DepartmentHead;
 
-        // Pagination defaults
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 20;
-        const offset = (page - 1) * limit;
+        // --- Extract and type query params from req.query ---
+        const semesterId = getStringQueryParam(req.query.semesterId);
+        const title = getStringQueryParam(req.query.title);
+        const code = getStringQueryParam(req.query.code);
+        const subjectLevel = getStringQueryParam(req.query.subjectLevel);
+        const subjectType = getStringQueryParam(req.query.subjectType);
+        const knowledgeArea = getStringQueryParam(req.query.knowledgeArea);
+        const domain = getStringQueryParam(req.query.domain);
+        const programId = getStringQueryParam(req.query.programId);
+        const search = getStringQueryParam(req.query.search);
 
-        // Filters from query
-        const {
-            semesterId,
-            title,
-            code,
-            subjectLevel,
-            subjectType,
-            knowledgeArea,
-            domain,
-            programId,
-            search,
-        } = req.query;
+        if (semesterId) {
+            if (!isValidUUID(semesterId)) {
+                return res.status(BAD_REQUEST).json({ message: "Invalid semester ID" });
+            }
+        }
+
+        if (programId) {
+            if (!isValidUUID(programId)) {
+                return res.status(BAD_REQUEST).json({ message: "Invalid program ID" });
+            }
+        }
+
+        // Pagination defaults
+        const page = getNumberQueryParam(req.query.page, 1);
+        const limit = getNumberQueryParam(req.query.limit, 20);
+
+        const pageNum = page && page > 0 ? page : 1;
+        const pageSize = limit && limit > 0 ? Math.min(limit, 100) : 20;
+        const offsetVal = (pageNum - 1) * pageSize;
+
 
         // Base filter conditions for courses table
         const baseConditions: any[] = [];
@@ -251,7 +292,7 @@ export const getCourses = async (req: Request, res: Response) => {
             where: finalWhere,
             orderBy: (c) => desc(c.createdAt),
             limit,
-            offset,
+            offset: offsetVal,
             with: {
                 // You can populate related entities if needed
                 // e.g. preRequisites: true, coRequisites: true
@@ -259,7 +300,7 @@ export const getCourses = async (req: Request, res: Response) => {
         });
 
         const totalCount = totalCourses[0]?.count ?? 0;
-        const totalPages = Math.ceil(totalCount / limit);
+        const totalPages = Math.ceil(totalCount / pageSize);
 
         return res.status(OK).json({
             message: semesterId ? `Courses for semester` : "All courses",
@@ -282,8 +323,8 @@ export const getCourseById = async (req: Request, res: Response) => {
         const userId = req.userId;
         const { courseId } = req.params;
 
-        if (!courseId) {
-            return res.status(BAD_REQUEST).json({ message: "Course ID is required" });
+        if (!isValidUUID(courseId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid course ID" });
         }
 
         // Fetch user
@@ -422,17 +463,21 @@ export const updateCourseById = async (req: Request, res: Response) => {
         const { courseId } = req.params;
         const userId = req.userId;
 
-        console.log("🚀 updateCourseById called");
-        console.log("Course ID:", courseId);
-        console.log("User ID:", userId);
-        console.log("Request body:", JSON.stringify(req.body, null, 2));
+        if (!isValidUUID(courseId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid course ID" });
+        }
+
+        // console.log("🚀 updateCourseById called");
+        // console.log("Course ID:", courseId);
+        // console.log("User ID:", userId);
+        // console.log("Request body:", JSON.stringify(req.body, null, 2));
 
         const user = await db.query.users.findFirst({
             where: (u, { eq }) => eq(u.id, userId),
             columns: { role: true, id: true, department: true },
         });
 
-        console.log("Fetched user:", user);
+        // console.log("Fetched user:", user);
 
         if (!user) {
             console.warn("User not found");
@@ -444,7 +489,7 @@ export const updateCourseById = async (req: Request, res: Response) => {
         const isDeptHead = user.role === AudienceEnum.DepartmentHead;
         const isFaculty = user.role === AudienceEnum.DepartmentTeacher;
 
-        console.log("Roles:", { isAdmin, isDeptHead, isFaculty });
+        // console.log("Roles:", { isAdmin, isDeptHead, isFaculty });
 
         if (!isAdmin && !isDeptHead && !isFaculty) {
             console.warn("User not authorized based on role");
@@ -460,7 +505,7 @@ export const updateCourseById = async (req: Request, res: Response) => {
             },
         });
 
-        console.log("Fetched existing course:", existingCourse);
+        // console.log("Fetched existing course:", existingCourse);
 
         if (!existingCourse) {
             return res.status(NOT_FOUND).json({ message: "Course not found" });
@@ -480,7 +525,7 @@ export const updateCourseById = async (req: Request, res: Response) => {
                 where: (st, { eq }) => eq(st.courseId, courseId),
             });
 
-            console.log("Faculty section teachers:", sectionTeachers);
+            // console.log("Faculty section teachers:", sectionTeachers);
         }
 
         // Role-based access checks
@@ -494,7 +539,7 @@ export const updateCourseById = async (req: Request, res: Response) => {
         } else if (isFaculty) {
             // Check if faculty is assigned as section teacher
             const isAssigned = sectionTeachers.some(st => st.teacherId === user.id);
-            console.log("Faculty assignment check:", isAssigned);
+            // console.log("Faculty assignment check:", isAssigned);
             if (!isAssigned) {
                 return res.status(FORBIDDEN).json({
                     message: "You are not authorized to update this course (not section teacher).",
@@ -506,7 +551,7 @@ export const updateCourseById = async (req: Request, res: Response) => {
             });
         }
 
-        console.log("Validating payload with Zod schema...");
+        // console.log("Validating payload with Zod schema...");
 
         const parsed = updateCourseSchema.safeParse(req.body);
         if (!parsed.success) {
@@ -522,11 +567,11 @@ export const updateCourseById = async (req: Request, res: Response) => {
         }
         const data = parsed.data;
 
-        console.log("Validation SUCCESS, parsed data:", JSON.stringify(data, null, 2));
+        // console.log("Validation SUCCESS, parsed data:", JSON.stringify(data, null, 2));
 
         // Update the course
 
-        console.log("Updating course in DB...");
+        // console.log("Updating course in DB...");
 
         const updatedCourse = await db.update(courses)
             .set({
@@ -544,7 +589,7 @@ export const updateCourseById = async (req: Request, res: Response) => {
             })
             .where(eq(courses.id, courseId));
 
-        console.log("Course updated successfully:", updatedCourse);
+        // console.log("Course updated successfully:", updatedCourse);
 
         if (data.clos) {
             const existingClos = await db.query.clos.findMany({
@@ -773,6 +818,34 @@ export const updateCourseById = async (req: Request, res: Response) => {
             }
         }
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "COURSE_UPDATED",
+            actorId: userId,
+            entityType: "course",
+            entityId: courseId,
+            metadata: {
+                ip: req.ip,
+                updatedFields: parsed.data, // the Zod-validated update payload
+                updatedAt: new Date(),
+                // Optional: include program context
+                programId: existingCourse.program?.id,
+                department: existingCourse.program?.departmentTitle,
+                // Track related entities updates
+                closUpdated: data.clos?.map(c => ({
+                    id: c.id,
+                    code: c.code,
+                    title: c.title,
+                    description: c.description,
+                    ploMappings: c.ploMappings,
+                })),
+                preRequisitesUpdated: data.preRequisites,
+                coRequisitesUpdated: data.coRequisites,
+                sectionsUpdated: data.sections,
+                sectionTeachersUpdated: data.sectionTeachers,
+            },
+        });
+
         return res.status(OK).json({
             message: "Course updated successfully",
             course: updatedCourse,
@@ -797,8 +870,8 @@ export const deleteCourseById = async (req: Request, res: Response) => {
     try {
         const { courseId } = req.params;
 
-        if (!courseId) {
-            return res.status(BAD_REQUEST).json({ message: "Course ID is required" });
+        if (!isValidUUID(courseId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid course ID" });
         }
 
         const userId = req.userId;
@@ -847,6 +920,20 @@ export const deleteCourseById = async (req: Request, res: Response) => {
                 updatedAt: new Date(),
             })
             .where(eq(courses.id, courseId));
+
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "COURSE_ARCHIVED",
+            actorId: userId,
+            entityType: "course",
+            entityId: courseId,
+            metadata: {
+                ip: req.ip,
+                programId: course.program?.id,
+                department: course.program?.departmentTitle,
+                archivedAt: new Date(),
+            },
+        });
 
         return res.status(OK).json({ message: "Course archived successfully" });
 

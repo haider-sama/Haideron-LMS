@@ -1,18 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useToast } from "../../../../context/ToastContext";
-import TopCenterLoader from "../../../../components/ui/TopCenterLoader";
-import { AssessmentResultEntry } from "../../../../constants/core/interfaces";
-import { fetchEnrolledStudentsForCourse } from "../../../../api/core/teacher/teacher-course-api";
-import { getAssessmentResults, submitBulkAssessmentResults } from "../../../../api/core/teacher/assessment-api";
-import { MAX_PAGE_LIMIT } from "../../../../constants";
+import { useToast } from "../../../../../context/ToastContext";
+import TopCenterLoader from "../../../../ui/TopCenterLoader";
+import { AssessmentResultEntry } from "../../../../../constants/core/interfaces";
+import { fetchEnrolledStudentsForCourse } from "../../../../../api/core/teacher/teacher-course-api";
+import { getAssessmentResults, submitBulkAssessmentResults } from "../../../../../api/core/teacher/assessment-api";
+import { MAX_PAGE_LIMIT } from "../../../../../constants";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import ErrorStatus from "../../../../components/ui/ErrorStatus";
-import { Button } from "../../../../components/ui/Button";
-import { useUserManagement } from "../../../../hooks/admin/useUserManagement";
-import { AudienceEnum } from "../../../../../../server/src/shared/enums";
-import { usePermissions } from "../../../../hooks/usePermissions";
-import { Pagination } from "../../../../components/ui/Pagination";
-import { DropdownEditor } from "../../../../components/ui/DropdownEditor";
+import ErrorStatus from "../../../../ui/ErrorStatus";
+import { Button } from "../../../../ui/Button";
+import { useUserManagement } from "../../../../../hooks/admin/useUserManagement";
+import { AudienceEnum } from "../../../../../../../server/src/shared/enums";
+import { usePermissions } from "../../../../../hooks/usePermissions";
+import { Pagination } from "../../../../ui/Pagination";
+import { DropdownEditor } from "../../../../ui/DropdownEditor";
+import { SelectInput } from "../../../../ui/Input";
 
 interface Props {
     offeringId: string;
@@ -30,6 +31,9 @@ const AssessmentResultsForm: React.FC<Props> = ({
     const [marks, setMarks] = useState<Record<string, { marksObtained: string; totalMarks: string }>>({});
     const [editableCell, setEditableCell] = useState<{ rowIndex: number; field: string } | null>(null);
     const [tempValue, setTempValue] = useState("");
+    const [limit, setLimit] = useState<number>(10); // default limit
+    const [inputLimit, setInputLimit] = useState<string>("10"); // controlled input
+
     const toast = useToast();
     const queryClient = useQueryClient();
 
@@ -53,17 +57,28 @@ const AssessmentResultsForm: React.FC<Props> = ({
         setTempValue("");
     };
 
+    // Update limit when user clicks button
+    const handleUpdateLimit = () => {
+        const parsed = parseInt(inputLimit);
+        if (!isNaN(parsed) && parsed > 0 && parsed <= MAX_PAGE_LIMIT) {
+            setLimit(parsed);
+            setPage(1); // reset to first page
+        } else {
+            toast.error(`Please enter a valid number (1-${MAX_PAGE_LIMIT})`);
+        }
+    };
+
     // Queries
     const {
         data: studentsData,
         isLoading: studentsLoading,
         error: studentsError,
     } = useQuery({
-        queryKey: ["students", offeringId, section, debouncedSearch],
+        queryKey: ["students", offeringId, section, debouncedSearch, page, limit],
         queryFn: () =>
             fetchEnrolledStudentsForCourse(offeringId, section, {
-                page: 1,
-                limit: MAX_PAGE_LIMIT,
+                page,
+                limit,
                 search: debouncedSearch,
             }),
     });
@@ -95,6 +110,7 @@ const AssessmentResultsForm: React.FC<Props> = ({
     // Prepare marks state once data arrives
     const students = studentsData?.students || [];
 
+    // Map results by studentId
     const resultsMap = useMemo(() => {
         return (
             resultsData?.results.reduce((acc, r) => {
@@ -107,17 +123,26 @@ const AssessmentResultsForm: React.FC<Props> = ({
         );
     }, [resultsData]);
 
-    // Merge into marks (lazy init style)
+    // Merge results into marks state
     useEffect(() => {
-        if (students.length > 0) {
-            setMarks(() => {
-                const copy: Record<string, { marksObtained: string; totalMarks: string }> = {};
-                students.forEach((s) => {
-                    copy[s.id] = resultsMap[s.id] || { marksObtained: "", totalMarks: "" };
-                });
-                return copy;
+        if (students.length === 0) return;
+
+        setMarks((prev) => {
+            const updatedMarks: Record<string, { marksObtained: string; totalMarks: string }> = { ...prev };
+
+            students.forEach((student) => {
+                const existing = prev[student.id] || { marksObtained: "", totalMarks: "" };
+                const fromResults = resultsMap[student.id] || { marksObtained: "", totalMarks: "" };
+
+                // Merge: prioritize existing edits, fallback to fetched results
+                updatedMarks[student.id] = {
+                    marksObtained: existing.marksObtained || fromResults.marksObtained,
+                    totalMarks: existing.totalMarks || fromResults.totalMarks,
+                };
             });
-        }
+
+            return updatedMarks;
+        });
     }, [students, resultsMap]);
 
     const handleMarksChange = (
@@ -137,11 +162,13 @@ const AssessmentResultsForm: React.FC<Props> = ({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        const resultsPayload: AssessmentResultEntry[] = students.map((student) => ({
-            studentId: student.id,
-            marksObtained: parseFloat(marks[student.id]?.marksObtained || "0"),
-            totalMarks: parseFloat(marks[student.id]?.totalMarks || "0"),
-        }));
+        const resultsPayload: AssessmentResultEntry[] = Object.entries(marks).map(
+            ([studentId, { marksObtained, totalMarks }]) => ({
+                studentId,
+                marksObtained: parseFloat(marksObtained || "0"),
+                totalMarks: parseFloat(totalMarks || "0"),
+            })
+        );
 
         submitMutation.mutate(resultsPayload);
     };
@@ -155,13 +182,32 @@ const AssessmentResultsForm: React.FC<Props> = ({
 
             {(studentsLoading || resultsLoading) && <TopCenterLoader />}
 
-            <input
-                type="text"
-                placeholder="Search students..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full px-4 py-2 mb-6 border border-gray-300 dark:border-darkBorderLight rounded bg-white dark:bg-darkSurface text-gray-900 dark:text-darkTextPrimary placeholder-gray-500 dark:placeholder-darkTextMuted"
-            />
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                {/* Search Box */}
+                <input
+                    type="text"
+                    placeholder="Search students..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-darkBorderLight rounded bg-white dark:bg-darkSurface text-gray-900 dark:text-darkTextPrimary placeholder-gray-500 dark:placeholder-darkTextMuted"
+                />
+
+                {/* Limit Input + Button */}
+                <div className="flex items-center space-x-2">
+                    <SelectInput
+                        value={inputLimit}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setInputLimit(e.target.value)}
+                        options={Array.from({ length: 10 }, (_, i) => {
+                            const val = (i + 1) * 10;
+                            return { label: val.toString(), value: val.toString() };
+                        })}
+                        className="w-32 text-sm"
+                    />
+                    <Button onClick={handleUpdateLimit} size="sm" variant="blue">
+                        Set Limit
+                    </Button>
+                </div>
+            </div>
 
             <form onSubmit={handleSubmit}>
                 <div className="border border-gray-300 dark:border-darkBorderLight rounded-sm mb-6">
@@ -265,7 +311,7 @@ const AssessmentResultsForm: React.FC<Props> = ({
                 <Pagination
                     currentPage={page}
                     totalPages={totalPages}
-                    onPageChange={setPage}
+                    onPageChange={(newPage) => setPage(newPage)}
                 />
             </div>
         </div>

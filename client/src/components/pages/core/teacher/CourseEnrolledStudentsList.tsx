@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { fetchEnrolledStudentsForCourse } from "../../../api/core/teacher/teacher-course-api";
-import { MAX_PAGE_LIMIT } from "../../../constants";
-import { getAttendanceRecords, getAttendanceSessions, markAttendanceRecords } from "../../../api/core/teacher/attendance-api";
-import { Input, SelectInput } from "../../../components/ui/Input";
-import { Pagination } from "../../../components/ui/Pagination";
-import { useToast } from "../../../context/ToastContext";
+import { fetchEnrolledStudentsForCourse } from "../../../../api/core/teacher/teacher-course-api";
+import { MAX_PAGE_LIMIT } from "../../../../constants";
+import { getAttendanceRecords, getAttendanceSessions, markAttendanceRecords } from "../../../../api/core/teacher/attendance-api";
+import { Input, SelectInput } from "../../../ui/Input";
+import { Pagination } from "../../../ui/Pagination";
+import { useToast } from "../../../../context/ToastContext";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "../../../components/ui/Button";
-import ErrorStatus from "../../../components/ui/ErrorStatus";
-import TopCenterLoader from "../../../components/ui/TopCenterLoader";
-import { AudienceEnum } from "../../../../../server/src/shared/enums";
-import { useUserManagement } from "../../../hooks/admin/useUserManagement";
-import { usePermissions } from "../../../hooks/usePermissions";
-import Modal from "../../../components/ui/Modal";
-import CreateAttendanceSessionForm from "../../../components/pages/core/teacher/CreateAttendanceSessionForm";
+import { Button } from "../../../ui/Button";
+import ErrorStatus from "../../../ui/ErrorStatus";
+import TopCenterLoader from "../../../ui/TopCenterLoader";
+import { AudienceEnum } from "../../../../../../server/src/shared/enums";
+import { useUserManagement } from "../../../../hooks/admin/useUserManagement";
+import { usePermissions } from "../../../../hooks/usePermissions";
+import Modal from "../../../ui/Modal";
+import CreateAttendanceSessionForm from "./CreateAttendanceSessionForm";
 
 interface EnrolledStudentsListProps {
     offeringId: string;

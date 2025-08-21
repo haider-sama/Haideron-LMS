@@ -212,7 +212,7 @@ const Profile: React.FC<ProfileProps> = ({ onClose }) => {
                             </h2>
 
                             <Link to="/forgot-password" className="block w-full" onClick={onClose}>
-                                <Button variant="light" size='md' fullWidth={false} >
+                                <Button variant="gray" size='md' fullWidth={false} >
                                     Reset Password
                                 </Button>
                             </Link>

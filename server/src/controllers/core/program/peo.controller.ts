@@ -4,9 +4,10 @@ import { peoSchema, programRegisterSchema, updatePeoSchema, updateProgramSchema 
 import { AudienceEnum, DepartmentEnum } from "../../../shared/enums";
 import { peoPloMappings, peos, plos, programs, users } from "../../../db/schema";
 import { db } from "../../../db/db";
-import { eq, asc, inArray, sql } from "drizzle-orm";
+import { eq, asc, inArray, sql, and } from "drizzle-orm";
 import z from "zod";
 import { isValidUUID } from "../../../utils/validators/lms-schemas/isValidUUID";
+import { writeAuditLog } from "../../../utils/logs/writeAuditLog";
 
 export const addPEOsToProgram = async (req: Request, res: Response) => {
     try {
@@ -108,6 +109,20 @@ export const addPEOsToProgram = async (req: Request, res: Response) => {
             }
 
             return inserted;
+        });
+
+        await writeAuditLog(db, {
+            action: "PEOS_ADDED_TO_PROGRAM",
+            actorId: userId,
+            entityType: "programs",
+            entityId: programId,
+            metadata: {
+                ip: req.ip,
+                programDept,
+                addedPEOs: insertedPeos.map((peo) => ({
+                    id: peo.id,
+                })),
+            },
         });
 
         return res.status(CREATED).json({
@@ -293,6 +308,19 @@ export const updatePEO = async (req: Request, res: Response) => {
             }
         });
 
+        await writeAuditLog(db, {
+            action: "PEO_UPDATED",
+            actorId: userId,
+            entityType: "peos",
+            entityId: peoId,
+            metadata: {
+                ip: req.ip,
+                programId,
+                programDept,
+                updatedFields: Object.keys(parsed.data), // logs which fields were updated
+            },
+        });
+
         return res.status(OK).json({ message: "PEO updated successfully" });
 
     } catch (err: any) {
@@ -309,8 +337,8 @@ export const deletePEO = async (req: Request, res: Response) => {
         const { programId, peoId } = req.params;
         const userId = req.userId;
 
-        if (!isValidUUID(programId)) {
-            return res.status(BAD_REQUEST).json({ message: "Invalid program ID" });
+        if (!isValidUUID(programId) || !isValidUUID(peoId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid program or PEO ID" });
         }
 
         // Fetch program + user in one query
@@ -341,30 +369,31 @@ export const deletePEO = async (req: Request, res: Response) => {
             });
         }
 
-        const idx = parseInt(peoId, 10);
-        if (isNaN(idx) || idx < 0) {
-            return res.status(BAD_REQUEST).json({ message: "Invalid PEO index" });
+        const peoToDelete = await db.query.peos.findFirst({
+            where: and(eq(peos.id, peoId), eq(peos.programId, programId)),
+        });
+
+        if (!peoToDelete) {
+            return res.status(NOT_FOUND).json({ message: "PEO not found" });
         }
 
-        // Get ordered PEOs for this program
-        const peoList = await db
-            .select({
-                id: peos.id,
-                title: peos.title,
-                description: peos.description,
-            })
-            .from(peos)
-            .where(eq(peos.programId, programId))
-            .orderBy(asc(peos.position)) // order by pos
+        await db.delete(peos).where(eq(peos.id, peoId));
 
-        if (idx >= peoList.length) {
-            return res.status(BAD_REQUEST).json({ message: "Invalid PEO index" });
-        }
-
-        const peoToDelete = peoList[idx];
-
-        // Delete PEO (and cascade PLO mappings if FK cascade is set)
-        await db.delete(peos).where(eq(peos.id, peoToDelete.id));
+        await writeAuditLog(db, {
+            action: "PEO_DELETED",
+            actorId: userId,
+            entityType: "peos",
+            entityId: peoToDelete.id,
+            metadata: {
+                ip: req.ip,
+                programId,
+                programDept,
+                deletedPeo: {
+                    id: peoToDelete.id,
+                    title: peoToDelete.title,
+                },
+            },
+        });
 
         return res.status(OK).json({
             message: "PEO deleted successfully",

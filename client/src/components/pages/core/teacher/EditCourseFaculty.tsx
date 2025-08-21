@@ -1,17 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
-import { useToast } from "../../../context/ToastContext";
-import { usePermissions } from "../../../hooks/usePermissions";
-import { useDashboards } from "../../../hooks/auth/useDashboards";
-import { getCourseById, updateCourseById } from "../../../api/core/course-api";
-import { getPLOsForProgram } from "../../../api/core/program-api";
-import { DomainEnum, KnowledgeAreaEnum, StrengthEnum, SubjectLevelEnum, SubjectTypeEnum } from "../../../../../server/src/shared/enums";
-import { CLO, EditableCourse, PLOMapping, UpdateCoursePayload } from "../../../constants/core/interfaces";
-import ErrorStatus from "../../../components/ui/ErrorStatus";
-import { Input, SelectInput, TextAreaInput } from "../../../components/ui/Input";
-import { Button } from "../../../components/ui/Button";
-import CLOEditor from "../../../components/pages/core/course/CLOEditor";
-import { useSafeQuery } from "../../../hooks/useSafeQuery";
+import { useToast } from "../../../../context/ToastContext";
+import { usePermissions } from "../../../../hooks/usePermissions";
+import { useDashboards } from "../../../../hooks/auth/useDashboards";
+import { getCourseById, updateCourseById } from "../../../../api/core/course-api";
+import { getPLOsForProgram } from "../../../../api/core/program-api";
+import { DomainEnum, KnowledgeAreaEnum, StrengthEnum, SubjectLevelEnum, SubjectTypeEnum } from "../../../../../../server/src/shared/enums";
+import { CLO, EditableCourse, PLOMapping, UpdateCoursePayload } from "../../../../constants/core/interfaces";
+import ErrorStatus from "../../../ui/ErrorStatus";
+import { Input, SelectInput, TextAreaInput } from "../../../ui/Input";
+import { Button } from "../../../ui/Button";
+import CLOEditor from "../course/CLOEditor";
+import { useSafeQuery } from "../../../../hooks/useSafeQuery";
 
 interface EditCourseFacultyProps {
     courseId: string;

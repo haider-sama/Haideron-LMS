@@ -5,6 +5,8 @@ import { db } from "../../../db/db";
 import { eq, and, asc, ne, inArray } from "drizzle-orm";
 import { AudienceEnum } from "../../../shared/enums";
 import { CreateAssessmentSchema, submitResultsSchema, UpdateAssessmentSchema } from "../../../utils/validators/lms-schemas/assessmentSchemas";
+import { writeAuditLog } from "../../../utils/logs/writeAuditLog";
+import { isValidUUID } from "../../../utils/validators/lms-schemas/isValidUUID";
 
 export function validateResultEntry(entry: any): { valid: boolean; message?: string } {
     const { studentId, marksObtained, totalMarks } = entry;
@@ -23,6 +25,10 @@ export function validateResultEntry(entry: any): { valid: boolean; message?: str
 export const createAssessment = async (req: Request, res: Response) => {
     const { courseOfferingId } = req.params;
     const userId = req.userId;
+
+    if (!isValidUUID(courseOfferingId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid courseOffering ID" });
+    }
 
     try {
         // Validation
@@ -122,6 +128,25 @@ export const createAssessment = async (req: Request, res: Response) => {
             );
         }
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "ASSESSMENT_CREATED",
+            actorId: userId, // The user who created the assessment
+            entityType: "assessment",
+            entityId: newAssessment.id, // Newly created assessment ID
+            metadata: {
+                ip: req.ip,
+                courseOfferingId: courseOfferingId,
+                courseId: courseOffering.courseId,
+                type,
+                title,
+                weightage,
+                dueDate: new Date(dueDate),
+                clos: filteredCLOs, // Array of valid CLO IDs associated with this assessment
+                createdAt: new Date(),
+            },
+        });
+
         res.status(CREATED).json({ message: "Assessment created successfully." });
     } catch (error) {
         console.error(error);
@@ -132,6 +157,10 @@ export const createAssessment = async (req: Request, res: Response) => {
 export const getCourseAssessments = async (req: Request, res: Response) => {
     const { courseOfferingId } = req.params;
     const userId = req.userId;
+
+    if (!isValidUUID(courseOfferingId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid courseOffering ID" });
+    }
 
     try {
         // Fetch course offering with courseId and active flag
@@ -219,7 +248,7 @@ export const getCourseAssessments = async (req: Request, res: Response) => {
                 };
             })
         );
-        
+
         return res.status(OK).json({
             message: "Assessments retrieved successfully.",
             assessments: assessmentsWithClos,
@@ -235,6 +264,10 @@ export const getCourseAssessments = async (req: Request, res: Response) => {
 export const updateAssessment = async (req: Request, res: Response) => {
     const { assessmentId } = req.params;
     const userId = req.userId;
+
+    if (!isValidUUID(assessmentId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid assessment ID" });
+    }
 
     try {
         // Validate input
@@ -366,6 +399,30 @@ export const updateAssessment = async (req: Request, res: Response) => {
             return [updated];
         });
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "ASSESSMENT_UPDATED",
+            actorId: userId, // User performing the update
+            entityType: "assessment",
+            entityId: assessmentId, // Updated assessment ID
+            metadata: {
+                ip: req.ip,
+                courseOfferingId: courseOfferingId,
+                courseId: courseOffering.courseId,
+                updatedFields: {
+                    type,
+                    title,
+                    weightage,
+                    dueDate: new Date(dueDate),
+                },
+                cloChanges: {
+                    added: toInsert,   // CLO IDs newly associated
+                    removed: toDelete, // CLO IDs removed
+                },
+                updatedAt: new Date(),
+            },
+        });
+
         return res.status(OK).json({
             message: "Assessment updated successfully.",
         });
@@ -429,6 +486,20 @@ export const deleteAssessment = async (req: Request, res: Response) => {
             }
         }
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "ASSESSMENT_DELETED",
+            actorId: userId, // User performing the deletion
+            entityType: "assessment",
+            entityId: assessmentId, // Deleted assessment ID
+            metadata: {
+                ip: req.ip,
+                courseOfferingId: courseOfferingId,
+                courseId: courseOffering.courseId,
+                deletedAt: new Date(),
+            },
+        });
+
         // Delete assessment (cascade deletes CLO mappings & results via FK)
         await db.delete(assessments).where(eq(assessments.id, assessmentId));
 
@@ -444,6 +515,10 @@ export const deleteAssessment = async (req: Request, res: Response) => {
 export const submitBulkAssessmentResults = async (req: Request, res: Response) => {
     const { id: assessmentId } = req.params;
     const userId = req.userId;
+
+    if (!isValidUUID(assessmentId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid assessment ID" });
+    }
 
     try {
         // Validate body
@@ -560,6 +635,20 @@ export const submitBulkAssessmentResults = async (req: Request, res: Response) =
             }
         });
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "BULK_ASSESSMENT_RESULTS_SUBMITTED",
+            actorId: userId, // The teacher submitting the results
+            entityType: "assessment",
+            entityId: assessmentId,
+            metadata: {
+                ip: req.ip,
+                totalResults: results.length,
+                studentIds: results.map(r => r.studentId),
+                updatedAt: new Date(),
+            },
+        });
+
         return res.status(OK).json({ message: "Assessment results submitted successfully." });
     } catch (error: any) {
         console.error(error);
@@ -575,6 +664,10 @@ export const submitBulkAssessmentResults = async (req: Request, res: Response) =
 export const getAssessmentResults = async (req: Request, res: Response) => {
     const { id: assessmentId } = req.params;
     const userId = req.userId;
+
+    if (!isValidUUID(assessmentId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid assessment ID" });
+    }
 
     try {
         // Fetch assessment

@@ -84,7 +84,8 @@ const AddPEOsForm = ({ programId }: { programId: string | null }) => {
         onSuccess: () => {
             toast.success("PEOs added successfully.");
             setPeos([]);
-            queryClient.invalidateQueries({ queryKey: ["programs", programId] });
+            queryClient.invalidateQueries({ queryKey: ["peos", programId] });
+            queryClient.invalidateQueries({ queryKey: ["plos", programId] });
         },
         onError: (err: any) => {
             if (err?.zodErrors) {

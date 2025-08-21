@@ -6,6 +6,9 @@ import { db } from "../../../db/db";
 import { eq, and, inArray, sql, notInArray } from "drizzle-orm";
 import { createEnrollmentSchema, defaultEnrollmentSchema } from "../../../utils/validators/lms-schemas/studentEnrollmentSchemas";
 import { checkDepartmentAccess } from "./batch.controller";
+import { writeAuditLog } from "../../../utils/logs/writeAuditLog";
+import { isValidUUID } from "../../../utils/validators/lms-schemas/isValidUUID";
+import { getBooleanQueryParam, getNumberQueryParam, getStringQueryParam } from "../../../utils/validators/sanitizer/queryParams";
 
 export const createStudentBatchEnrollment = async (req: Request, res: Response) => {
     const userId = req.userId;
@@ -97,6 +100,22 @@ export const createStudentBatchEnrollment = async (req: Request, res: Response) 
             results.push({ studentId, status: "success" });
         }
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "STUDENT_BATCH_ENROLLMENT_CREATED",
+            actorId: requestingUser.id,
+            entityType: "studentBatchEnrollment",
+            entityId: programBatch.id,
+            metadata: {
+                ip: req.ip,
+                programBatchId: programBatch.id,
+                programId: program.id,
+                studentIds: allStudentIds,
+                status: status,
+                results,
+            },
+        });
+
         return res.status(OK).json({
             message: "Batch enrollment processed",
             results,
@@ -110,11 +129,11 @@ export const createStudentBatchEnrollment = async (req: Request, res: Response) 
 };
 
 export const listStudentsInBatch = async (req: Request, res: Response) => {
-    const { programBatchId } = req.params;
     const userId = req.userId;
+    const { programBatchId } = req.params;
 
-    if (!programBatchId) {
-        return res.status(BAD_REQUEST).json({ message: "Valid programBatchId is required." });
+    if (!isValidUUID(programBatchId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid program batch ID" });
     }
 
     try {
@@ -188,8 +207,8 @@ export const listStudentsInBatch = async (req: Request, res: Response) => {
 
 export const listStudentsInAllBatches = async (req: Request, res: Response) => {
     const userId = req.userId;
-    const departmentTitle = req.params.departmentTitle || req.query.department?.toString();
 
+    const departmentTitle = getStringQueryParam(req.params.departmentTitle || req.query.department);
     if (!departmentTitle) {
         return res.status(BAD_REQUEST).json({ message: "Department title is required." });
     }
@@ -355,6 +374,21 @@ export const removeStudentFromBatch = async (req: Request, res: Response) => {
             return res.status(NOT_FOUND).json({ message: "Enrollment not found." });
         }
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "STUDENT_REMOVED_FROM_BATCH",
+            actorId: requestingUser.id,
+            entityType: "studentBatchEnrollment",
+            entityId: studentId,
+            metadata: {
+                ip: req.ip,
+                programBatchId: programBatchId,
+                programId: programBatch.program.id,
+                studentId,
+                removedAt: new Date(),
+            },
+        });
+
         return res.status(OK).json({ message: "Student removed from batch successfully." });
     } catch (err: any) {
         return res.status(INTERNAL_SERVER_ERROR).json({
@@ -427,6 +461,22 @@ export const softRemoveStudentFromBatch = async (req: Request, res: Response) =>
         if (updatedEnrollment.length === 0) {
             return res.status(NOT_FOUND).json({ message: "Enrollment not found." });
         }
+
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "STUDENT_SOFT_REMOVED_FROM_BATCH",
+            actorId: requestingUser.id,
+            entityType: "studentBatchEnrollment",
+            entityId: studentId,
+            metadata: {
+                ip: req.ip,
+                programBatchId,
+                programId: programBatch.program.id,
+                studentId,
+                newStatus: BatchEnrollmentStatus.Dropped,
+                updatedAt: new Date(),
+            },
+        });
 
         return res.status(OK).json({
             message: "Student marked as 'dropped' from batch successfully.",
@@ -503,6 +553,22 @@ export const reinstateStudentInBatch = async (req: Request, res: Response) => {
             return res.status(NOT_FOUND).json({ message: "Enrollment not found." });
         }
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "STUDENT_REINSTATED_IN_BATCH",
+            actorId: requestingUser.id,
+            entityType: "studentBatchEnrollment",
+            entityId: studentId,
+            metadata: {
+                ip: req.ip,
+                programBatchId,
+                programId: programBatch.program.id,
+                studentId,
+                newStatus: BatchEnrollmentStatus.Active,
+                updatedAt: new Date(),
+            },
+        });
+
         return res.status(OK).json({
             message: "Student reactivated in batch successfully.",
         });
@@ -539,13 +605,15 @@ export async function fetchPaginatedStudentsByDepartment(req: Request, res: Resp
             return res.status(FORBIDDEN).json({ message: "Access denied" });
         }
 
-        const page = Math.max(parseInt(req.query.page as string) || 1, 1);
-        const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
-        const offsetVal = (page - 1) * limit;
+        const department = getStringQueryParam(req.query.department);
+        const hideEnrolled = getBooleanQueryParam(req.query.hideEnrolled);
+        const search = getStringQueryParam(req.query.search);
+        const page = getNumberQueryParam(req.query.page);
+        const limit = getNumberQueryParam(req.query.limit);
 
-        const search = (req.query.search as string || "").trim();
-        const department = req.query.department as string | undefined;
-        const hideEnrolled = req.query.hideEnrolled === "true";
+        const pageNum = page && page > 0 ? page : 1;
+        const pageSize = limit && limit > 0 ? Math.min(limit, 100) : 20;
+        const offsetVal = (pageNum - 1) * pageSize;
 
         // Admin can choose department, DeptHead restricted to own department
         const departmentFilter = isAdmin ? department ?? undefined : requestingUser.department;
@@ -605,7 +673,7 @@ export async function fetchPaginatedStudentsByDepartment(req: Request, res: Resp
             })
             .from(users)
             .where(finalFilter)
-            .limit(limit)
+            .limit(pageSize)
             .offset(offsetVal)
             .execute();
 
@@ -627,7 +695,7 @@ export async function fetchPaginatedStudentsByDepartment(req: Request, res: Resp
         return res.status(OK).json({
             data: studentsWithStatus,
             page,
-            totalPages: Math.ceil(totalUsers / limit),
+            totalPages: Math.ceil(totalUsers / pageSize),
             totalUsers,
         });
     } catch (err: any) {

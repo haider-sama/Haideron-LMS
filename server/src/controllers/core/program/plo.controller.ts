@@ -7,6 +7,7 @@ import { db } from "../../../db/db";
 import { eq, and } from "drizzle-orm";
 import z from "zod";
 import { isValidUUID } from "../../../utils/validators/lms-schemas/isValidUUID";
+import { writeAuditLog } from "../../../utils/logs/writeAuditLog";
 
 export const addPLOsToProgram = async (req: Request, res: Response) => {
     try {
@@ -71,6 +72,21 @@ export const addPLOsToProgram = async (req: Request, res: Response) => {
                 .insert(plos)
                 .values(plosWithProgram)
                 .returning();
+
+            await writeAuditLog(db, {
+                action: "PLOS_ADDED_TO_PROGRAM",
+                actorId: userId,
+                entityType: "programs",
+                entityId: programId,
+                metadata: {
+                    ip: req.ip,
+                    programDept,
+                    addedPLOs: insertedPLOs.map((plo) => ({
+                        code: plo.code,
+                        title: plo.title,
+                    })),
+                },
+            });
 
             return res.status(CREATED).json({
                 message: "PLOs added successfully",
@@ -223,6 +239,20 @@ export const updatePLO = async (req: Request, res: Response) => {
             return res.status(NOT_FOUND).json({ message: "PLO not found for this program" });
         }
 
+        await writeAuditLog(db, {
+            action: "PLO_UPDATED",
+            actorId: userId,
+            entityType: "plos",
+            entityId: updatedPLO[0].id,
+            metadata: {
+                ip: req.ip,
+                programId,
+                programDept,
+                ploCode: updatedPLO[0].code,
+                ploTitle: updatedPLO[0].title,
+            },
+        });
+
         return res.status(OK).json({
             message: "PLO updated successfully",
             plo: updatedPLO[0],
@@ -284,6 +314,20 @@ export const deletePLO = async (req: Request, res: Response) => {
         if (!deleted.length) {
             return res.status(NOT_FOUND).json({ message: "PLO not found for this program" });
         }
+
+        await writeAuditLog(db, {
+            action: "PLO_DELETED",
+            actorId: userId,
+            entityType: "plos",
+            entityId: deleted[0].id,
+            metadata: {
+                ip: req.ip,
+                programId,
+                programDept,
+                ploCode: deleted[0].code,
+                ploTitle: deleted[0].title,
+            },
+        });
 
         return res.status(OK).json({
             message: "PLO deleted successfully",

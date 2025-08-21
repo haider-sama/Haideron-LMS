@@ -24,6 +24,8 @@ import teacherRouter from './routes/core/teacher/teacher.routes';
 import attendanceRouter from './routes/core/teacher/attendance.routes';
 import assessmentRouter from './routes/core/teacher/assessment.routes';
 import resultRouter from './routes/core/teacher/result.routes';
+import { catchMissedJobs, startCronJobs } from './cron';
+import auditLogRouter from './routes/audit.log.routes';
 
 dotenv.config();
 
@@ -62,6 +64,8 @@ app.use('/api/v1/attendance/', attendanceRouter);
 app.use('/api/v1/assessment/', assessmentRouter);
 app.use('/api/v1/results/', resultRouter);
 
+app.use('/api/v1/audit-logs/', auditLogRouter);
+
 const startServer = async () => {
     console.time("Total Startup Time");
 
@@ -75,6 +79,9 @@ const startServer = async () => {
         //     "Drizzle user model test:",
         //     firstUser.length ? firstUser[0] : "No users found"
         // );
+
+        startCronJobs();            // Start cron jobs
+        await catchMissedJobs();    // Catch up on missed jobs (safety net)
 
         const server = app.listen(PORT, () => {
             console.log(`Server running on PORT: ${PORT}`);

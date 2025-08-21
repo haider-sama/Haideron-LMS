@@ -2,8 +2,20 @@ import { z } from "zod";
 
 const ScheduleSlotSchema = z.object({
   day: z.enum(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]),
-  startTime: z.string(), // optionally add regex for "HH:mm" if you want strict time format
-  endTime: z.string(),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/, "startTime must be in HH:mm format"),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/, "endTime must be in HH:mm format"),
+});
+
+// Define offerings
+const CourseOfferingSchema = z.object({
+  courseId: z.string().uuid(),
+  sectionSchedules: z.record(z.array(ScheduleSlotSchema)).optional(),
+  capacityPerSection: z.record(z.number().int().nonnegative()).optional(),
+});
+
+// Validate the entire payload
+export const CreateCourseOfferingsSchema = z.object({
+  offerings: z.array(CourseOfferingSchema).min(1, "Offerings array cannot be empty"),
 });
 
 export const UpdateCourseOfferingSchema = z.object({

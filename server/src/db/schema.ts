@@ -19,4 +19,6 @@ export * from "./models/core/program/program.model";
 export * from "./models/core/semester/activated.semester.model";
 export * from "./models/core/semester/semester.model";
 
+export * from "./models/logs/audit.log.model"
+
 // Example table

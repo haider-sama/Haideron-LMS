@@ -4,15 +4,15 @@ import { activatedSemesters, courseOfferings, users } from "../../../db/schema";
 import { db } from "../../../db/db";
 import { eq, and } from "drizzle-orm";
 import { checkDepartmentAccess } from "./batch.controller";
-import { UpdateCourseOfferingSchema } from "../../../utils/validators/lms-schemas/courseOfferingSchemas";
+import { CreateCourseOfferingsSchema, UpdateCourseOfferingSchema } from "../../../utils/validators/lms-schemas/courseOfferingSchemas";
+import { writeAuditLog } from "../../../utils/logs/writeAuditLog";
+import { isValidUUID } from "../../../utils/validators/lms-schemas/isValidUUID";
 
 export const createCourseOfferings = async (req: Request, res: Response) => {
     const { activatedSemesterId } = req.params;
-    const { offerings } = req.body; // Array of { courseId, sectionSchedules, capacityPerSection }
     const userId = req.userId;
 
     try {
-
         const user = await db.query.users.findFirst({
             where: eq(users.id, userId),
         });
@@ -21,9 +21,20 @@ export const createCourseOfferings = async (req: Request, res: Response) => {
             return res.status(NOT_FOUND).json({ message: "User not found" });
         }
 
-        if (!activatedSemesterId) {
-            return res.status(BAD_REQUEST).json({ message: "Invalid activatedSemesterId format" });
+        if (!isValidUUID(activatedSemesterId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid activated Semester ID" });
         }
+
+        const parsed = CreateCourseOfferingsSchema.safeParse(req.body);
+
+        if (!parsed.success) {
+            return res.status(BAD_REQUEST).json({
+                message: "Validation failed",
+                errors: parsed.error.flatten().fieldErrors,
+            });
+        }
+
+        const { offerings } = parsed.data;
 
         // 2. Get activatedSemester with program + department
         const activatedSemester = await db.query.activatedSemesters.findFirst({
@@ -93,6 +104,26 @@ export const createCourseOfferings = async (req: Request, res: Response) => {
             createdOfferings.push(newOffering);
         }
 
+        // --- AUDIT LOG --- //
+        for (const offering of createdOfferings) {
+            await writeAuditLog(db, {
+                action: "COURSE_OFFERING_CREATED",
+                actorId: userId,
+                entityType: "courseOffering",
+                entityId: offering.id,
+                metadata: {
+                    ip: req.ip,
+                    activatedSemesterId: activatedSemester.id,
+                    programBatchId: activatedSemester.programBatchId,
+                    programId: activatedSemester.programBatch.program.id,
+                    courseId: offering.courseId,
+                    sectionSchedules: offering.sectionSchedules,
+                    capacityPerSection: offering.capacityPerSection,
+                    createdAt: new Date(),
+                },
+            });
+        }
+
         return res.status(CREATED).json({
             message: "Course offerings created",
         });
@@ -109,8 +140,8 @@ export const getCourseOfferings = async (req: Request, res: Response) => {
     const { activatedSemesterId } = req.params;
 
     try {
-        if (!activatedSemesterId) {
-            return res.status(BAD_REQUEST).json({ message: "Invalid activatedSemesterId format" });
+        if (!isValidUUID(activatedSemesterId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid activated Semester ID" });
         }
 
         // Ensure activated semester exists
@@ -151,8 +182,8 @@ export const updateCourseOffering = async (req: Request, res: Response) => {
     const userId = req.userId;
 
     try {
-        if (!offeringId) {
-            return res.status(BAD_REQUEST).json({ message: "Invalid offeringId format" });
+        if (!isValidUUID(offeringId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid offering ID" });
         }
 
         const parsed = UpdateCourseOfferingSchema.safeParse(req.body);
@@ -213,6 +244,22 @@ export const updateCourseOffering = async (req: Request, res: Response) => {
             .where(eq(courseOfferings.id, offeringId))
             .returning();
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "COURSE_OFFERING_UPDATED",
+            actorId: userId,
+            entityType: "courseOffering",
+            entityId: offeringId,
+            metadata: {
+                ip: req.ip,
+                activatedSemesterId: offering.activatedSemester.id,
+                programBatchId: offering.activatedSemester.programBatch.id,
+                programId: offering.activatedSemester.programBatch.program.id,
+                updatedFields: parsed.data,
+                updatedAt: new Date(),
+            },
+        });
+
         return res.status(OK).json({ message: "Course Offering updated" });
     } catch (err: any) {
         res.status(INTERNAL_SERVER_ERROR).json({
@@ -227,8 +274,8 @@ export const deleteCourseOffering = async (req: Request, res: Response) => {
     const userId = req.userId;
 
     try {
-        if (!offeringId) {
-            return res.status(BAD_REQUEST).json({ message: "Invalid offeringId format" });
+        if (!isValidUUID(offeringId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid offering ID" });
         }
 
         const user = await db.query.users.findFirst({
@@ -272,6 +319,21 @@ export const deleteCourseOffering = async (req: Request, res: Response) => {
 
         // delete offering
         await db.delete(courseOfferings).where(eq(courseOfferings.id, offeringId));
+
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "COURSE_OFFERING_DELETED",
+            actorId: userId,
+            entityType: "courseOffering",
+            entityId: offeringId,
+            metadata: {
+                ip: req.ip,
+                activatedSemesterId: offering.activatedSemester.id,
+                programBatchId: offering.activatedSemester.programBatch.id,
+                programId: offering.activatedSemester.programBatch.program.id,
+                deletedAt: new Date(),
+            },
+        });
 
         return res.status(OK).json({ message: "Course offering deleted successfully" });
     } catch (error) {

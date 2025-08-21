@@ -9,9 +9,10 @@ import { Button } from '../ui/Button';
 
 interface AvatarUploadProps {
     avatarURL?: string | null; // Expect a single string
+    targetUserId?: string; // optional, for admin/dept head usage
 }
 
-const AvatarUpload: React.FC<AvatarUploadProps> = ({ avatarURL }) => {
+const AvatarUpload: React.FC<AvatarUploadProps> = ({ avatarURL, targetUserId }) => {
     const [image, setImage] = useState<File | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [deleting, setDeleting] = useState(false);
@@ -84,27 +85,20 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({ avatarURL }) => {
 
     const handleUpload = async () => {
         if (!image || !imageSrc || !croppedAreaPixels) {
-            toast.error('Please select and crop an image');
+            toast.error("Please select and crop an image");
             return;
         }
 
         setLoading(true);
         try {
             const croppedFile = await getCroppedImg(imageSrc, croppedAreaPixels);
-
             if (!croppedFile) {
-                toast.error('Failed to crop image');
+                toast.error("Failed to crop image");
                 return;
             }
 
-            const response = await uploadAvatar(croppedFile);
-            if (!response.ok) {
-                const errorData = await response.json();
-                toast.error(errorData.message || 'Failed to upload avatar');
-                return;
-            }
-
-            toast.success('Avatar updated successfully (refresh to see changes)');
+            await uploadAvatar(croppedFile, targetUserId);
+            toast.success("Avatar updated successfully (refresh to see changes)");
             setModalOpen(false);
         } catch (err: any) {
             toast.error(err.message);
@@ -116,15 +110,9 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({ avatarURL }) => {
     const handleDelete = async () => {
         setDeleting(true);
         try {
-            const response = await deleteAvatar();
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to delete avatar');
-            }
-
-            toast.success('Avatar deleted successfully (refresh to see changes)');
-            setImage(null); // optional: clear local image
+            await deleteAvatar(targetUserId);
+            toast.success("Avatar deleted successfully (refresh to see changes)");
+            setImage(null);
         } catch (err: any) {
             toast.error(err.message);
         } finally {

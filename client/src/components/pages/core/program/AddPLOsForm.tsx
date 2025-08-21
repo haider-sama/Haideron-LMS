@@ -35,7 +35,8 @@ const AddPLOsForm = ({ programId }: { programId: string | null }) => {
         onSuccess: () => {
             toast.success("PLOs added successfully.");
             setPlos([]);
-            queryClient.invalidateQueries({ queryKey: ["programs", programId] });
+            queryClient.invalidateQueries({ queryKey: ["peos", programId] });
+            queryClient.invalidateQueries({ queryKey: ["plos", programId] });
         },
         onError: (err: any) => {
             if (err?.zodErrors && typeof err.zodErrors === "object") {

@@ -13,15 +13,11 @@ import TeacherCourseCard from "../../../components/pages/core/teacher/TeacherCou
 import Modal from "../../../components/ui/Modal";
 import ErrorStatus from "../../../components/ui/ErrorStatus";
 import { Button } from "../../../components/ui/Button";
-import CreateAssessmentForm from "./assessment/CreateAssessmentForm";
-import AssessmentListTable from "./assessment/AssessmentListTable";
-import CourseEnrolledStudentsList from "./CourseEnrolledStudentsList";
-import EditCourseFaculty from "./EditCourseFaculty";
-// import CourseEnrolledStudentsList from "./CourseEnrolledStudentsList";
-// import EditCourseFaculty from "./EditCourseFaculty";
-// import CreateAssessmentForm from "./assessment/CreateAssessmentForm";
-// import AssessmentListTable from "./assessment/AssessmentListTable";
-// import { GradingFinalizationForm } from "./grade/GradingFinalizationForm";
+import CreateAssessmentForm from "../../../components/pages/core/teacher/assessment/CreateAssessmentForm";
+import AssessmentListTable from "../../../components/pages/core/teacher/assessment/AssessmentListTable";
+import CourseEnrolledStudentsList from "../../../components/pages/core/teacher/CourseEnrolledStudentsList";
+import EditCourseFaculty from "../../../components/pages/core/teacher/EditCourseFaculty";
+import { GradingFinalizationForm } from "../../../components/pages/core/teacher/GradingFinalizationForm";
 
 const OfferedCoursesList: React.FC = () => {
     const { user, isLoggedIn } = usePermissions();
@@ -304,7 +300,7 @@ const OfferedCoursesList: React.FC = () => {
                 </Modal>
             )}
 
-            {/* {showFinalizeModal && assessmentModalData && (
+            {showFinalizeModal && assessmentModalData && (
                 <Modal isOpen={showFinalizeModal} onClose={() => setShowFinalizeModal(false)}>
                     <div className="min-h-[40vh] flex items-center justify-center">
                         <div className="w-full max-w-2xl">
@@ -315,7 +311,7 @@ const OfferedCoursesList: React.FC = () => {
                         </div>
                     </div>
                 </Modal>
-            )} */}
+            )}
 
         </div>
     );

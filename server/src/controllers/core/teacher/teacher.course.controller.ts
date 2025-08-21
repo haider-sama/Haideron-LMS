@@ -3,102 +3,104 @@ import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_F
 import { activatedSemesters, clos, courseOfferings, courses, courseSectionTeachers, enrollments, programBatches, programs, users } from "../../../db/schema";
 import { db } from "../../../db/db";
 import { eq, and, sql, asc, inArray } from "drizzle-orm";
+import { isValidUUID } from "../../../utils/validators/lms-schemas/isValidUUID";
+import { getStringQueryParam } from "../../../utils/validators/sanitizer/queryParams";
 
-export const getAssignedCourseOfferings = async (req: Request, res: Response) => {
-    const { activatedSemesterId } = req.params;
-    const teacherId = req.userId;
+// export const getAssignedCourseOfferings = async (req: Request, res: Response) => {
+//     const { activatedSemesterId } = req.params;
+//     const teacherId = req.userId;
 
-    if (!activatedSemesterId || activatedSemesterId.length !== 36) {
-        return res.status(BAD_REQUEST).json({ message: "Invalid activatedSemesterId format" });
-    }
+//     if (!isValidUUID(activatedSemesterId)) {
+//         return res.status(BAD_REQUEST).json({ message: "Invalid activatedSemester ID" });
+//     }
 
-    try {
-        // Validate semester exists
-        const semester = await db
-            .select()
-            .from(activatedSemesters)
-            .where(eq(activatedSemesters.id, activatedSemesterId))
-            .limit(1);
+//     try {
+//         // Validate semester exists
+//         const semester = await db
+//             .select()
+//             .from(activatedSemesters)
+//             .where(eq(activatedSemesters.id, activatedSemesterId))
+//             .limit(1);
 
-        if (semester.length === 0) {
-            return res.status(NOT_FOUND).json({ message: "Activated semester not found" });
-        }
+//         if (semester.length === 0) {
+//             return res.status(NOT_FOUND).json({ message: "Activated semester not found" });
+//         }
 
-        // Fetch offerings + join courses + join teacher assignments
-        const offerings = await db
-            .select({
-                offeringId: courseOfferings.id,
-                sectionSchedules: courseOfferings.sectionSchedules,
-                capacityPerSection: courseOfferings.capacityPerSection,
-                programBatchId: courseOfferings.programBatchId,
-                activatedSemesterId: courseOfferings.activatedSemesterId,
+//         // Fetch offerings + join courses + join teacher assignments
+//         const offerings = await db
+//             .select({
+//                 offeringId: courseOfferings.id,
+//                 sectionSchedules: courseOfferings.sectionSchedules,
+//                 capacityPerSection: courseOfferings.capacityPerSection,
+//                 programBatchId: courseOfferings.programBatchId,
+//                 activatedSemesterId: courseOfferings.activatedSemesterId,
 
-                courseId: courses.id,
-                courseTitle: courses.title,
-                courseCode: courses.code,
+//                 courseId: courses.id,
+//                 courseTitle: courses.title,
+//                 courseCode: courses.code,
 
-                section: courseSectionTeachers.section,
-            })
-            .from(courseOfferings)
-            .innerJoin(courses, eq(courses.id, courseOfferings.courseId))
-            .innerJoin(
-                courseSectionTeachers,
-                and(
-                    eq(courseSectionTeachers.courseId, courses.id),
-                    eq(courseSectionTeachers.teacherId, teacherId)
-                )
-            )
-            .where(eq(courseOfferings.activatedSemesterId, activatedSemesterId));
+//                 section: courseSectionTeachers.section,
+//             })
+//             .from(courseOfferings)
+//             .innerJoin(courses, eq(courses.id, courseOfferings.courseId))
+//             .innerJoin(
+//                 courseSectionTeachers,
+//                 and(
+//                     eq(courseSectionTeachers.courseId, courses.id),
+//                     eq(courseSectionTeachers.teacherId, teacherId)
+//                 )
+//             )
+//             .where(eq(courseOfferings.activatedSemesterId, activatedSemesterId));
 
-        // Group by offering and collect assigned sections
-        const offeringMap: Record<string, {
-            offeringId: string;
-            course: { id: string; title: string; code: string };
-            assignedSections: string[];
-            programBatchId: string;
-            activatedSemesterId: string;
-            sectionSchedules: any;
-            capacityPerSection: any;
-        }> = {};
+//         // Group by offering and collect assigned sections
+//         const offeringMap: Record<string, {
+//             offeringId: string;
+//             course: { id: string; title: string; code: string };
+//             assignedSections: string[];
+//             programBatchId: string;
+//             activatedSemesterId: string;
+//             sectionSchedules: any;
+//             capacityPerSection: any;
+//         }> = {};
 
-        for (const off of offerings) {
-            if (!offeringMap[off.offeringId]) {
-                offeringMap[off.offeringId] = {
-                    offeringId: off.offeringId,
-                    course: {
-                        id: off.courseId,
-                        title: off.courseTitle,
-                        code: off.courseCode,
-                    },
-                    assignedSections: [],
-                    programBatchId: off.programBatchId,
-                    activatedSemesterId: off.activatedSemesterId,
-                    sectionSchedules: off.sectionSchedules,
-                    capacityPerSection: off.capacityPerSection,
-                };
-            }
-            offeringMap[off.offeringId].assignedSections.push(off.section);
-        }
+//         for (const off of offerings) {
+//             if (!offeringMap[off.offeringId]) {
+//                 offeringMap[off.offeringId] = {
+//                     offeringId: off.offeringId,
+//                     course: {
+//                         id: off.courseId,
+//                         title: off.courseTitle,
+//                         code: off.courseCode,
+//                     },
+//                     assignedSections: [],
+//                     programBatchId: off.programBatchId,
+//                     activatedSemesterId: off.activatedSemesterId,
+//                     sectionSchedules: off.sectionSchedules,
+//                     capacityPerSection: off.capacityPerSection,
+//                 };
+//             }
+//             offeringMap[off.offeringId].assignedSections.push(off.section);
+//         }
 
-        const assignedOfferings = Object.values(offeringMap);
+//         const assignedOfferings = Object.values(offeringMap);
 
-        return res.status(OK).json({ offerings: assignedOfferings });
-    } catch (err: any) {
-        console.error("Assigned course offerings error:", err);
-        return res.status(INTERNAL_SERVER_ERROR).json({
-            message: "Error while fetching assigned course offerings",
-            error: err.message,
-        });
-    }
-};
+//         return res.status(OK).json({ offerings: assignedOfferings });
+//     } catch (err: any) {
+//         console.error("Assigned course offerings error:", err);
+//         return res.status(INTERNAL_SERVER_ERROR).json({
+//             message: "Error while fetching assigned course offerings",
+//             error: err.message,
+//         });
+//     }
+// };
 
 export const getAllAssignedCourseOfferings = async (req: Request, res: Response) => {
     const teacherId = req.userId;
-    const semesterId = req.query.semesterId as string | undefined;
+    const semesterId = getStringQueryParam(req.query.semesterId);
 
     try {
-        if (!semesterId || semesterId.length !== 36) {
-            return res.status(BAD_REQUEST).json({ message: "Missing or invalid semesterId in query" });
+        if (!semesterId || !isValidUUID(semesterId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid semester ID" });
         }
 
         // Fetch offerings + join courses + join teacher assignments
@@ -193,7 +195,7 @@ export const getEnrolledStudentsForCourse = async (req: Request, res: Response) 
     const pageSize = parseInt(limit as string);
     const searchQuery = (search as string).trim();
 
-    if (!offeringId || typeof offeringId !== "string") {
+    if (!isValidUUID(offeringId)) {
         return res.status(BAD_REQUEST).json({ message: "Invalid course offering ID" });
     }
 

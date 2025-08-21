@@ -4,13 +4,18 @@ import { AudienceEnum, BatchEnrollmentStatus, FinalizedResultStatusEnum } from "
 import { activatedSemesters, courseOfferings, courses, enrollments, finalizedResultEntries, finalizedResults, programBatches, studentBatchEnrollments, users } from "../../../db/schema";
 import { db } from "../../../db/db";
 import { eq, and, sql } from "drizzle-orm";
-import { enrollBodySchema } from "../../../utils/validators/lms-schemas/student-schemas";
+import { enrollBodySchema } from "../../../utils/validators/lms-schemas/studentSchemas";
+import { isValidUUID } from "../../../utils/validators/lms-schemas/isValidUUID";
 
 const PASSING_GRADES = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D"];
 
 export const enrollInCourse = async (req: Request, res: Response) => {
     const studentId = req.userId;
     const { courseOfferingId } = req.params;
+
+    if (!isValidUUID(courseOfferingId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid course offering ID" });
+    }
 
     const parsed = enrollBodySchema.safeParse(req.body);
     if (!parsed.success) {
@@ -208,6 +213,10 @@ export const deEnrollFromCourse = async (req: Request, res: Response) => {
     const studentId = req.userId;
     const { courseOfferingId } = req.params;
 
+    if (!isValidUUID(courseOfferingId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid course offering ID" });
+    }
+
     const parsed = enrollBodySchema.safeParse(req.body);
     if (!parsed.success) {
         return res.status(BAD_REQUEST).json({
@@ -296,8 +305,8 @@ export const deEnrollFromCourse = async (req: Request, res: Response) => {
 export const getEnrolledCourses = async (req: Request, res: Response) => {
     const studentId = req.userId;
 
-    if (!studentId) {
-        return res.status(UNAUTHORIZED).json({ message: "Unauthorized: Missing user ID" });
+    if (!isValidUUID(studentId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid user ID" });
     }
 
     try {
@@ -403,8 +412,8 @@ export const getEnrolledCourses = async (req: Request, res: Response) => {
 export const getStudentDashboardContext = async (req: Request, res: Response) => {
     const studentId = req.userId;
 
-    if (!studentId) {
-        return res.status(UNAUTHORIZED).json({ message: "Unauthorized: Missing user ID" });
+    if (!isValidUUID(studentId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid user ID" });
     }
 
     try {
@@ -448,8 +457,8 @@ export const getStudentDashboardContext = async (req: Request, res: Response) =>
 export const getTranscript = async (req: Request, res: Response) => {
     const studentId = req.userId;
 
-    if (!studentId) {
-        return res.status(UNAUTHORIZED).json({ message: "Unauthorized: missing user ID" });
+    if (!isValidUUID(studentId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid user ID" });
     }
 
     try {

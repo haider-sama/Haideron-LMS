@@ -190,7 +190,7 @@ const EnrolledStudentsList: React.FC = () => {
                                 filteredStudents.map(({ student, status }) => (
                                     <tr
                                         key={student.id}
-                                        className="border-t hover:bg-gray-50 dark:hover:bg-darkMuted transition dark:border-darkBorderLight"
+                                        className="border-b last:border-0 hover:bg-gray-50 dark:hover:bg-darkMuted transition dark:border-darkBorderLight"
                                     >
                                         <td className="px-4 py-2 whitespace-nowrap font-medium text-gray-800 dark:text-darkTextPrimary">
                                             {student.firstName} {student.lastName}

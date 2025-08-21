@@ -29,7 +29,11 @@ authRouter.route("/resend-password-reset").post(strictLimiter, authController.re
 
 authRouter.route("/upload-avatar")
     .post(normalLimiter, verifyToken, authController.uploadSingleAvatar, authController.uploadAvatar);
+authRouter.route("/users/:targetUserId/upload-avatar")
+    .post(normalLimiter, verifyToken, authController.uploadSingleAvatar, authController.uploadAvatar);
+
 authRouter.route("/delete/avatar").delete(normalLimiter, verifyToken, authController.deleteAvatar);
+authRouter.route("/users/:targetUserId/delete/avatar").delete(normalLimiter, verifyToken, authController.deleteAvatar);
 
 // User Profile Routes
 authRouter.route("/profile").get(safeLimiter, verifyToken, authController.getUserProfile)

@@ -125,43 +125,52 @@ export const resendPasswordResetEmail = async (email: string): Promise<{ message
     return res.json();
 };
 
-export const uploadAvatar = async (file: File): Promise<Response> => {
+export const uploadAvatar = async (file: File, targetUserId?: string): Promise<Response> => {
     const formData = new FormData();
-    formData.append('avatar', file);
+    formData.append("avatar", file);
+
+    // append targetUserId if provided
+    const url = targetUserId
+        ? `${LOCAL_BASE_URL}/users/${targetUserId}/upload-avatar`
+        : `${LOCAL_BASE_URL}/upload-avatar`;
 
     try {
-        const response = await fetch(`${LOCAL_BASE_URL}/upload-avatar`, {
-            method: 'POST',
+        const response = await fetch(url, {
+            method: "POST",
             body: formData,
-            credentials: 'include',
+            credentials: "include",
         });
 
         if (!response.ok) {
-            throw new Error('Failed to upload avatar');
+            const errorData = await response.json();
+            throw new Error(errorData.message || "Failed to upload avatar");
         }
 
         return response;
     } catch (error) {
-        console.error('Error uploading avatar:', error);
+        console.error("Error uploading avatar:", error);
         throw error;
     }
 };
 
-export const deleteAvatar = async (): Promise<Response> => {
+export const deleteAvatar = async (targetUserId?: string): Promise<Response> => {
+    const url = targetUserId
+        ? `${LOCAL_BASE_URL}/users/${targetUserId}/delete/avatar`
+        : `${LOCAL_BASE_URL}/delete/avatar`;
+
     try {
-        const response = await fetch(`${LOCAL_BASE_URL}/delete/avatar`, {
-            method: 'DELETE',
-            credentials: 'include',
+        const response = await fetch(url, {
+            method: "DELETE",
+            credentials: "include",
         });
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to delete avatar');
+            throw new Error(error.message || "Failed to delete avatar");
         }
 
         return response;
     } catch (err) {
-        // console.error('Error deleting avatar:', err);
         throw err;
     }
 };

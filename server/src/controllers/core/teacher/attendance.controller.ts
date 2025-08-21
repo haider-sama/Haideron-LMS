@@ -2,13 +2,19 @@ import { Request, Response } from "express";
 import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED } from "../../../constants/http";
 import { attendanceRecords, attendanceSessions, courseOfferings, courses, courseSectionTeachers, enrollments, users } from "../../../db/schema";
 import { db } from "../../../db/db";
-import { eq, and, desc, ne, inArray } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { AudienceEnum } from "../../../shared/enums";
-import { CreateAttendanceRecordSchema, CreateAttendanceSessionSchema, MarkAttendanceInput, MarkAttendanceSchema } from "../../../utils/validators/lms-schemas/attendanceSchemas";
+import { CreateAttendanceSessionSchema, MarkAttendanceInput, MarkAttendanceSchema } from "../../../utils/validators/lms-schemas/attendanceSchemas";
+import { writeAuditLog } from "../../../utils/logs/writeAuditLog";
+import { isValidUUID } from "../../../utils/validators/lms-schemas/isValidUUID";
 
 export const createAttendanceSession = async (req: Request, res: Response) => {
     const { courseOfferingId } = req.params;
     const userId = req.userId;
+
+    if (!isValidUUID(courseOfferingId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid courseOffering ID" });
+    }
 
     try {
         // Validate request body
@@ -83,6 +89,20 @@ export const createAttendanceSession = async (req: Request, res: Response) => {
             })
             .returning();
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "ATTENDANCE_SESSION_CREATED",
+            actorId: userId, // The teacher creating the session
+            entityType: "attendanceSession",
+            entityId: newSession.id, // Newly created attendance session
+            metadata: {
+                ip: req.ip,
+                courseOfferingId: newSession.courseOfferingId,
+                date: newSession.date.toISOString().split("T")[0], // 'YYYY-MM-DD'
+                createdAt: newSession.createdAt ?? new Date(),
+            },
+        });
+
         return res.status(CREATED).json({ message: "Attendance session created successfully." });
     } catch (error) {
         console.error("Create Attendance Session Error:", error);
@@ -93,6 +113,10 @@ export const createAttendanceSession = async (req: Request, res: Response) => {
 export const getAttendanceSessions = async (req: Request, res: Response) => {
     const { courseOfferingId } = req.params;
     const userId = req.userId;
+
+    if (!isValidUUID(courseOfferingId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid courseOffering ID" });
+    }
 
     try {
         // Fetch user
@@ -178,6 +202,10 @@ export const markAttendanceRecords = async (req: Request, res: Response) => {
     const { id: sessionId } = req.params;
     const userId = req.userId;
 
+    if (!isValidUUID(sessionId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid session ID" });
+    }
+
     try {
         // Validate request body
         const parsed = MarkAttendanceSchema.safeParse(req.body);
@@ -251,6 +279,21 @@ export const markAttendanceRecords = async (req: Request, res: Response) => {
 
         const result = await Promise.all(upsertPromises);
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "ATTENDANCE_MARKED",
+            actorId: userId,
+            entityType: "attendanceSession",
+            entityId: sessionId,
+            metadata: {
+                ip: req.ip,
+                sessionId,
+                updatedRecordsCount: records.length,
+                students: records.map(r => ({ studentId: r.studentId, present: r.present })),
+                timestamp: new Date(),
+            },
+        });
+
         return res.status(CREATED).json({
             message: "Attendance records updated successfully",
             updatedCount: result.length,
@@ -267,6 +310,10 @@ export const markAttendanceRecords = async (req: Request, res: Response) => {
 export const getAttendanceRecords = async (req: Request, res: Response) => {
     const { id: sessionId } = req.params;
     const userId = req.userId;
+
+    if (!isValidUUID(sessionId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid session ID" });
+    }
 
     try {
         // Fetch user

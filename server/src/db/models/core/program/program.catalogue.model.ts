@@ -1,6 +1,7 @@
 import { pgTable, integer, boolean, timestamp, uuid, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { users } from "../../auth/user.model";
 import { programs } from "./program.model";
+import { relations } from "drizzle-orm";
 
 export const programCatalogues = pgTable(
     "program_catalogues",
@@ -20,6 +21,17 @@ export const programCatalogues = pgTable(
         index("program_catalogues_created_by_idx").on(table.createdBy),
     ]
 );
+
+export const programCatalogueRelations = relations(programCatalogues, ({ one }) => ({
+    program: one(programs, {
+        fields: [programCatalogues.programId],
+        references: [programs.id],
+    }),
+    creator: one(users, {
+        fields: [programCatalogues.createdBy],
+        references: [users.id],
+    }),
+}));
 
 // TODO:
 // ALTER TABLE program_catalogues

@@ -5,6 +5,9 @@ import { programBatches, programCatalogues, programs, users } from "../../../db/
 import { db } from "../../../db/db";
 import { eq, desc, and, count } from "drizzle-orm";
 import { createProgramBatchSchema, updateProgramBatchSchema } from "../../../utils/validators/lms-schemas/batchSchemas";
+import { writeAuditLog } from "../../../utils/logs/writeAuditLog";
+import { isValidUUID } from "../../../utils/validators/lms-schemas/isValidUUID";
+import { getNumberQueryParam, getStringQueryParam } from "../../../utils/validators/sanitizer/queryParams";
 
 // Typescript type of a user row
 type User = typeof users.$inferSelect;
@@ -67,15 +70,9 @@ export const createProgramBatch = async (req: Request, res: Response) => {
         ]);
 
 
-        if (!user) {
-            return res.status(NOT_FOUND).json({ message: "User not found" });
-        }
-        if (!program) {
-            return res.status(NOT_FOUND).json({ message: "Program not found" });
-        }
-        if (!catalogue) {
-            return res.status(NOT_FOUND).json({ message: "Program Catalogue not found" });
-        }
+        if (!user) return res.status(NOT_FOUND).json({ message: "User not found" });
+        if (!program) return res.status(NOT_FOUND).json({ message: "Program not found" });
+        if (!catalogue) return res.status(NOT_FOUND).json({ message: "Program Catalogue not found" });
 
         // Enforce department-level permission
         try {
@@ -114,6 +111,20 @@ export const createProgramBatch = async (req: Request, res: Response) => {
             })
             .returning();
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "PROGRAM_BATCH_CREATED",
+            actorId: user.id,
+            entityType: "programBatch",
+            entityId: newBatch.id,
+            metadata: {
+                ip: req.ip,
+                programId,
+                programCatalogueId,
+                sessionYear,
+            },
+        });
+
         return res.status(OK).json({
             message: "Program batch created successfully.",
         });
@@ -129,12 +140,13 @@ export const createProgramBatch = async (req: Request, res: Response) => {
 export const getBatchesByProgram = async (req: Request, res: Response) => {
     try {
         const userId = req.userId;
-        const programId = req.query.programId as string;
-        const departmentFilter = req.query.department as string; // optional filter
-        const search = (req.query.search as string)?.toLowerCase(); // optional search text
 
-        if (!programId) {
-            return res.status(BAD_REQUEST).json({ message: "Invalid ProgramId" });
+        const programId = getStringQueryParam(req.query.programId);
+        const page = getNumberQueryParam(req.query.page, 1);
+        const limit = getNumberQueryParam(req.query.limit, 20);
+
+        if (!programId || !isValidUUID(programId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid program ID" });
         }
 
         // Load user & program
@@ -158,9 +170,9 @@ export const getBatchesByProgram = async (req: Request, res: Response) => {
         }
 
         // Pagination
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 20;
-        const offset = (page - 1) * limit;
+        const pageNum = page && page > 0 ? page : 1;
+        const pageSize = limit && limit > 0 ? Math.min(limit, 100) : 20;
+        const offsetVal = (pageNum - 1) * pageSize;
 
         // Fetch batches with joins
         const batches = await db
@@ -183,8 +195,8 @@ export const getBatchesByProgram = async (req: Request, res: Response) => {
             .leftJoin(programCatalogues, eq(programCatalogues.id, programBatches.programCatalogueId))
             .leftJoin(users, eq(users.id, programBatches.createdBy))
             .orderBy(desc(programBatches.sessionYear))
-            .limit(limit)
-            .offset(offset);
+            .limit(pageSize)
+            .offset(offsetVal);
 
         // Count total batches
         const [{ count: totalBatches }] = await db
@@ -195,8 +207,8 @@ export const getBatchesByProgram = async (req: Request, res: Response) => {
         return res.status(OK).json({
             message: "Batches fetched successfully",
             batches,
-            page,
-            totalPages: Math.ceil(Number(totalBatches) / limit),
+            page: pageNum,
+            totalPages: Math.ceil(Number(totalBatches) / pageSize),
             totalBatches: Number(totalBatches),
         });
     } catch (err: any) {
@@ -212,7 +224,7 @@ export const getBatchById = async (req: Request, res: Response) => {
         const userId = req.userId;
         const { batchId } = req.params;
 
-        if (!batchId) {
+        if (!isValidUUID(batchId)) {
             return res.status(BAD_REQUEST).json({ message: "Invalid batch ID format" });
         }
 
@@ -276,7 +288,7 @@ export const updateBatchById = async (req: Request, res: Response) => {
         const userId = req.userId;
         const { batchId } = req.params;
 
-        if (!batchId) {
+        if (!isValidUUID(batchId)) {
             return res.status(BAD_REQUEST).json({ message: "Invalid batch ID format" });
         }
 
@@ -343,6 +355,19 @@ export const updateBatchById = async (req: Request, res: Response) => {
             })
             .where(eq(programBatches.id, batchId))
             .returning();
+
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "PROGRAM_BATCH_UPDATED",
+            actorId: user.id,
+            entityType: "programBatch",
+            entityId: updatedBatch.id,
+            metadata: {
+                ip: req.ip,
+                sessionYear: updatedBatch.sessionYear,
+                isActive: updatedBatch.isActive,
+            },
+        });
 
         return res.status(OK).json({
             message: "Batch updated successfully",

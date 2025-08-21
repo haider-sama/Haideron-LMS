@@ -75,7 +75,7 @@ const EditPEOList = ({ programId }: EditPEOListProps) => {
             updatePEOInProgram(programId, payload.peoId, payload.update),
         onSuccess: () => {
             toast.success("PEO updated successfully");
-            queryClient.invalidateQueries({ queryKey: ["programs", programId] });
+            queryClient.invalidateQueries({ queryKey: ["peos", programId] });
         },
         onError: (err: any) => {
             if (err?.zodErrors && typeof err.zodErrors === "object") {
@@ -168,7 +168,7 @@ const EditPEOList = ({ programId }: EditPEOListProps) => {
             const updated = [...editedPeos];
             updated.splice(peoIndex, 1);
             setEditedPeos(updated);
-            queryClient.invalidateQueries({ queryKey: ["programs", programId] });
+            queryClient.invalidateQueries({ queryKey: ["peos", programId] });
         } catch (err: any) {
             toast.error(err.message || "Failed to delete PEO");
         }

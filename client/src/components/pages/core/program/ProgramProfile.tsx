@@ -47,7 +47,8 @@ const ProgramProfile = ({ programId, fetchProgram, updateProgram }: ProgramProps
         },
         onSuccess: () => {
             toast.success('Program updated successfully!');
-            queryClient.invalidateQueries({ queryKey: ['programs', programId] });
+            queryClient.invalidateQueries({ queryKey: ['programs'], exact: false });
+            queryClient.invalidateQueries({ queryKey: ['program', programId] }); // refresh single program
         },
         onError: (err: any) => {
             if (err?.zodErrors) {
@@ -91,7 +92,8 @@ const ProgramProfile = ({ programId, fetchProgram, updateProgram }: ProgramProps
         mutationFn: () => deleteProgramById(programId),
         onSuccess: () => {
             toast.success("Program deleted successfully");
-            queryClient.invalidateQueries({ queryKey: ['programs', programId] });
+            queryClient.invalidateQueries({ queryKey: ['programs'], exact: false });
+            queryClient.removeQueries({ queryKey: ['program', programId] }); // optional: clear single program cache
         },
         onError: (err: any) => {
             toast.error(err?.message || "Failed to delete program");

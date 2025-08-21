@@ -5,14 +5,9 @@ import { semesterCourses, semesters } from "../../db/schema";
 import { db } from "../../db/db";
 import { eq, and, inArray } from "drizzle-orm";
 import { addSemesterSchema, updateSemesterSchema } from "../../utils/validators/lms-schemas/semesterSchemas";
-
-type CatalogueWithProgram = {
-    id: string;
-    programId: string;
-    program: {
-        departmentTitle: string;
-    };
-};
+import { writeAuditLog } from "../../utils/logs/writeAuditLog";
+import { isValidUUID } from "../../utils/validators/lms-schemas/isValidUUID";
+import { getStringQueryParam } from "../../utils/validators/sanitizer/queryParams";
 
 export const addSemesterToCatalogue = async (req: Request, res: Response) => {
     try {
@@ -41,7 +36,7 @@ export const addSemesterToCatalogue = async (req: Request, res: Response) => {
         const catalogue = await db.query.programCatalogues.findFirst({
             where: (pc, { eq }) => eq(pc.id, programCatalogueId),
             with: { program: true },
-        }) as CatalogueWithProgram | null;
+        });
 
         // Tell TypeScript what `catalogue` looks like
         if (!catalogue || !catalogue.program) {
@@ -107,6 +102,22 @@ export const addSemesterToCatalogue = async (req: Request, res: Response) => {
             );
         }
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "SEMESTER_ADDED_TO_CATALOGUE",
+            actorId: userId,
+            entityType: "semester",
+            entityId: newSemester.id,
+            metadata: {
+                ip: req.ip,
+                programCatalogueId: newSemester.programCatalogueId,
+                programId: catalogue.program.id,
+                semesterNo: newSemester.semesterNo,
+                courses: validCourseIds, // array of course IDs associated with the semester
+                createdAt: new Date(),
+            },
+        });
+
         return res.status(CREATED).json({
             message: "Semester added to catalogue successfully",
         });
@@ -121,12 +132,11 @@ export const addSemesterToCatalogue = async (req: Request, res: Response) => {
 
 export const getSemestersInCatalogue = async (req: Request, res: Response) => {
     try {
-        const { catalogueId } = req.query;
         const userId = req.userId;
+        const catalogueId = getStringQueryParam(req.query.catalogueId);
 
-        // Validate catalogueId param
-        if (!catalogueId || typeof catalogueId !== "string") {
-            return res.status(BAD_REQUEST).json({ message: "Invalid or missing catalogueId" });
+        if (!catalogueId || !isValidUUID(catalogueId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid catalogue ID" });
         }
 
         // Fetch user for authorization
@@ -143,7 +153,7 @@ export const getSemestersInCatalogue = async (req: Request, res: Response) => {
         const catalogue = await db.query.programCatalogues.findFirst({
             where: (pc, { eq }) => eq(pc.id, catalogueId),
             with: { program: true },
-        }) as CatalogueWithProgram | null;
+        });
 
         if (!catalogue || !catalogue.program) {
             return res.status(NOT_FOUND).json({ message: "Program catalogue not found" });
@@ -208,6 +218,10 @@ export const updateSemesterById = async (req: Request, res: Response) => {
             return res.status(NOT_FOUND).json({ message: "User not found" });
         }
 
+        if (!isValidUUID(semesterId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid semester ID" });
+        }
+
         const parsed = updateSemesterSchema.safeParse(req.body);
         if (!parsed.success) {
             return res.status(BAD_REQUEST).json({
@@ -236,7 +250,7 @@ export const updateSemesterById = async (req: Request, res: Response) => {
         const catalogue = await db.query.programCatalogues.findFirst({
             where: (pc, { eq }) => eq(pc.id, semester.programCatalogueId),
             with: { program: true },
-        }) as CatalogueWithProgram | null;
+        });
 
         if (!catalogue || !catalogue.program) {
             return res.status(NOT_FOUND).json({ message: "Related program catalogue not found" });
@@ -349,6 +363,26 @@ export const updateSemesterById = async (req: Request, res: Response) => {
                 },
             },
         });
+
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "SEMESTER_UPDATED",
+            actorId: userId,
+            entityType: "semester",
+            entityId: semesterId,
+            metadata: {
+                ip: req.ip,
+                programCatalogueId: semester.programCatalogueId,
+                programId: catalogue.program.id,
+                previousSemesterNo: semester.semesterNo,
+                updatedSemesterNo: semesterNo ?? semester.semesterNo,
+                previousCourses: currentCourseIds,
+                addedCourses: coursesToAdd,
+                removedCourses: coursesToRemove,
+                updatedAt: new Date(),
+            },
+        });
+
         return res.status(OK).json({
             message: "Semester updated successfully",
             semester: updatedSemester,
@@ -377,7 +411,7 @@ export const deleteSemesterById = async (req: Request, res: Response) => {
             return res.status(NOT_FOUND).json({ message: "User not found" });
         }
 
-        if (!semesterId || typeof semesterId !== "string") {
+        if (!isValidUUID(semesterId)) {
             return res.status(BAD_REQUEST).json({ message: "Invalid semester ID" });
         }
 
@@ -403,7 +437,7 @@ export const deleteSemesterById = async (req: Request, res: Response) => {
         const catalogue = await db.query.programCatalogues.findFirst({
             where: (pc, { eq }) => eq(pc.id, semester.programCatalogueId),
             with: { program: true },
-        }) as CatalogueWithProgram | null;
+        });
 
         if (!catalogue || !catalogue.program) {
             return res.status(NOT_FOUND).json({ message: "Associated program catalogue not found" });
@@ -430,6 +464,21 @@ export const deleteSemesterById = async (req: Request, res: Response) => {
                 updatedAt: new Date(),
             })
             .where(eq(semesters.id, semesterId));
+
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "SEMESTER_ARCHIVED",
+            actorId: userId,
+            entityType: "semester",
+            entityId: semesterId,
+            metadata: {
+                ip: req.ip,
+                programCatalogueId: semester.programCatalogueId,
+                programId: catalogue.program.id,
+                archivedAt: new Date(),
+                previousIsArchived: semester.isArchived,
+            },
+        });
 
         return res.status(OK).json({
             message: "Semester archived successfully",

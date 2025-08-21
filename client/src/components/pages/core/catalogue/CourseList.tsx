@@ -32,11 +32,11 @@ const CourseList: React.FC<CourseListProps> = ({ semester, allCourses, catalogue
 
     const existingCourseIds = semester.semesterCourses?.map(sc => sc.courseId) ?? [];
     const availableCourses = allCourses.filter(c => !existingCourseIds.includes(c.id));
-    
+
     // Update semester courses mutation
     const mutation = useMutation({
-        mutationFn: (updatedCourses: string[]) =>
-            updateSemester(semester.id, { courses: updatedCourses }),
+        mutationFn: (payload: { courses: string[] }) =>
+            updateSemester(semester.id, payload),
         onSuccess: () => {
             toast.success("Semester updated");
             queryClient.invalidateQueries({ queryKey: ["courses", semester.id] });
@@ -55,10 +55,7 @@ const CourseList: React.FC<CourseListProps> = ({ semester, allCourses, catalogue
     });
 
     const handleAddCourse = () => {
-        const existingIds = (semester.courses ?? []).map((c) =>
-            typeof c === "string" ? c : (c as Course).id
-        );
-
+        const existingIds = courses.map((c) => c.id); // <- from query, always fresh
         const newIds = selectedCourseIds
             .map((opt) => opt.value)
             .filter((id) => !existingIds.includes(id));
@@ -68,17 +65,18 @@ const CourseList: React.FC<CourseListProps> = ({ semester, allCourses, catalogue
             return;
         }
 
-        mutation.mutate([...existingIds, ...newIds]);
+        mutation.mutate({ courses: [...existingIds, ...newIds] });
         setSelectedCourseIds([]);
     };
 
     const handleRemove = async (courseId: string) => {
         setDeletingCourseId(courseId);
-        const updatedCourses = (semester.courses ?? [])
-            .map((c) => (typeof c === "string" ? c : (c as Course).id))
-            .filter((id) => id !== courseId);
 
-        await mutation.mutateAsync(updatedCourses);
+        // Always base off latest query data
+        const existingIds = courses.map((c) => c.id);
+        const updatedCourses = existingIds.filter((id) => id !== courseId);
+
+        await mutation.mutateAsync({ courses: updatedCourses });
         setDeletingCourseId(null);
     };
 

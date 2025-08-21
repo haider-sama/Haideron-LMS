@@ -5,6 +5,8 @@ import { AudienceEnum, DepartmentEnum } from "../../../shared/enums";
 import { programs, users } from "../../../db/schema";
 import { db } from "../../../db/db";
 import { eq, ilike, sql, desc, SQL, and, or } from "drizzle-orm";
+import { writeAuditLog } from "../../../utils/logs/writeAuditLog";
+import { isValidUUID } from "../../../utils/validators/lms-schemas/isValidUUID";
 
 export const registerProgram = async (req: Request, res: Response) => {
     try {
@@ -75,6 +77,18 @@ export const registerProgram = async (req: Request, res: Response) => {
 
         const newProgram = insertedPrograms[0];
 
+        await writeAuditLog(db, {
+            action: "PROGRAM_REGISTERED",
+            actorId: user.id,
+            entityType: "programs",
+            entityId: newProgram.id,
+            metadata: {
+                ip: req.ip,
+                programTitle: newProgram.title,  // optional but useful
+                programDept: newProgram.departmentTitle,
+            },
+        });
+
         return res.status(CREATED).json({
             message: "Program registered successfully",
         });
@@ -120,6 +134,13 @@ export const getPrograms = async (req: Request, res: Response) => {
     try {
         const userId = req.userId;
         const { programId } = req.params;
+
+        if (programId) {
+            if (!isValidUUID(programId)) {
+                return res.status(BAD_REQUEST).json({ message: "Invalid program ID" });
+            }
+        }
+
         const [user] = await db
             .select({ id: users.id, role: users.role, department: users.department })
             .from(users)
@@ -237,8 +258,8 @@ export const getProgramById = async (req: Request, res: Response) => {
         const userId = req.userId; // auth middleware sets this
         const { programId } = req.params;
 
-        if (!programId) {
-            return res.status(BAD_REQUEST).json({ message: "Program ID is required" });
+        if (!isValidUUID(programId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid program ID" });
         }
 
         // Fetch user info
@@ -292,7 +313,7 @@ export const updateProgramById = async (req: Request, res: Response) => {
     const { programId } = req.params;
 
     try {
-        if (!programId) {
+        if (!isValidUUID(programId)) {
             return res.status(BAD_REQUEST).json({ message: "Invalid program ID" });
         }
 
@@ -352,6 +373,22 @@ export const updateProgramById = async (req: Request, res: Response) => {
             .where(eq(programs.id, programId))
             .returning();
 
+        if (!updatedProgram) {
+            return res.status(NOT_FOUND).json({ message: "Program not found" });
+        }
+
+        await writeAuditLog(db, {
+            action: "PROGRAM_UPDATED",
+            actorId: user.id,
+            entityType: "programs",
+            entityId: updatedProgram.id,
+            metadata: {
+                ip: req.ip,
+                programTitle: updatedProgram.title,  // optional but useful
+                programDept: updatedProgram.departmentTitle,
+            },
+        });
+
         return res.status(OK).json({
             message: "Program updated successfully",
             updatedProgram,
@@ -371,8 +408,7 @@ export const deleteProgramById = async (req: Request, res: Response) => {
     try {
         const { programId } = req.params;
 
-        // Validate ID format (Postgres UUID or integer depending on schema)
-        if (!programId) {
+        if (!isValidUUID(programId)) {
             return res.status(BAD_REQUEST).json({ message: "Invalid program ID" });
         }
 
@@ -410,15 +446,26 @@ export const deleteProgramById = async (req: Request, res: Response) => {
         }
 
         // Archive program
-        await db
+        const [archivedProgram] = await db
             .update(programs)
             .set({
                 isArchived: true,
                 archivedAt: new Date(),
             })
-            .where(eq(programs.id, programId));
+            .where(eq(programs.id, programId))
+            .returning();
 
-        // TODO: Log audit event
+        await writeAuditLog(db, {
+            action: "PROGRAM_ARCHIVED",
+            actorId: user.id,
+            entityType: "programs",
+            entityId: archivedProgram.id,
+            metadata: {
+                ip: req.ip,
+                programTitle: archivedProgram.title,
+                programDept: archivedProgram.departmentTitle,
+            },
+        });
 
         return res.status(OK).json({ message: "Program archived successfully" });
     } catch (err: any) {

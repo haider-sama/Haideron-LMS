@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import TopCenterLoader from "../../../../components/ui/TopCenterLoader";
-import { Assessment, CLO } from "../../../../constants/core/interfaces";
-import { deleteAssessmentById, getCourseAssessments } from "../../../../api/core/teacher/assessment-api";
-import { useToast } from "../../../../context/ToastContext";
+import TopCenterLoader from "../../../../ui/TopCenterLoader";
+import { Assessment, CLO } from "../../../../../constants/core/interfaces";
+import { deleteAssessmentById, getCourseAssessments } from "../../../../../api/core/teacher/assessment-api";
+import { useToast } from "../../../../../context/ToastContext";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "../../../../components/ui/Button";
-import Modal from "../../../../components/ui/Modal";
+import { Button } from "../../../../ui/Button";
+import Modal from "../../../../ui/Modal";
 import AssessmentResultsForm from "./AssessmentResultsForm";
-import ErrorStatus from "../../../../components/ui/ErrorStatus";
+import ErrorStatus from "../../../../ui/ErrorStatus";
 import UpdateAssessmentForm from "./UpdateAssessmentForm";
 
 interface AssessmentListTableProps {

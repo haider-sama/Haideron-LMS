@@ -5,6 +5,9 @@ import { db } from "../../../db/db";
 import { eq } from "drizzle-orm";
 import { AudienceEnum, FinalizedResultStatusEnum } from "../../../shared/enums";
 import { finalizeResultSchema, reviewResultSchema, saveGradingSchemeSchema, submitResultsSchema } from "../../../utils/validators/lms-schemas/assessmentSchemas";
+import { writeAuditLog } from "../../../utils/logs/writeAuditLog";
+import { getNumberQueryParam } from "../../../utils/validators/sanitizer/queryParams";
+import { isValidUUID } from "../../../utils/validators/lms-schemas/isValidUUID";
 
 export interface GradingRule {
     grade: string;        // e.g., "A+", "A", "B"
@@ -30,8 +33,12 @@ interface GradeSubmission {
 }
 
 export const finalizeAssessmentResults = async (req: Request, res: Response) => {
+    const userId = req.userId;
     const { courseOfferingId } = req.params;
-    const userId = req.userId!;
+
+    if (!isValidUUID(courseOfferingId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid courseOffering ID" });
+    }
 
     const parsed = finalizeResultSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -51,7 +58,7 @@ export const finalizeAssessmentResults = async (req: Request, res: Response) => 
             where: (u, { eq }) => eq(u.id, userId),
         });
 
-        if (!teacher || teacher.role !== "DepartmentTeacher") {
+        if (!teacher || teacher.role !== AudienceEnum.DepartmentTeacher) {
             return res.status(FORBIDDEN).json({ message: "You are not authorized to finalize results." });
         }
 
@@ -221,6 +228,28 @@ export const finalizeAssessmentResults = async (req: Request, res: Response) => 
             );
         });
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "ASSESSMENT_RESULTS_FINALIZED",
+            actorId: userId, // Teacher finalizing results
+            entityType: "finalizedResult",
+            entityId: `${courseOfferingId}-${section}`, // Composite ID for courseOffering + section
+            metadata: {
+                ip: req.ip,
+                courseOfferingId,
+                section,
+                submittedBy: userId,
+                totalStudents: gradesToSubmit.length,
+                gradesSnapshot: gradesToSubmit.map(g => ({
+                    studentId: g.studentId,
+                    grade: g.grade,
+                    gradePoint: g.gradePoint,
+                    weightedPercentage: g.weightedPercentage,
+                })), // JSON snapshot of submitted grades
+                timestamp: new Date(),
+            },
+        });
+
         return res.status(OK).json({
             message: `Final grades for Section ${section} calculated and submitted for review.`,
         });
@@ -231,8 +260,12 @@ export const finalizeAssessmentResults = async (req: Request, res: Response) => 
 };
 
 export const withdrawFinalizedResult = async (req: Request, res: Response) => {
+    const userId = req.userId;
     const { courseOfferingId } = req.params;
-    const userId = req.userId!;
+
+    if (!isValidUUID(courseOfferingId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid courseOffering ID" });
+    }
 
     const parsed = finalizeResultSchema.safeParse(req.body); // validate section
     if (!parsed.success) {
@@ -312,6 +345,21 @@ export const withdrawFinalizedResult = async (req: Request, res: Response) => {
             await tx.delete(finalizedResults).where(eq(finalizedResults.id, existingFinalized.id));
         });
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "FINALIZED_RESULT_WITHDRAWN",
+            actorId: userId, // Teacher performing the withdrawal
+            entityType: "finalizedResult",
+            entityId: `${courseOfferingId}-${section}`, // Composite of courseOffering + section
+            metadata: {
+                ip: req.ip,
+                courseOfferingId,
+                section,
+                withdrawnBy: userId,
+                timestamp: new Date(),
+            },
+        });
+
         return res.status(OK).json({
             message: `Finalized result for Section ${section} has been withdrawn successfully.`,
         });
@@ -323,8 +371,12 @@ export const withdrawFinalizedResult = async (req: Request, res: Response) => {
 };
 
 export const saveGradingScheme = async (req: Request, res: Response) => {
+    const userId = req.userId;
     const { courseOfferingId } = req.params;
-    const userId = req.userId!;
+
+    if (!isValidUUID(courseOfferingId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid courseOffering ID" });
+    }
 
     const parsed = saveGradingSchemeSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -404,6 +456,22 @@ export const saveGradingScheme = async (req: Request, res: Response) => {
             })
             .returning();
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: existingScheme ? "GRADING_SCHEME_UPDATED" : "GRADING_SCHEME_CREATED",
+            actorId: userId,
+            entityType: "customGradingScheme",
+            entityId: (existingScheme as any)?.id || (newScheme as any)?.id,
+            metadata: {
+                ip: req.ip,
+                courseOfferingId,
+                section,
+                rulesCount: rules.length,
+                createdOrUpdatedBy: userId,
+                timestamp: new Date(),
+            },
+        });
+
         return res.status(CREATED).json({ message: "Grading scheme saved.", scheme: newScheme });
 
     } catch (err) {
@@ -413,8 +481,12 @@ export const saveGradingScheme = async (req: Request, res: Response) => {
 };
 
 export const reviewFinalizedResult = async (req: Request, res: Response) => {
+    const userId = req.userId;
     const { resultId } = req.params;
-    const userId = req.userId!;
+
+    if (!isValidUUID(resultId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid result ID" });
+    }
 
     const parsed = reviewResultSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -480,6 +552,22 @@ export const reviewFinalizedResult = async (req: Request, res: Response) => {
             })
             .where(eq(finalizedResults.id, resultId));
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: status === FinalizedResultStatusEnum.Confirmed ? "FINAL_RESULT_CONFIRMED" : "FINAL_RESULT_REJECTED",
+            actorId: userId, // Department Head reviewing
+            entityType: "finalizedResult",
+            entityId: resultId,
+            metadata: {
+                ip: req.ip,
+                courseOfferingId: finalized.courseOfferingId,
+                section: finalized.section,
+                status,
+                reviewedBy: userId,
+                timestamp: new Date(),
+            },
+        });
+
         return res.status(OK).json({ message: `Result ${status.toLowerCase()} successfully.` });
     } catch (err) {
         console.error(err);
@@ -505,7 +593,7 @@ type FinalizedResultWithRelations = {
 };
 
 export const getPendingFinalizedResultsForReview = async (req: Request, res: Response) => {
-    const userId = req.userId!;
+    const userId = req.userId;
 
     try {
         const reviewer = await db.query.users.findFirst({
@@ -516,9 +604,12 @@ export const getPendingFinalizedResultsForReview = async (req: Request, res: Res
             return res.status(FORBIDDEN).json({ message: "Access denied. You must be a department head." });
         }
 
-        const page = parseInt((req.query.page as string) || "1");
-        const limit = parseInt((req.query.limit as string) || "20");
-        const offset = (page - 1) * limit;
+        const page = getNumberQueryParam(req.query.page, 1);
+        const limit = getNumberQueryParam(req.query.limit, 20);
+
+        const pageNum = page && page > 0 ? page : 1;
+        const pageSize = limit && limit > 0 ? Math.min(limit, 100) : 20;
+        const offsetVal = (pageNum - 1) * pageSize;
 
         // ----------------------
         // Fetch finalized results with nested relations
@@ -547,14 +638,14 @@ export const getPendingFinalizedResultsForReview = async (req: Request, res: Res
         );
 
         const total = filtered.length;
-        const paginated = filtered.slice(offset, offset + limit);
+        const paginated = filtered.slice(offsetVal, offsetVal + pageSize);
 
         return res.status(OK).json({
             results: paginated,
             total,
-            page,
-            pageSize: limit,
-            totalPages: Math.ceil(total / limit),
+            page: pageNum,
+            pageSize,
+            totalPages: Math.ceil(total / pageSize),
         });
     } catch (err) {
         console.error(err);

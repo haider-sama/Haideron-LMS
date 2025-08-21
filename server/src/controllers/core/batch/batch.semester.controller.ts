@@ -5,6 +5,8 @@ import { db } from "../../../db/db";
 import { eq, and, asc } from "drizzle-orm";
 import { activateSemesterSchema, updateBatchSemesterSchema } from "../../../utils/validators/lms-schemas/batchSchemas";
 import { checkDepartmentAccess } from "./batch.controller";
+import { writeAuditLog } from "../../../utils/logs/writeAuditLog";
+import { isValidUUID } from "../../../utils/validators/lms-schemas/isValidUUID";
 
 export const activateSemester = async (req: Request, res: Response) => {
     try {
@@ -101,6 +103,24 @@ export const activateSemester = async (req: Request, res: Response) => {
             })
             .returning();
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "SEMESTER_ACTIVATED",
+            actorId: userId,
+            entityType: "activatedSemester",
+            entityId: newActivatedSemester.id,
+            metadata: {
+                ip: req.ip,
+                programBatchId: batch.id,
+                programId: batch.program.id,
+                semesterNo,
+                term,
+                startedAt: newActivatedSemester.startedAt,
+                isActive: true,
+                createdAt: new Date(),
+            },
+        });
+
         return res.status(CREATED).json({
             message: `Semester ${semesterNo} activated successfully for this batch`,
             activatedSemester: newActivatedSemester,
@@ -120,8 +140,8 @@ export const getSemestersByBatch = async (req: Request, res: Response) => {
         const { batchId } = req.params;
         const userId = req.userId;
 
-        if (!batchId) {
-            return res.status(BAD_REQUEST).json({ message: "Invalid or missing batchId" });
+        if (!isValidUUID(batchId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid batch ID" });
         }
 
         // Validate user
@@ -179,8 +199,8 @@ export const updateBatchSemester = async (req: Request, res: Response) => {
         const { batchSemesterId } = req.params;
         const userId = req.userId;
 
-        if (!batchSemesterId) {
-            return res.status(BAD_REQUEST).json({ message: "Invalid batchSemesterId format" });
+        if (!isValidUUID(batchSemesterId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid batch semester ID" });
         }
 
         const updates = updateBatchSemesterSchema.safeParse(req.body);
@@ -252,6 +272,21 @@ export const updateBatchSemester = async (req: Request, res: Response) => {
             .where(eq(activatedSemesters.id, batchSemesterId))
             .returning();
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "BATCH_SEMESTER_UPDATED",
+            actorId: userId,
+            entityType: "activatedSemester",
+            entityId: batchSemesterId,
+            metadata: {
+                ip: req.ip,
+                programBatchId: batchSemester.programBatch.id,
+                programId: batchSemester.programBatch.program.id,
+                updatedFields: transformedUpdates,
+                updatedAt: new Date(),
+            },
+        });
+
         return res.status(OK).json({
             message: "Batch semester updated successfully",
         });
@@ -269,8 +304,8 @@ export const completeBatchSemester = async (req: Request, res: Response) => {
         const { batchSemesterId } = req.params;
         const userId = req.userId;
 
-        if (batchSemesterId) {
-            return res.status(BAD_REQUEST).json({ message: "Invalid batchSemesterId format" });
+        if (!isValidUUID(batchSemesterId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid batch semester ID" });
         }
 
         // Get user
@@ -321,6 +356,22 @@ export const completeBatchSemester = async (req: Request, res: Response) => {
             .where(eq(activatedSemesters.id, batchSemesterId))
             .returning();
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "BATCH_SEMESTER_COMPLETED",
+            actorId: userId,
+            entityType: "activatedSemester",
+            entityId: batchSemesterId,
+            metadata: {
+                ip: req.ip,
+                programBatchId: batchSemester.programBatch.id,
+                programId: batchSemester.programBatch.program.id,
+                endedAt: updates.endedAt,
+                isActive: updates.isActive,
+                updatedAt: new Date(),
+            },
+        });
+
         return res.status(OK).json({
             message: "Semester marked as completed",
         });
@@ -339,8 +390,8 @@ export const deleteBatchSemester = async (req: Request, res: Response) => {
         const { batchSemesterId } = req.params;
         const userId = req.userId;
 
-        if (!batchSemesterId) {
-            return res.status(BAD_REQUEST).json({ message: "Invalid batchSemesterId format" });
+        if (!isValidUUID(batchSemesterId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid batch semester ID" });
         }
 
         // Fetch user
@@ -383,6 +434,20 @@ export const deleteBatchSemester = async (req: Request, res: Response) => {
         // Delete semester
         await db.delete(activatedSemesters).where(eq(activatedSemesters.id, batchSemesterId));
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "BATCH_SEMESTER_DELETED",
+            actorId: userId,
+            entityType: "activatedSemester",
+            entityId: batchSemesterId,
+            metadata: {
+                ip: req.ip,
+                programBatchId: batchSemester.programBatch.id,
+                programId: batchSemester.programBatch.program.id,
+                deletedAt: new Date(),
+            },
+        });
+
         return res.status(OK).json({
             message: "Batch semester deleted successfully",
         });
@@ -400,7 +465,7 @@ export const getCatalogueCoursesForActivatedSemester = async (req: Request, res:
         const { activatedSemesterId } = req.params;
         const userId = req.userId;
 
-        if (!activatedSemesterId) {
+        if (!isValidUUID(activatedSemesterId)) {
             return res.status(BAD_REQUEST).json({ message: "Invalid activated semester ID" });
         }
 

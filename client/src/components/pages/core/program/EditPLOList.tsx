@@ -47,7 +47,8 @@ const EditPLOList: React.FC<EditPLOListProps> = ({ programId }) => {
         }),
         onSuccess: (_, variables) => {
             toast.success(`${variables.code} updated successfully`);
-            queryClient.invalidateQueries({ queryKey: ["programs", programId] });
+            queryClient.invalidateQueries({ queryKey: ["peos", programId] });
+            queryClient.invalidateQueries({ queryKey: ["plos", programId] });
         },
         onError: (err: any) => {
             if (err?.zodErrors && typeof err.zodErrors === "object") {
@@ -89,7 +90,8 @@ const EditPLOList: React.FC<EditPLOListProps> = ({ programId }) => {
 
             // Remove locally without refetch
             setEditedPlos(prev => prev.filter((_, i) => i !== index));
-            queryClient.invalidateQueries({ queryKey: ["program", programId] });
+            queryClient.invalidateQueries({ queryKey: ["peos", programId] });
+            queryClient.invalidateQueries({ queryKey: ["plos", programId] });
         } catch (err: any) {
             toast.error(err.message || "Failed to delete PLO.");
         }

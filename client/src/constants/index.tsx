@@ -2,7 +2,7 @@ import { IconType } from 'react-icons';
 import { AudienceEnum } from '../../../server/src/shared/enums';
 import { FaHome, FaGraduationCap, FaFileAlt, FaBookOpen, FaChalkboardTeacher, FaUsersCog, FaComments } from "react-icons/fa";
 import { HiAcademicCap, HiOutlineUserAdd } from "react-icons/hi";
-import { MdAdminPanelSettings, MdDashboard, MdListAlt, MdManageAccounts, MdPersonAddAlt1, MdRateReview } from "react-icons/md";
+import { MdAdminPanelSettings, MdDashboard, MdHistory, MdListAlt, MdManageAccounts, MdPersonAddAlt1, MdRateReview } from "react-icons/md";
 import { RiGraduationCapFill } from "react-icons/ri";
 import { FiBookOpen, FiUserCheck } from "react-icons/fi";
 import { BsBookHalf } from "react-icons/bs";
@@ -14,7 +14,7 @@ export const ALLOW_PUBLIC_REGISTRATION: boolean = true;
 export const ALLOW_EMAIL_MIGRATION: boolean = false;
 
 export const MOBILE_BREAKPOINT = 768; // px, adjust if needed
-export const MAX_PAGE_LIMIT = 10;
+export const MAX_PAGE_LIMIT = 100;
 
 // Define roles to restrict FROM
 export const restrictedRoles = [
@@ -65,6 +65,7 @@ export const navLinks: NavLink[] = [
         subLinks: [
             { label: 'User Registration', href: '/admin/user-registration', icon: HiOutlineUserAdd, roles: [AudienceEnum.Admin] },
             { label: 'User Management', href: '/admin/user-management', icon: MdManageAccounts, roles: [AudienceEnum.Admin] },
+            { label: 'Audit Logs', href: '/admin/audit-logs', icon: MdHistory, roles: [AudienceEnum.Admin] },
         ],
     },
     {

@@ -6,6 +6,9 @@ import { db } from "../../db/db";
 import { eq, sql, and, ilike, gte, lte, inArray } from "drizzle-orm";
 import { facultyRegisterSchema, updateFacultySchema } from "../../utils/validators/lms-schemas/facultySchemas";
 import { hashValue } from "../../utils/bcrypt";
+import { writeAuditLog } from "../../utils/logs/writeAuditLog";
+import { isValidUUID } from "../../utils/validators/lms-schemas/isValidUUID";
+import { getBooleanQueryParam, getNumberQueryParam, getStringQueryParam } from "../../utils/validators/sanitizer/queryParams";
 
 export const registerFacultyMember = async (req: Request, res: Response) => {
     const userId = req.userId;
@@ -96,6 +99,29 @@ export const registerFacultyMember = async (req: Request, res: Response) => {
             });
         }
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "FACULTY_REGISTERED",
+            actorId: userId, // The requester who performed the registration
+            entityType: "user",
+            entityId: newUser.id, // The newly created faculty member
+            metadata: {
+                ip: req.ip,
+                email: newUser.email,
+                department: newUser.department,
+                role: newUser.role, // Should be DepartmentTeacher
+                teacherInfo: teacherInfoData
+                    ? {
+                        designation: teacherInfoData.designation,
+                        joiningDate: teacherInfoData.joiningDate,
+                        facultyType: teacherInfoData.facultyType,
+                        subjectOwner: teacherInfoData.subjectOwner ?? false,
+                    }
+                    : null,
+                createdAt: newUser.createdAt,
+            },
+        });
+
         return res.status(CREATED).json({
             message: "Faculty member registered successfully!",
         });
@@ -158,21 +184,19 @@ export const fetchFacultyMembers = async (req: Request, res: Response) => {
         }
 
         // --- Otherwise -> Paginated list ---
-        const {
-            page = "1",
-            limit = "20",
-            search,
-            designation,
-            facultyType,
-            subjectOwner,
-            joiningDateFrom,
-            joiningDateTo,
-            department,
-        } = req.query as Record<string, string | undefined>;
+        const search = getStringQueryParam(req.query.search);
+        const page = getNumberQueryParam(req.query.page, 1);
+        const limit = getNumberQueryParam(req.query.limit, 10);
+        const designation = getStringQueryParam(req.query.designation);
+        const facultyType = getStringQueryParam(req.query.facultyType);
+        const subjectOwner = getBooleanQueryParam(req.query.subjectOwner);
+        const joiningDateFrom = getStringQueryParam(req.query.joiningDateFrom);
+        const joiningDateTo = getStringQueryParam(req.query.joiningDateTo);
+        const department = getStringQueryParam(req.query.department);
 
-        const pageNum = parseInt(page, 10);
-        const limitNum = parseInt(limit, 10);
-        const offset = (pageNum - 1) * limitNum;
+        const pageNum = page && page > 0 ? page : 1;
+        const pageSize = limit && limit > 0 ? Math.min(limit, 100) : 20;
+        const offsetVal = (pageNum - 1) * pageSize;
 
         const whereClauses = [eq(users.role, AudienceEnum.DepartmentTeacher)];
 
@@ -182,7 +206,6 @@ export const fetchFacultyMembers = async (req: Request, res: Response) => {
             whereClauses.push(eq(users.department, department as string));
         }
 
-        // Full-text search on users.search_vector using PostgreSQL `to_tsquery`
         // Full-text search on users.searchVector using PostgreSQL `plainto_tsquery`
         if (search && typeof search === "string" && search.trim().length > 0) {
             whereClauses.push(
@@ -198,7 +221,7 @@ export const fetchFacultyMembers = async (req: Request, res: Response) => {
             whereClauses.push(eq(teacherInfo.facultyType, facultyType as string));
         }
         if (subjectOwner !== undefined) {
-            whereClauses.push(eq(teacherInfo.subjectOwner, subjectOwner === "true"));
+            whereClauses.push(eq(teacherInfo.subjectOwner, subjectOwner));
         }
         if (joiningDateFrom) {
             whereClauses.push(gte(teacherInfo.joiningDate, joiningDateFrom as string));
@@ -233,8 +256,8 @@ export const fetchFacultyMembers = async (req: Request, res: Response) => {
             .from(users)
             .leftJoin(teacherInfo, eq(users.id, teacherInfo.userId))
             .where(and(...whereClauses))
-            .limit(limitNum)
-            .offset(offset);
+            .limit(pageSize)
+            .offset(offsetVal);
 
         const totalFacultyResult = await db
             .select({ count: sql<number>`count(*)` })
@@ -247,7 +270,7 @@ export const fetchFacultyMembers = async (req: Request, res: Response) => {
         return res.status(OK).json({
             data: facultyMembers,
             page,
-            totalPages: Math.ceil(totalFaculty / limitNum),
+            totalPages: Math.ceil(totalFaculty / pageSize),
             totalFaculty,
         });
     } catch (error) {
@@ -257,8 +280,12 @@ export const fetchFacultyMembers = async (req: Request, res: Response) => {
 };
 
 export async function updateFacultyMember(req: Request, res: Response) {
-    const { teacherId } = req.params;
     const userId = req.userId;
+    const { teacherId } = req.params;
+
+    if (!isValidUUID(teacherId)) {
+        return res.status(BAD_REQUEST).json({ message: "Invalid teacher ID" });
+    }
 
     const parsed = updateFacultySchema.safeParse(req.body);
     if (!parsed.success) {
@@ -456,6 +483,36 @@ export async function updateFacultyMember(req: Request, res: Response) {
             return res.status(NOT_FOUND).json({ message: "Teacher not found" });
         }
 
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "FACULTY_UPDATED",
+            actorId: userId, // The requester performing the update
+            entityType: "user",
+            entityId: teacherId, // The teacher being updated
+            metadata: {
+                ip: req.ip,
+                updatedFields: {
+                    ...(firstName !== undefined && { firstName }),
+                    ...(lastName !== undefined && { lastName }),
+                    ...(city !== undefined && { city }),
+                    ...(country !== undefined && { country }),
+                    ...(address !== undefined && { address }),
+                    ...(department !== undefined && { department }),
+                    ...(role !== undefined && { role }),
+                },
+                teacherInfo: teacherInfoData
+                    ? {
+                        designation: teacherInfoData.designation,
+                        joiningDate: teacherInfoData.joiningDate,
+                        facultyType: teacherInfoData.facultyType,
+                        subjectOwner: teacherInfoData.subjectOwner ?? false,
+                        qualifications: teacherInfoData.qualifications ?? null,
+                    }
+                    : null,
+                updatedAt: new Date(),
+            },
+        });
+
         return res.status(OK).json(updatedUser);
     } catch (err: any) {
         console.error("Error updating faculty:", err);
@@ -467,8 +524,12 @@ export async function updateFacultyMember(req: Request, res: Response) {
 
 export async function deleteFacultyMemberById(req: Request, res: Response) {
     try {
-        const { teacherId } = req.params;
         const userId = req.userId;
+        const { teacherId } = req.params;
+
+        if (!isValidUUID(teacherId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid teacher ID" });
+        }
 
         // Fetch the current user (requester)
         const user = await db.query.users.findFirst({
@@ -517,6 +578,20 @@ export async function deleteFacultyMemberById(req: Request, res: Response) {
 
         // Delete the teacher user record
         await db.delete(users).where(eq(users.id, teacherId));
+
+        // --- AUDIT LOG --- //
+        await writeAuditLog(db, {
+            action: "FACULTY_DELETED",
+            actorId: userId,        // The requester performing the deletion
+            entityType: "user",
+            entityId: teacherId,    // The teacher being deleted
+            metadata: {
+                ip: req.ip,
+                department: teacher.department,
+                role: teacher.role,
+                deletedAt: new Date(),
+            },
+        });
 
         return res.status(OK).json({ message: "Teacher deleted successfully" });
     } catch (error: any) {

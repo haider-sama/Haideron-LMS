@@ -2,9 +2,9 @@ import { z } from "zod";
 import { BatchEnrollmentStatus } from "../../../shared/enums";
 
 export const createEnrollmentSchema = z.object({
-    studentId: z.string().optional(),          // single student
-    studentIds: z.array(z.string()).optional(), // multiple students
-    programBatchId: z.string(),
+    studentId: z.string().uuid().optional(),          // single student
+    studentIds: z.array(z.string().uuid()).optional(), // multiple students
+    programBatchId: z.string().uuid(),
     status: z
         .enum([BatchEnrollmentStatus.Active, BatchEnrollmentStatus.Graduated, BatchEnrollmentStatus.Dropped])
         .optional(),
@@ -17,6 +17,6 @@ export const createEnrollmentSchema = z.object({
 );
 
 export const defaultEnrollmentSchema = z.object({
-    studentId: z.string(),
-    programBatchId: z.string(),
+    studentId: z.string().uuid(),
+    programBatchId: z.string().uuid(),
 });

@@ -42,7 +42,7 @@ const CatalogueProfile: React.FC<CatalogueProfileProps> = ({
 
     const [editYear, setEditYear] = useState("");
     const [selectedProgramId, setSelectedProgramId] = useState(
-        isAdmin ? "" : departmentHeadProgram?._id ?? ""
+        isAdmin ? "" : departmentHeadProgram?.id ?? ""
     );
 
     const toast = useToast();

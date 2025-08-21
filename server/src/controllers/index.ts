@@ -17,6 +17,8 @@ export * as resultController from "./core/teacher/result.controller";
 export * as teacherCourseController from "./core/teacher/teacher.course.controller";
 export * as studentController from "./core/student/student.controller";
 
+export * as auditLogController from './logs/audit.log.controller';
+
 export const programController = {
   ...peoController,
   ...ploController,

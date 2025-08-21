@@ -6,7 +6,7 @@ interface DropdownEditorProps {
     setTempValue: (value: string) => void;
     onCancel: () => void;
     onSave: () => void;
-    type?: "text" | "number" | "email" | "password"; // extend if needed
+    type?: "text" | "number" | "email" | "password";
 }
 
 export const DropdownEditor: React.FC<DropdownEditorProps> = ({
@@ -16,6 +16,17 @@ export const DropdownEditor: React.FC<DropdownEditorProps> = ({
     onSave,
     type = "text",
 }) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            onSave();
+        }
+        if (e.key === "Escape") {
+            e.preventDefault();
+            onCancel();
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.9, y: -10 }}
@@ -29,6 +40,7 @@ export const DropdownEditor: React.FC<DropdownEditorProps> = ({
                 type={type}
                 value={tempValue}
                 onChange={(e) => setTempValue(e.target.value)}
+                onKeyDown={handleKeyDown}
                 autoFocus
                 className="w-full p-2 text-sm border rounded-md dark:bg-darkPrimary dark:text-darkTextPrimary"
             />

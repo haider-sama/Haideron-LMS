@@ -30,6 +30,8 @@ import StudentBatchRegistration from "../pages/core/batch/StudentBatchRegistrati
 import StudentCourseEnrollment from "../pages/core/student/StudentCourseEnrollment";
 import StudentTranscriptPage from "../pages/core/student/StudentTranscriptPage";
 import OfferedCoursesList from "../pages/core/teacher/OfferedCoursesList";
+import PendingFinalizedResultsList from "../pages/core/result/PendingFinalizedResultsList";
+import AuditLogPage from "../pages/admin/AuditLogPage";
 // import SocialShell from "../pages/main/SocialShell";
 
 interface AppRoutesProps {
@@ -85,7 +87,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                     }
                 />
             )}
-            
+
             {ALLOW_EMAIL_MIGRATION && (
                 <Route path="/verify-email-change" element={<EmailChangeVerification />} />
             )}
@@ -116,6 +118,15 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                             isAllowed={isLoggedIn && role === AudienceEnum.Admin}
                             redirectTo="/forbidden"
                             element={<UserManagementTable />}
+                        />
+                    }
+                />
+                <Route path="/admin/audit-logs"
+                    element={
+                        <ProtectedRoute
+                            isAllowed={isLoggedIn && role === AudienceEnum.Admin}
+                            redirectTo="/forbidden"
+                            element={<AuditLogPage />}
                         />
                     }
                 />
@@ -169,7 +180,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                         />
                     }
                 />
-                {/* <Route path="/faculty/pending-results"
+                <Route path="/faculty/pending-results"
                     element={
                         <ProtectedRoute
                             isAllowed={isLoggedIn && role === AudienceEnum.DepartmentHead}
@@ -177,7 +188,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                             element={<PendingFinalizedResultsList />}
                         />
                     }
-                /> */}
+                />
 
 
                 {/* ProgramBatch routes */}

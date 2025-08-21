@@ -266,7 +266,10 @@ const FacultyProfile =
                 {/* Avatar at top if admin */}
                 {user?.role === AudienceEnum.Admin && (
                     <div className="flex justify-center mb-6">
-                        <AvatarUpload avatarURL={faculty.avatarURL} />
+                        <AvatarUpload 
+                            avatarURL={faculty.avatarURL} 
+                            targetUserId={facultyId} 
+                        />
                     </div>
                 )}
 

@@ -9,7 +9,7 @@ export const CreateAttendanceSessionSchema = z.object({
 });
 
 export const CreateAttendanceRecordSchema = z.object({
-    studentId: z.string().min(1),
+    studentId: z.string().uuid({ message: "Invalid student ID" }).min(1),
     present: z.boolean(),
 });
 

@@ -6,6 +6,8 @@ import { db } from "../../../db/db";
 import { eq, desc, sql, and, ne, ilike, or, SQL } from "drizzle-orm";
 import { createProgramCatalogueSchema, updateProgramCatalogueSchema } from "../../../utils/validators/lms-schemas/catalogueSchemas";
 import { isValidUUID } from "../../../utils/validators/lms-schemas/isValidUUID";
+import { writeAuditLog } from "../../../utils/logs/writeAuditLog";
+import { getNumberQueryParam, getStringQueryParam } from "../../../utils/validators/sanitizer/queryParams";
 
 export async function getUserById(userId: string) {
     const [user] = await db
@@ -120,6 +122,19 @@ export async function createProgramCatalogue(req: Request, res: Response) {
             })
             .returning();
 
+        await writeAuditLog(db, {
+            action: "PROGRAM_CATALOGUE_CREATED",
+            actorId: user.id,
+            entityType: "programCatalogues",
+            entityId: newCatalogue.id,
+            metadata: {
+                ip: req.ip,
+                programId: existingProgram.id,
+                programDept: existingProgram.departmentTitle,
+                catalogueYear: newCatalogue.catalogueYear,
+            },
+        });
+
         res.status(CREATED).json({
             message: "Catalogue created successfully",
             catalogue: newCatalogue,
@@ -142,13 +157,14 @@ export async function getCatalogues(req: Request, res: Response) {
             return res.status(NOT_FOUND).json({ message: "User not found" });
         }
 
-        const { programId, year, search, page = "1", limit = "20" } = req.query;
+        const programId = getStringQueryParam(req.query.programId);
+        const year = getNumberQueryParam(req.query.year);
+        const search = getStringQueryParam(req.query.search);
+        const page = getNumberQueryParam(req.query.page, 1);
+        const limit = getNumberQueryParam(req.query.limit, 20);
 
-        // List
-        if (!programId || typeof programId !== "string") {
-            return res
-                .status(BAD_REQUEST)
-                .json({ message: "Missing or invalid programId" });
+        if (!programId || !isValidUUID(programId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid program ID" });
         }
 
         // Get program for permission check
@@ -170,8 +186,8 @@ export async function getCatalogues(req: Request, res: Response) {
             });
         }
 
-        const pageNum = Math.max(parseInt(page as string), 1);
-        const pageSize = Math.min(parseInt(limit as string), 100);
+        const pageNum = page && page > 0 ? page : 1;
+        const pageSize = limit && limit > 0 ? Math.min(limit, 100) : 20;
         const offsetVal = (pageNum - 1) * pageSize;
 
         let conditions: SQL<boolean>[] = [
@@ -184,7 +200,8 @@ export async function getCatalogues(req: Request, res: Response) {
         }
 
         if (search && typeof search === "string" && search.trim() !== "") {
-            const term = `%${search.trim()}%`;
+            const safeTerm = search.replace(/[%_]/g, "\\$&");
+            const term = `%${safeTerm}%`;
 
             // Wrap OR in sql<boolean> to satisfy TypeScript
             const searchCondition: SQL<boolean> = sql<boolean>`(
@@ -255,8 +272,8 @@ export async function getCatalogueById(req: Request, res: Response) {
 
         const { catalogueId } = req.params;
 
-        if (!catalogueId) {
-            return res.status(BAD_REQUEST).json({ message: "Catalogue ID is required" });
+        if (!isValidUUID(catalogueId)) {
+            return res.status(BAD_REQUEST).json({ message: "Invalid catalogue ID" });
         }
 
         // Fetch catalogue + program + createdBy details
@@ -409,6 +426,24 @@ export async function updateCatalogueById(req: Request, res: Response) {
             })
             .where(eq(programCatalogues.id, catalogueId));
 
+        await writeAuditLog(db, {
+            action: "PROGRAM_CATALOGUE_UPDATED",
+            actorId: user.id,
+            entityType: "programCatalogues",
+            entityId: catalogueId,
+            metadata: {
+                ip: req.ip,
+                oldValues: {
+                    programId: catalogue.program.id,
+                    catalogueYear: catalogue.catalogueYear,
+                },
+                newValues: {
+                    programId: newProgramId,
+                    catalogueYear: catalogueYear ?? catalogue.catalogueYear,
+                },
+            },
+        });
+
         return res.status(OK).json({
             message: "Catalogue updated successfully",
             catalogue: updatedCatalogue,
@@ -435,7 +470,6 @@ export async function deleteCatalogueById(req: Request, res: Response) {
             return res.status(NOT_FOUND).json({ message: "User not found" });
         }
 
-        //  Validate ID format
         if (!isValidUUID(catalogueId)) {
             return res.status(BAD_REQUEST).json({ message: "Invalid catalogue ID" });
         }
@@ -495,7 +529,19 @@ export async function deleteCatalogueById(req: Request, res: Response) {
             })
             .where(eq(programCatalogues.id, catalogueId));
 
-        // TODO: Audit log
+        await writeAuditLog(db, {
+            action: "PROGRAM_CATALOGUE_ARCHIVED",
+            actorId: user.id,
+            entityType: "programCatalogues",
+            entityId: catalogueId,
+            metadata: {
+                ip: req.ip,
+                programId: catalogue.program.id,
+                programTitle: catalogue.program.title,
+                programDept: catalogue.program.departmentTitle,
+                archivedAt: new Date(),
+            },
+        });
 
         res.status(OK).json({ message: "Catalogue archived successfully" });
     } catch (error: any) {

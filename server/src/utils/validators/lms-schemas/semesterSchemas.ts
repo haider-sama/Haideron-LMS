@@ -1,34 +1,32 @@
 import { z } from "zod";
 import { ClassSectionEnum, DomainEnum, KnowledgeAreaEnum, StrengthEnum, SubjectLevelEnum, SubjectTypeEnum } from "../../../shared/enums";
 
-const uuidSchema = z.string().uuid({ message: "Invalid UUID" });
-
 export const addSemesterSchema = z.object({
-    programCatalogueId: z.string().uuid(),
+    programCatalogueId: z.string().uuid({ message: "Invalid program catalogue ID" }),
     semesterNo: z.number().int().min(1).max(8),
     courses: z
-        .array(z.string().uuid())
+        .array(z.string().uuid({ message: "Invalid course IDs" }))
         .optional(),
 });
 
 export const updateSemesterSchema = z.object({
     semesterNo: z.number().int().min(1).max(8).optional(),
     courses: z
-        .array(z.string().uuid())
+        .array(z.string().uuid({ message: "Invalid course IDs" }))
         .optional(),
 });
 
 // Zod schema for a single CLO
 export const cloSchema = z.object({
-    id: z.string().uuid({ message: "Invalid UUID" }).optional(), // For updates — keep CLO IDs if they exist
+    id: z.string().uuid({ message: "Invalid CLO ID" }).optional(), // For updates — keep CLO IDs if they exist
     code: z.string().regex(/^CLO\d+$/, "CLO code must be in format CLO<number>"),
     title: z.string().min(1, "CLO title is required"),
     description: z.string().min(1, "CLO description is required"),
     ploMappings: z
         .array(
             z.object({
-                id: uuidSchema.optional(), // For updating existing mappings
-                ploId: uuidSchema,         // Postgres foreign key to PLO table
+                id: z.string().uuid({ message: "Invalid CLO ID" }).optional(),  // For updating existing mappings
+                ploId: z.string().uuid({ message: "Invalid PLO ID" }),  // Postgres foreign key to PLO table
                 strength: z.nativeEnum(StrengthEnum),
             })
         )

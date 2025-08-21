@@ -20,14 +20,14 @@ const modalVariants = {
 };
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
+    // Remove Escape listener completely
     useEffect(() => {
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
-        };
-        document.addEventListener("keydown", handleEsc);
-        return () => document.removeEventListener("keydown", handleEsc);
-    }, [onClose]);
+        // Optionally, you can keep this empty if you want other key handling
+        return () => { };
+    }, []);
 
+    if (!isOpen) return null;
+    
     return (
         <AnimatePresence>
             {isOpen && (

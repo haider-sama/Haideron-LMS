@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Button } from "../../../../components/ui/Button";
-import { AssessmentPayload, AssignedCourseOffering, CLO } from "../../../../constants/core/interfaces";
-import { AssessmentTypeEnum } from "../../../../../../server/src/shared/enums";
-import { useToast } from "../../../../context/ToastContext";
-import { createAssessment } from "../../../../api/core/teacher/assessment-api";
-import { Input, SelectInput } from "../../../../components/ui/Input";
+import { Button } from "../../../../ui/Button";
+import { AssessmentPayload, AssignedCourseOffering, CLO } from "../../../../../constants/core/interfaces";
+import { AssessmentTypeEnum } from "../../../../../../../server/src/shared/enums";
+import { useToast } from "../../../../../context/ToastContext";
+import { createAssessment } from "../../../../../api/core/teacher/assessment-api";
+import { Input, SelectInput } from "../../../../ui/Input";
 import DatePicker from "react-datepicker";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

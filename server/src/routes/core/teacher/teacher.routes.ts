@@ -8,13 +8,13 @@ import { AudienceEnum } from "../../../shared/enums";
 dotenv.config();
 const teacherRouter = express.Router();
 
-teacherRouter.get(
-    "/assigned-course-offerings/:activatedSemesterId",
-    safeLimiter,
-    verifyToken,
-    authorizeRoles(AudienceEnum.DepartmentTeacher),
-    teacherCourseController.getAssignedCourseOfferings
-);
+// teacherRouter.get(
+//     "/assigned-course-offerings/:activatedSemesterId",
+//     safeLimiter,
+//     verifyToken,
+//     authorizeRoles(AudienceEnum.DepartmentTeacher),
+//     teacherCourseController.getAssignedCourseOfferings
+// );
 
 teacherRouter.get("/assigned-course-offerings", 
     safeLimiter, 
