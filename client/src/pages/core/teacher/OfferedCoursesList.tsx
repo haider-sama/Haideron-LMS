@@ -66,18 +66,25 @@ const OfferedCoursesList: React.FC = () => {
     }, [activatedSemesters]);
 
     // Fetch offerings
-    const { data, isLoading, error } = useQuery<GetAssignedCourseOfferingsResponse, Error>({
+    const {
+        data,
+        isLoading,
+        isError,
+        error
+    } = useQuery<GetAssignedCourseOfferingsResponse, Error>({
         queryKey: ["assignedCourseOfferings", selectedSemesterId],
         queryFn: () => getAllAssignedCourseOfferings(selectedSemesterId),
         enabled: !!selectedSemesterId,
+        staleTime: 1000 * 60 * 1, // 1 min cache
+        retry: false,
     });
 
-    // Handle errors
+    // Handle errors safely
     useEffect(() => {
-        if (error) {
+        if (isError && error) {
             toast.error(error.message || "Failed to load assigned courses");
         }
-    }, [error, toast]);
+    }, [isError, error, toast]);
 
     // Safe access
     const offerings = data?.offerings ?? [];

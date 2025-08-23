@@ -29,6 +29,7 @@ const EnrolledStudentsList: React.FC = () => {
         queryKey: ["programs", user?.id],
         queryFn: () => getPrograms({ page: 1, limit: MAX_PAGE_LIMIT }),
         enabled: !!user,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     // --- Batches ---
@@ -36,6 +37,7 @@ const EnrolledStudentsList: React.FC = () => {
         queryKey: ["batches", selectedProgramId],
         queryFn: () => getBatchesByProgram(selectedProgramId).then((res) => res.batches || []),
         enabled: !!selectedProgramId,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
 
@@ -44,6 +46,7 @@ const EnrolledStudentsList: React.FC = () => {
         queryKey: ["students", selectedBatchId],
         queryFn: () => listStudentsInBatch(selectedBatchId),
         enabled: !!selectedBatchId,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const filteredStudents = studentsData.filter((s) =>

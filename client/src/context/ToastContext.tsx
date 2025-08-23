@@ -1,5 +1,4 @@
-// context/ToastContext.tsx
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useState, useRef } from 'react';
 import Toast, { ToastType } from '../components/ui/Toast';
 import { v4 as uuidv4 } from 'uuid';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -24,15 +23,23 @@ const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [toasts, setToasts] = useState<ToastMessage[]>([]);
+    const shownErrors = useRef<Set<string>>(new Set()); // track already shown messages
 
-    const removeToast = (id: string) => {
+    const removeToast = (id: string, message?: string) => {
         setToasts((prev) => prev.filter((toast) => toast.id !== id));
+        if (message) shownErrors.current.delete(message); // remove from shown set when toast disappears
     };
 
     const showToast = useCallback((type: ToastType, message: string, duration = 4000) => {
+        // Prevent duplicate messages
+        if (shownErrors.current.has(message)) return;
+
         const id = uuidv4();
+        shownErrors.current.add(message);
+
         setToasts((prev) => [...prev, { id, type, message, duration }]);
-        setTimeout(() => removeToast(id), duration);
+
+        setTimeout(() => removeToast(id, message), duration);
     }, []);
 
     const contextValue: ToastContextValue = {
@@ -62,7 +69,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                                 message={toast.message}
                                 show
                                 duration={toast.duration}
-                                onClose={() => removeToast(toast.id)}
+                                onClose={() => removeToast(toast.id, toast.message)}
                             />
                         </motion.div>
                     ))}

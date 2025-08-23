@@ -77,6 +77,7 @@ const FacultyProfile =
             queryKey: ['facultyProfile', facultyId],
             queryFn: () => fetchFaculty(facultyId),
             enabled: !!facultyId,
+            staleTime: 1000 * 60 * 5, // 5 min cache
         });
 
         // On data load success: set faculty, editFields, qualifications, majorSubjectsBuffer

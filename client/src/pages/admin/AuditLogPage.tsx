@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { FiInfo } from "react-icons/fi";
+import { FiEye, FiInfo } from "react-icons/fi";
 import Breadcrumbs, { generateBreadcrumbs } from "../../components/ui/Breadcrumbs";
 import PageHeading from "../../components/ui/PageHeading";
 import TopCenterLoader from "../../components/ui/TopCenterLoader";
@@ -11,22 +11,42 @@ import { AuditLog, FetchAuditLogsFilters } from "../../constants/core/interfaces
 import { fetchPaginatedAuditLogs } from "../../api/admin/audit-log-api";
 import { useQuery } from "@tanstack/react-query";
 import ErrorStatus from "../../components/ui/ErrorStatus";
+import { truncateName } from "../../utils/truncate-name";
+import { Button } from "../../components/ui/Button";
+import Modal from "../../components/ui/Modal";
 
 const AuditLogPage: React.FC = () => {
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState("");
     const [filters] = useState<FetchAuditLogsFilters>({}); // extend later if needed
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedMetadata, setSelectedMetadata] = useState<any>(null);
+
+    const handleOpenModal = (metadata: any) => {
+        setSelectedMetadata(metadata);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setSelectedMetadata(null);
+        setIsModalOpen(false);
+    };
 
     const {
         data,
         isLoading,
         isError,
-        error,
+        error
     } = useQuery({
-        queryKey: ["auditLogs", { page, search, filters }],
+        queryKey: ["auditLogs", page, search, JSON.stringify(filters)],
         queryFn: () => fetchPaginatedAuditLogs(page, 20, search, filters),
-        staleTime: 1000 * 60 * 5, // 5 minutes cache
+        staleTime: 1000 * 60 * 1,
     });
+
+    const handleSearch = (query: string) => {
+        setPage(1); // reset to first page
+        setSearch(query);
+    };
 
     const logs: AuditLog[] = data?.data ?? [];
     const totalPages = data?.totalPages ?? 1;
@@ -46,7 +66,7 @@ const AuditLogPage: React.FC = () => {
 
                     <SearchBar
                         value={search}
-                        onSearch={(query) => setSearch(query)}
+                        onSearch={handleSearch}
                         showAdvanced={false}
                     />
                 </div>
@@ -61,6 +81,7 @@ const AuditLogPage: React.FC = () => {
             {!isError && (
                 <div className="mt-4 overflow-x-auto border rounded-sm border-gray-300 bg-white dark:bg-darkSurface dark:border-darkBorderLight">
                     <table className="min-w-full text-sm text-left">
+
                         <thead className="bg-gray-100 text-gray-700 uppercase text-xs tracking-wide dark:bg-darkMuted dark:text-darkTextSecondary">
                             <tr className="border-b border-gray-300 dark:border-darkBorderLight">
                                 <th className="px-4 py-2">Actor</th>
@@ -68,13 +89,19 @@ const AuditLogPage: React.FC = () => {
                                 <th className="px-4 py-2">Target</th>
                                 <th className="px-4 py-2">Details</th>
                                 <th className="px-4 py-2">Timestamp</th>
+                                <th className="px-4 py-2">Actions</th> {/* New Actions column */}
                             </tr>
                         </thead>
                         <tbody>
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={5} className="text-center px-4 py-6">
-                                        <TopCenterLoader />
+                                    <td colSpan={6} className="px-4 py-6">
+                                        <div className="flex flex-col items-center justify-center w-full h-full gap-2">
+                                            <TopCenterLoader />
+                                            <span className="text-gray-600 dark:text-darkTextMuted text-sm">
+                                                Loading logs...
+                                            </span>
+                                        </div>
                                     </td>
                                 </tr>
                             ) : logs.length > 0 ? (
@@ -84,28 +111,35 @@ const AuditLogPage: React.FC = () => {
                                         className="border-b last:border-b-0 hover:bg-gray-50 dark:border-darkBorderLight dark:hover:bg-darkMuted transition"
                                     >
                                         <td className="px-4 py-2 font-medium text-gray-800 dark:text-darkTextPrimary">
-                                            {log.actorId}
+                                            {truncateName(log.actorId)}
                                         </td>
                                         <td className="px-4 py-2 text-gray-700 dark:text-darkTextSecondary">
-                                            {log.action}
+                                            {truncateName(log.action)}
                                         </td>
                                         <td className="px-4 py-2 text-gray-600 dark:text-darkTextMuted">
-                                            {log.entityType} / {log.entityId}
+                                            {truncateName(`${log.entityType} / ${log.entityId}`)}
                                         </td>
                                         <td className="px-4 py-2 text-gray-600 dark:text-darkTextMuted">
-                                            {JSON.stringify(log.metadata) || "-"}
+                                            {truncateName(JSON.stringify(log.metadata) || "-")}
                                         </td>
                                         <td className="px-4 py-2 text-gray-500 dark:text-darkTextMuted whitespace-nowrap">
                                             {new Date(log.createdAt).toLocaleString()}
                                         </td>
+                                        <td className="px-4 py-2 text-blue-600 dark:text-darkTextSecondary">
+                                            <button
+                                                onClick={() => handleOpenModal(log)}
+                                                className="p-1 rounded hover:bg-gray-200 dark:hover:bg-darkBorderLight"
+                                                title="View Details"
+                                            >
+                                                <FiEye className="w-4 h-4" />
+                                            </button>
+                                        </td>
+
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td
-                                        colSpan={5}
-                                        className="text-center px-4 py-6 text-gray-500 dark:text-darkTextMuted"
-                                    >
+                                    <td colSpan={6} className="text-center px-4 py-6 text-gray-500 dark:text-darkTextMuted">
                                         <div className="flex items-center justify-center gap-2">
                                             <FiInfo className="w-4 h-4" />
                                             No logs found.
@@ -117,6 +151,34 @@ const AuditLogPage: React.FC = () => {
                     </table>
                 </div>
             )}
+
+            <Modal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+            >
+                {selectedMetadata && (
+                    <div className="flex flex-col items-center justify-center p-6 min-h-[200px] max-w-lg w-full mx-auto my-auto">
+                        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <FiInfo className="text-blue-500" />
+                            Log Details
+                        </h2>
+
+                        <pre className="bg-gray-100 dark:bg-darkMuted p-4 rounded w-full overflow-x-auto text-sm text-gray-800 dark:text-darkTextPrimary">
+                            {JSON.stringify(selectedMetadata, null, 2)} {/* now shows full log */}
+                        </pre>
+
+                        <div className="flex justify-center mt-4 w-full">
+                            <Button
+                                variant="gray"
+                                size="md"
+                                onClick={handleCloseModal}
+                            >
+                                Close
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
 
             {/* Pagination */}
             {!isError && (

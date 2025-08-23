@@ -41,6 +41,7 @@ const AssessmentListTable: React.FC<AssessmentListTableProps> = ({
         queryKey: ["courseAssessments", offeringId],
         queryFn: () => getCourseAssessments(offeringId),
         select: (data) => data.assessments, // we only care about assessments array
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const assessments = data ?? [];

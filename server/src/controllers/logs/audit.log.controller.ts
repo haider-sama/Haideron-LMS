@@ -3,9 +3,12 @@ import { INTERNAL_SERVER_ERROR, OK } from "../../constants/http";
 import { and, eq, desc, sql } from "drizzle-orm";
 import { db } from "../../db/db";
 import { auditLogs } from "../../db/models/logs/audit.log.model";
+import { assertAdmin } from "../admin/admin.controller";
 
-// GET /audit-logs?page=1&limit=20&search=login
 export async function fetchPaginatedAuditLogs(req: Request, res: Response) {
+    const isAdmin = await assertAdmin(req, res);
+    if (isAdmin !== true) return isAdmin;
+
     try {
         const page = Math.max(parseInt(req.query.page as string) || 1, 1);
         const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
@@ -18,22 +21,16 @@ export async function fetchPaginatedAuditLogs(req: Request, res: Response) {
         const filterEntityType = req.query.entityType as string | undefined;
         const filterAction = req.query.action as string | undefined;
 
-        let filters: any[] = [];
+        const filters: any[] = [];
 
-        if (filterActorId) {
-            filters.push(eq(auditLogs.actorId, filterActorId));
-        }
-        if (filterEntityType) {
-            filters.push(eq(auditLogs.entityType, filterEntityType));
-        }
-        if (filterAction) {
-            filters.push(eq(auditLogs.action, filterAction));
-        }
+        if (filterActorId) filters.push(eq(auditLogs.actorId, filterActorId));
+        if (filterEntityType) filters.push(eq(auditLogs.entityType, filterEntityType));
+        if (filterAction) filters.push(eq(auditLogs.action, filterAction));
 
-        // Full-text search filter
+        // Full-text search including actorId
         if (search.length > 0) {
             filters.push(
-                sql`${auditLogs.searchVector} @@ plainto_tsquery('simple', ${search})`
+                sql`${auditLogs.searchVector} @@ websearch_to_tsquery('simple', ${search})`
             );
         }
 

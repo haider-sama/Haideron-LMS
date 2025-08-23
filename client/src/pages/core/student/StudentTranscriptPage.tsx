@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageHeading from "../../../components/ui/PageHeading";
 import Modal from "../../../components/ui/Modal";
 import { IoMdStats } from "react-icons/io";
@@ -8,6 +8,7 @@ import { getTranscript } from "../../../api/core/student-api";
 import { TranscriptResponse } from "../../../constants/core/interfaces";
 import { useQuery } from "@tanstack/react-query";
 import ErrorStatus from "../../../components/ui/ErrorStatus";
+import { useToast } from "../../../context/ToastContext";
 
 const statusColors: Record<string, string> = {
     Confirmed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
@@ -17,18 +18,27 @@ const statusColors: Record<string, string> = {
 
 const StudentTranscriptPage = () => {
     const [showGpaModal, setShowGpaModal] = useState(false);
+    const toast = useToast();
 
     const {
         data: transcript,
         isLoading,
         isError,
         error,
-    } = useQuery<TranscriptResponse>({
+    } = useQuery<TranscriptResponse, Error>({
         queryKey: ["studentTranscript"],
-        queryFn: getTranscript,
+        queryFn: () => getTranscript(),
         staleTime: 1000 * 60 * 5, // cache for 5 mins
+        retry: false,
     });
 
+    // Handle errors outside the query function
+    useEffect(() => {
+        if (isError && error) {
+            toast.error(error.message || "Failed to load transcript");
+        }
+    }, [isError, error, toast]);
+    
     if (isLoading) return <TopCenterLoader />;
 
     if (isError || !transcript) {

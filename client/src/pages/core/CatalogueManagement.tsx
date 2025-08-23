@@ -37,15 +37,20 @@ const CatalogueManagement: React.FC = () => {
     const toast = useToast();
 
     // Programs Query
-    const { data: programData, error: programsError, isPending: programsLoading } = useQuery({
+    const { data: programData, isLoading: programsLoading, isError: programsError, error: programError } = useQuery({
         queryKey: ["programs"],
         queryFn: () => getPrograms({ page: 1, limit: MAX_PAGE_LIMIT }),
         enabled: isAdmin || isDepartmentHead,
         retry: false,
-        staleTime: 5 * 60 * 1000,
+        staleTime: 1000 * 60 * 5,
     });
 
-    if (programsError) toast.error("Error fetching programs");
+    // Show toast on error
+    useEffect(() => {
+        if (programsError && programError) {
+            toast.error("Error fetching programs: " + programError.message);
+        }
+    }, [programsError, programError, toast]);
 
     // Programs array (either all programs for admin, or department head program)
     const programs: Program[] = programData?.programs?.length
@@ -67,20 +72,24 @@ const CatalogueManagement: React.FC = () => {
     }, [programs]);
 
     // Catalogues Query (always runs when selectedProgramId exists)
-    const { data: catalogueData, error: cataloguesError, isPending: cataloguesLoading } = useQuery({
+    const { data: catalogueData, isLoading: cataloguesLoading, isError: cataloguesError, error: catalogueError } = useQuery({
         queryKey: ["catalogues", selectedProgramId, page, debouncedSearch],
-        queryFn: () =>
-            getCataloguesByProgram({
-                programId: selectedProgramId,
-                page,
-                limit: MAX_PAGE_LIMIT,
-                search: debouncedSearch,
-            }),
+        queryFn: () => getCataloguesByProgram({
+            programId: selectedProgramId,
+            page,
+            limit: MAX_PAGE_LIMIT,
+            search: debouncedSearch,
+        }),
         enabled: !!selectedProgramId,
         placeholderData: (prev) => prev,
+        staleTime: 1000 * 60 * 5,
     });
 
-    if (cataloguesError) toast.error("Error fetching catalogues");
+    useEffect(() => {
+        if (cataloguesError && catalogueError) {
+            toast.error("Error fetching catalogues: " + catalogueError.message);
+        }
+    }, [cataloguesError, catalogueError, toast]);
 
     const catalogues = catalogueData?.data || [];
     const totalPages = catalogueData?.totalPages || 1;

@@ -4,7 +4,6 @@ import TopCenterLoader from "../../../../ui/TopCenterLoader";
 import { AssessmentResultEntry } from "../../../../../constants/core/interfaces";
 import { fetchEnrolledStudentsForCourse } from "../../../../../api/core/teacher/teacher-course-api";
 import { getAssessmentResults, submitBulkAssessmentResults } from "../../../../../api/core/teacher/assessment-api";
-import { MAX_PAGE_LIMIT } from "../../../../../constants";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ErrorStatus from "../../../../ui/ErrorStatus";
 import { Button } from "../../../../ui/Button";
@@ -21,6 +20,8 @@ interface Props {
     assessmentId: string;
     onClose: () => void;
 }
+
+const LOCAL_MAX_PAGE_LIMIT = 100;
 
 const AssessmentResultsForm: React.FC<Props> = ({
     offeringId,
@@ -60,11 +61,11 @@ const AssessmentResultsForm: React.FC<Props> = ({
     // Update limit when user clicks button
     const handleUpdateLimit = () => {
         const parsed = parseInt(inputLimit);
-        if (!isNaN(parsed) && parsed > 0 && parsed <= MAX_PAGE_LIMIT) {
+        if (!isNaN(parsed) && parsed > 0 && parsed <= LOCAL_MAX_PAGE_LIMIT) {
             setLimit(parsed);
             setPage(1); // reset to first page
         } else {
-            toast.error(`Please enter a valid number (1-${MAX_PAGE_LIMIT})`);
+            toast.error(`Please enter a valid number (1-${LOCAL_MAX_PAGE_LIMIT})`);
         }
     };
 
@@ -81,6 +82,7 @@ const AssessmentResultsForm: React.FC<Props> = ({
                 limit,
                 search: debouncedSearch,
             }),
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const totalPages = studentsData?.totalPages || 1;
@@ -92,6 +94,7 @@ const AssessmentResultsForm: React.FC<Props> = ({
     } = useQuery({
         queryKey: ["assessmentResults", assessmentId],
         queryFn: () => getAssessmentResults(assessmentId),
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const submitMutation = useMutation({

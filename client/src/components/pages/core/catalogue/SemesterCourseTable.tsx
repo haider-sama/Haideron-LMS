@@ -27,6 +27,7 @@ const SemesterCourseTable: React.FC<SemesterCourseTableProps> = ({ catalogueId }
         queryKey: ["semesters", catalogueId],
         queryFn: () => getSemestersByCatalogue(catalogueId).then((res) => res.semesters),
         enabled: !!catalogueId,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     // Fetch all courses (for CourseList)
@@ -38,10 +39,10 @@ const SemesterCourseTable: React.FC<SemesterCourseTableProps> = ({ catalogueId }
                 limit: MAX_PAGE_LIMIT,
                 search: searchTerm
             }).then((res) => res.courses),
-        staleTime: 5 * 60 * 1000, 
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
-    console.log(allCourses)
+    // console.log(allCourses)
 
     const toggleExpand = (id: string) => {
         setExpandedSemesterId((prev) => (prev === id ? null : id));

@@ -46,6 +46,7 @@ const BatchManagement: React.FC = () => {
     const { data: programData, isLoading: isProgramsLoading } = useQuery({
         queryKey: ["programs"],
         queryFn: () => getPrograms({ page: 1, limit: MAX_PAGE_LIMIT, search: debouncedSearch }),
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     useEffect(() => {
@@ -63,6 +64,7 @@ const BatchManagement: React.FC = () => {
         queryKey: ["batches", { programId: selectedProgramId, page }],
         queryFn: () => getBatchesByProgram(selectedProgramId, page, MAX_PAGE_LIMIT),
         enabled: !!selectedProgramId,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const programs = programData?.programs ?? [];

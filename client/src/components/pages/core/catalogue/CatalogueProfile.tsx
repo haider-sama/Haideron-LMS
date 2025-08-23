@@ -52,18 +52,22 @@ const CatalogueProfile: React.FC<CatalogueProfileProps> = ({
     const closeSemesterModal = () => setShowSemesterModal(false);
 
     // Fetch the catalogue
-    const {
-        data: catalogue,
-        isLoading: catalogueLoading,
-        isError: catalogueError,
-        error: catalogueErrorObj,
-    } = useQuery({
+    const { data: catalogue, isLoading: catalogueLoading, isError: catalogueError } = useQuery({
         queryKey: ["catalogue", catalogueId],
-        queryFn: () => fetchCatalogue(catalogueId),
+        queryFn: () => fetchCatalogue(catalogueId!), // assume catalogueId is valid
         enabled: !!catalogueId,
-        retry: false,
+        retry: false, // prevent auto retries that would spam toasts
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
+    // Show toast only after render, not inside queryFn
+    useEffect(() => {
+        if (catalogueError) {
+            toast.error("Failed to fetch catalogue");
+        }
+    }, [catalogueError, toast]);
+
+    // Update local state when data arrives
     useEffect(() => {
         if (catalogue) {
             setEditYear(catalogue.catalogueYear?.toString() || "");
@@ -71,19 +75,6 @@ const CatalogueProfile: React.FC<CatalogueProfileProps> = ({
             setSelectedProgramId(programId);
         }
     }, [catalogue]);
-
-    // Handle catalogue errors
-    useEffect(() => {
-        if (catalogueError) {
-            const err: any = catalogueErrorObj;
-            if (err?.zodErrors && typeof err.zodErrors === "object") {
-                const messages = Object.values(err.zodErrors).flat();
-                messages.forEach((msg) => toast.error(String(msg)));
-            } else {
-                toast.error(err?.message || "Failed to fetch catalogue.");
-            }
-        }
-    }, [catalogueError, catalogueErrorObj, toast]);
 
     // Update mutation
     const updateMutation = useMutation({
@@ -209,15 +200,15 @@ const CatalogueProfile: React.FC<CatalogueProfileProps> = ({
             </div>
 
             <div className="flex justify-center gap-4 pt-8">
-                <Button 
-                    onClick={openSemesterModal} 
+                <Button
+                    onClick={openSemesterModal}
                     fullWidth={false}
                 >
                     Add Semesters
                 </Button>
             </div>
 
-            
+
             {showSemesterModal && (
                 <Modal isOpen={showSemesterModal} onClose={closeSemesterModal}>
                     <AddSemesterForm

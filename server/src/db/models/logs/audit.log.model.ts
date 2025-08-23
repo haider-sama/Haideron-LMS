@@ -45,11 +45,12 @@ export const auditLogs = pgTable(
 
         searchVector: tsvector("search_vector").generatedAlwaysAs(
             (): SQL => sql`
-        setweight(to_tsvector('english', coalesce(${auditLogs.action}, '')), 'A') ||
-        setweight(to_tsvector('english', coalesce(${auditLogs.entityType}, '')), 'B') ||
-        setweight(to_tsvector('english', coalesce(${auditLogs.entityId}, '')), 'C') ||
-        setweight(to_tsvector('english', coalesce(${auditLogs.metadata}::text, '')), 'D')
-      `
+            setweight(to_tsvector('simple', coalesce(${auditLogs.actorId}::text, '')), 'A') ||
+            setweight(to_tsvector('simple', regexp_replace(coalesce(${auditLogs.action}, ''), '_', ' ', 'g')), 'A') ||
+            setweight(to_tsvector('simple', regexp_replace(coalesce(${auditLogs.entityType}, ''), '_', ' ', 'g')), 'B') ||
+            setweight(to_tsvector('simple', regexp_replace(coalesce(${auditLogs.entityId}, ''), '_', ' ', 'g')), 'C') ||
+            setweight(to_tsvector('simple', coalesce(${auditLogs.metadata}::text, '')), 'D')
+        `
         ),
     },
     (table) => [

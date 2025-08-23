@@ -51,12 +51,7 @@ const CourseManagement: React.FC = () => {
         setSelectedCourseId(null);
     };
 
-    const {
-        data: courseData,
-        isLoading: isCoursesLoading,
-        isError: isCoursesError,
-        error: coursesError
-    } = useQuery<GetCoursesResponse, Error>({
+    const { data: courseData, isLoading: isCoursesLoading, isError: isCoursesError, error: coursesError } = useQuery<GetCoursesResponse, Error>({
         queryKey: [
             'courses',
             page,
@@ -67,28 +62,27 @@ const CourseManagement: React.FC = () => {
             knowledgeAreaFilter,
             domainFilter
         ],
-        queryFn: () =>
-            getCourses({
-                page,
-                limit: MAX_PAGE_LIMIT,
-                programId: isDepartmentHead ? deptHeadProgram?.id : undefined,
-                search: debouncedSearch || undefined,
-                subjectLevel: subjectLevelFilter || undefined,
-                subjectType: subjectTypeFilter || undefined,
-                knowledgeArea: knowledgeAreaFilter || undefined,
-                domain: domainFilter || undefined,
-            }),
-        retry: 1,
+        queryFn: () => getCourses({
+            page,
+            limit: MAX_PAGE_LIMIT,
+            programId: isDepartmentHead ? deptHeadProgram?.id : undefined,
+            search: debouncedSearch || undefined,
+            subjectLevel: subjectLevelFilter || undefined,
+            subjectType: subjectTypeFilter || undefined,
+            knowledgeArea: knowledgeAreaFilter || undefined,
+            domain: domainFilter || undefined,
+        }),
+        retry: false,
         staleTime: 1000 * 60 * 5,
     });
 
-    // Handle errors manually
+    // handle errors in useEffect
     useEffect(() => {
         if (isCoursesError && coursesError) {
             toast.error(`Error fetching courses: ${coursesError.message}`);
         }
     }, [isCoursesError, coursesError, toast]);
-
+    
     const courses = courseData?.courses || [];
     const totalPages = courseData?.totalPages || 1;
 

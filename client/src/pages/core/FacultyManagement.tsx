@@ -49,8 +49,8 @@ const FacultyManagement: React.FC = () => {
     const {
         data: facultyData,
         isLoading,
-        isError,
-        error
+        isError: isFacultyError,
+        error: facultyError
     } = useQuery<PaginatedFacultyResponse, Error>({
         queryKey: [
             'faculty',
@@ -74,14 +74,17 @@ const FacultyManagement: React.FC = () => {
             joiningDateFrom: joiningDateFromFilter || undefined,
             joiningDateTo: joiningDateToFilter || undefined,
         }),
+        retry: false,
+        staleTime: 1000 * 60 * 5,
     });
 
+    // Handle errors safely
     useEffect(() => {
-        if (isError) {
-            toast.error("Error fetching faculty members: " + error?.message);
+        if (isFacultyError && facultyError) {
+            toast.error(`Error fetching faculty members: ${facultyError.message}`);
         }
-    }, [isError, error]);
-
+    }, [isFacultyError, facultyError, toast]);
+    
     const faculty = facultyData?.data || [];
     const totalPages = facultyData?.totalPages || 1;
 
@@ -226,75 +229,75 @@ const FacultyManagement: React.FC = () => {
 
 
 
-                {isLoading && <TopCenterLoader />}
+            {isLoading && <TopCenterLoader />}
 
-                <div className={`overflow-x-auto mt-4 rounded-sm border border-gray-300 dark:border-darkBorderLight shadow-sm bg-white dark:bg-darkSurface `}>
-                    <table className="min-w-full text-sm text-left">
-                        <thead className="bg-gray-50 dark:bg-darkMuted text-gray-600 dark:text-darkTextMuted uppercase text-xs tracking-wider border-b border-gray-300 dark:border-darkBorderLight">
-                            <tr>
-                                <th className="px-4 py-2">Avatar</th>
-                                <th className="px-4 py-2">First Name</th>
-                                <th className="px-4 py-2">Last Name</th>
-                                <th className="px-4 py-2">Email</th>
-                                <th className="px-4 py-2">City</th>
-                                <th className="px-4 py-2">Department</th>
-                                <th className="px-4 py-2">Designation</th>
-                                <th className="px-4 py-2 text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredFaculty.length > 0 ? (
-                                filteredFaculty.map((member: any) => (
-                                    <tr
-                                        key={member.id}
-                                        className="border-b dark:border-darkBorderLight last:border-b-0 hover:bg-gray-50 dark:hover:bg-darkMuted transition"
-                                    >
-                                        <td className="px-4 py-2">
-                                            {member.avatarURL ? (
-                                                <img
-                                                    src={member.avatarURL}
-                                                    alt="avatar"
-                                                    className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-darkBorderLight"
-                                                />
-                                            ) : (
-                                                <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 text-gray-400 dark:bg-darkMuted font-semibold">
-                                                    {(member.firstName?.[0] || "").toUpperCase()}
-                                                    {(member.lastName?.[0] || "").toUpperCase()}
-                                                </div>
-                                            )}
-                                        </td>
+            <div className={`overflow-x-auto mt-4 rounded-sm border border-gray-300 dark:border-darkBorderLight shadow-sm bg-white dark:bg-darkSurface `}>
+                <table className="min-w-full text-sm text-left">
+                    <thead className="bg-gray-50 dark:bg-darkMuted text-gray-600 dark:text-darkTextMuted uppercase text-xs tracking-wider border-b border-gray-300 dark:border-darkBorderLight">
+                        <tr>
+                            <th className="px-4 py-2">Avatar</th>
+                            <th className="px-4 py-2">First Name</th>
+                            <th className="px-4 py-2">Last Name</th>
+                            <th className="px-4 py-2">Email</th>
+                            <th className="px-4 py-2">City</th>
+                            <th className="px-4 py-2">Department</th>
+                            <th className="px-4 py-2">Designation</th>
+                            <th className="px-4 py-2 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredFaculty.length > 0 ? (
+                            filteredFaculty.map((member: any) => (
+                                <tr
+                                    key={member.id}
+                                    className="border-b dark:border-darkBorderLight last:border-b-0 hover:bg-gray-50 dark:hover:bg-darkMuted transition"
+                                >
+                                    <td className="px-4 py-2">
+                                        {member.avatarURL ? (
+                                            <img
+                                                src={member.avatarURL}
+                                                alt="avatar"
+                                                className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-darkBorderLight"
+                                            />
+                                        ) : (
+                                            <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 text-gray-400 dark:bg-darkMuted font-semibold">
+                                                {(member.firstName?.[0] || "").toUpperCase()}
+                                                {(member.lastName?.[0] || "").toUpperCase()}
+                                            </div>
+                                        )}
+                                    </td>
 
-                                        <td className="px-4 py-2 text-gray-800 dark:text-darkTextPrimary font-medium">{truncateName(member.firstName || "-")}</td>
-                                        <td className="px-4 py-2 text-gray-800 dark:text-darkTextPrimary font-medium">{truncateName(member.lastName || "-")}</td>
-                                        <td className="px-4 py-2 text-gray-800 dark:text-darkTextSecondary">{truncateName(member.email || "-")}</td>
-                                        <td className="px-4 py-2 text-gray-600 dark:text-darkTextMuted">{member.city || "-"}</td>
-                                        <td className="px-4 py-2 text-gray-800 dark:text-darkTextSecondary">
-                                            {truncateName(member.department ?? "-")}
-                                        </td>
-                                        <td className="px-4 py-2 text-gray-800 dark:text-darkTextSecondary">
-                                            {member.teacherInfo?.designation || "-"}
-                                        </td>
-                                        <td className="px-4 py-2 text-center">
-                                            <button
-                                                onClick={() => handleViewFaculty(member.id)}
-                                                className="inline-flex items-center justify-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-darkMuted transition"
-                                                title="View faculty details"
-                                            >
-                                                <FiEye className="w-4 h-4 text-blue-500" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={7} className="text-center px-4 py-6 text-gray-500 dark:text-darkTextMuted">
-                                        No faculty members found.
+                                    <td className="px-4 py-2 text-gray-800 dark:text-darkTextPrimary font-medium">{truncateName(member.firstName || "-")}</td>
+                                    <td className="px-4 py-2 text-gray-800 dark:text-darkTextPrimary font-medium">{truncateName(member.lastName || "-")}</td>
+                                    <td className="px-4 py-2 text-gray-800 dark:text-darkTextSecondary">{truncateName(member.email || "-")}</td>
+                                    <td className="px-4 py-2 text-gray-600 dark:text-darkTextMuted">{member.city || "-"}</td>
+                                    <td className="px-4 py-2 text-gray-800 dark:text-darkTextSecondary">
+                                        {truncateName(member.department ?? "-")}
+                                    </td>
+                                    <td className="px-4 py-2 text-gray-800 dark:text-darkTextSecondary">
+                                        {member.teacherInfo?.designation || "-"}
+                                    </td>
+                                    <td className="px-4 py-2 text-center">
+                                        <button
+                                            onClick={() => handleViewFaculty(member.id)}
+                                            className="inline-flex items-center justify-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-darkMuted transition"
+                                            title="View faculty details"
+                                        >
+                                            <FiEye className="w-4 h-4 text-blue-500" />
+                                        </button>
                                     </td>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={7} className="text-center px-4 py-6 text-gray-500 dark:text-darkTextMuted">
+                                    No faculty members found.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
 
 
             <div className="flex justify-end">

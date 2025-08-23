@@ -27,7 +27,7 @@ const CourseList: React.FC<CourseListProps> = ({ semester, allCourses, catalogue
         queryKey: ["courses", semester.id],
         queryFn: () => getCourses({ semesterId: semester.id }).then((res) => res.courses),
         enabled: !!semester.id,
-        staleTime: 5 * 60 * 1000,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const existingCourseIds = semester.semesterCourses?.map(sc => sc.courseId) ?? [];

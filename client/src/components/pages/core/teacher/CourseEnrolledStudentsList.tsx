@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { fetchEnrolledStudentsForCourse } from "../../../../api/core/teacher/teacher-course-api";
-import { MAX_PAGE_LIMIT } from "../../../../constants";
 import { getAttendanceRecords, getAttendanceSessions, markAttendanceRecords } from "../../../../api/core/teacher/attendance-api";
 import { Input, SelectInput } from "../../../ui/Input";
 import { Pagination } from "../../../ui/Pagination";
@@ -20,6 +19,8 @@ interface EnrolledStudentsListProps {
     section: string;
 }
 
+const LOCAL_MAX_PAGE_LIMIT = 100;
+
 const CourseEnrolledStudentsList: React.FC<EnrolledStudentsListProps> = ({
     offeringId,
     section,
@@ -35,19 +36,33 @@ const CourseEnrolledStudentsList: React.FC<EnrolledStudentsListProps> = ({
     const [attendanceMap, setAttendanceMap] = useState<Record<string, boolean>>({});
     const [showCreateModal, setShowCreateModal] = useState(false);
 
+    const [limit, setLimit] = useState<number>(10); // default fetch limit
+    const [inputLimit, setInputLimit] = useState<string>("10"); // controlled input
+
+    const handleUpdateLimit = () => {
+        const parsed = parseInt(inputLimit);
+        if (!isNaN(parsed) && parsed > 0 && parsed <= LOCAL_MAX_PAGE_LIMIT) {
+            setLimit(parsed);
+            setPage(1); // reset to first page
+        } else {
+            toast.error(`Please enter a valid number (1-${LOCAL_MAX_PAGE_LIMIT})`);
+        }
+    };
+
     // Fetch students
     const {
         data: studentsData,
         isLoading: loadingStudents,
         error: studentsError,
     } = useQuery({
-        queryKey: ["enrolled-students", offeringId, section, { page, debouncedSearch }],
+        queryKey: ["enrolled-students", offeringId, section, page, debouncedSearch, limit],
         queryFn: () =>
             fetchEnrolledStudentsForCourse(offeringId, section, {
                 page,
-                limit: MAX_PAGE_LIMIT,
+                limit,
                 search: debouncedSearch,
             }),
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const totalPages = studentsData?.totalPages || 1;
@@ -60,6 +75,7 @@ const CourseEnrolledStudentsList: React.FC<EnrolledStudentsListProps> = ({
     } = useQuery({
         queryKey: ["attendance-sessions", offeringId],
         queryFn: () => getAttendanceSessions(offeringId),
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const {
@@ -70,6 +86,7 @@ const CourseEnrolledStudentsList: React.FC<EnrolledStudentsListProps> = ({
         queryKey: ["attendance-records", currentSessionId],
         queryFn: () => getAttendanceRecords(currentSessionId!),
         enabled: !!currentSessionId && (studentsData?.students?.length ?? 0) > 0,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     useEffect(() => {
@@ -157,6 +174,7 @@ const CourseEnrolledStudentsList: React.FC<EnrolledStudentsListProps> = ({
                     >
                         Create Attendance Session
                     </Button>
+
                 </div>
 
                 <div className="flex gap-4 mb-6">
@@ -179,6 +197,21 @@ const CourseEnrolledStudentsList: React.FC<EnrolledStudentsListProps> = ({
                         }
                         className="w-full"
                     />
+
+                    <div className="flex items-center space-x-2">
+                        <SelectInput
+                            value={inputLimit}
+                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setInputLimit(e.target.value)}
+                            options={Array.from({ length: 10 }, (_, i) => {
+                                const val = (i + 1) * 10;
+                                return { label: val.toString(), value: val.toString() };
+                            })}
+                            className="w-32 text-sm"
+                        />
+                        <Button onClick={handleUpdateLimit} size="sm" variant="blue">
+                            Set Limit
+                        </Button>
+                    </div>
                 </div>
 
                 <div className="overflow-hidden border border-gray-300 dark:border-darkBorderLight rounded-sm shadow-sm">
@@ -276,7 +309,7 @@ const CourseEnrolledStudentsList: React.FC<EnrolledStudentsListProps> = ({
                     <Pagination
                         currentPage={page}
                         totalPages={totalPages}
-                        onPageChange={setPage}
+                        onPageChange={(newPage) => setPage(newPage)}
                     />
                 </div>
             </div>

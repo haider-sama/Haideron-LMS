@@ -1,6 +1,6 @@
 import express from "express";
 import { authorizeRoles, verifyToken } from "../middleware/auth";
-import { adminController } from "../controllers/admin";
+import { adminController, adminSettingsController } from "../controllers";
 import dotenv from "dotenv";
 import { safeLimiter, normalLimiter, strictLimiter } from "../utils/limiter/rateLimiter";
 import { AudienceEnum } from "../shared/enums";
@@ -52,6 +52,19 @@ adminRouter.route("/users/:userId/password-reset")
         verifyToken,
         authorizeRoles(AudienceEnum.Admin),
         adminController.adminResetUserPassword
+    );
+
+adminRouter.route("/settings")
+    .get(
+        normalLimiter,
+        verifyToken,
+        authorizeRoles(AudienceEnum.Admin),
+        adminSettingsController.fetchAdminSettings
+    ).patch(
+        normalLimiter,
+        verifyToken,
+        authorizeRoles(AudienceEnum.Admin),
+        adminSettingsController.updateAdminSettings
     );
 
 export default adminRouter;

@@ -24,6 +24,7 @@ const OutcomeManagement: React.FC<OutcomeManagementProps> = ({ programId }) => {
         queryKey: ['peos', programId],
         enabled: !!programId,
         queryFn: () => getPEOsForProgram(programId!),
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     if (isLoading) return <TopCenterLoader />

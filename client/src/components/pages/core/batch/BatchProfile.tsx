@@ -46,6 +46,7 @@ const BatchProfile: React.FC<BatchProfileProps> = ({
         queryKey: ["batch", batchId],
         queryFn: () => fetchBatch(batchId),
         enabled: !!batchId,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     useEffect(() => {

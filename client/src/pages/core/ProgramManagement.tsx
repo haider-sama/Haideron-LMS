@@ -56,7 +56,7 @@ const ProgramManagement: React.FC = () => {
         queryFn: () => getPrograms({ page, limit: MAX_PAGE_LIMIT, search: debouncedSearch }),
         enabled: isAdmin || isDepartmentHead,
         placeholderData: (prev) => prev,
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const programs: ProgramWithCreator[] = data?.programs ?? (deptHeadProgram ? [deptHeadProgram] : []);

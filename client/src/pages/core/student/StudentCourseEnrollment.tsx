@@ -62,8 +62,10 @@ const StudentCourseEnrollment: React.FC = () => {
     // Queries
     const enrolledQuery = useQuery({
         queryKey: ["student", "enrollments"],
-        queryFn: getEnrolledCourses,
-        enabled: !!selectedSemester, // only load when semester is picked
+        queryFn: () => getEnrolledCourses(),
+        enabled: !!selectedSemester,
+        staleTime: 1000 * 60 * 1,
+        retry: false,
     });
 
     const offeringsQuery = useQuery({
@@ -71,7 +73,22 @@ const StudentCourseEnrollment: React.FC = () => {
         queryFn: () => getCourseOfferings(selectedSemester!.id),
         enabled: !!selectedSemester,
         select: (data) => data.offerings,
+        staleTime: 1000 * 60 * 1,
+        retry: false,
     });
+
+    // Handle errors outside of the query functions
+    useEffect(() => {
+        if (enrolledQuery.isError && enrolledQuery.error) {
+            toast.error(enrolledQuery.error.message || "Failed to load enrollments");
+        }
+    }, [enrolledQuery.isError, enrolledQuery.error, toast]);
+
+    useEffect(() => {
+        if (offeringsQuery.isError && offeringsQuery.error) {
+            toast.error(offeringsQuery.error.message || "Failed to load course offerings");
+        }
+    }, [offeringsQuery.isError, offeringsQuery.error, toast]);
 
     // Mutations
     const enrollMutation = useMutation({

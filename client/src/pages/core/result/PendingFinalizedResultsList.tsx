@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiEye } from "react-icons/fi";
 import { Helmet } from "react-helmet-async";
 import { FetchPendingFinalizedResultsResponse, FinalizedResultWithRelations } from "../../../constants/core/interfaces";
@@ -11,22 +11,27 @@ import TopCenterLoader from "../../../components/ui/TopCenterLoader";
 import { Pagination } from "../../../components/ui/Pagination";
 import Modal from "../../../components/ui/Modal";
 import FinalizedResultReview from "./FinalizedResultReview";
+import { useToast } from "../../../context/ToastContext";
 
 const PendingFinalizedResultsList: React.FC = () => {
     const [page, setPage] = useState(1);
     const [selectedResult, setSelectedResult] = useState<FinalizedResultWithRelations | null>(null);
     const [showModal, setShowModal] = useState(false);
+    const toast = useToast();
 
-    const {
-        data,
-        isPending,
-        isError,
-        refetch,
-    } = useQuery<FetchPendingFinalizedResultsResponse>({
+    const { data, isPending, isError, refetch } = useQuery<FetchPendingFinalizedResultsResponse, Error>({
         queryKey: ["pending-finalized-results", { page, limit: MAX_PAGE_LIMIT }],
         queryFn: () => fetchPendingFinalizedResults(page, MAX_PAGE_LIMIT),
-        staleTime: 60 * 1000, // cache for 1 min
+        staleTime: 60 * 1000, // 1 min cache
+        retry: false, // prevent automatic retries
     });
+
+    // Handle errors in an effect
+    useEffect(() => {
+        if (isError) {
+            toast.error("Failed to fetch pending finalized results");
+        }
+    }, [isError, toast]);
 
     const results = data?.results || [];
     const totalPages = data?.totalPages || 1;

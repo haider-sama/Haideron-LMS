@@ -64,7 +64,7 @@ export function useUserManagement(currentUserRole: AudienceEnum) {
                 department: departmentFilter as DepartmentEnum || undefined,
             }),
         placeholderData: (prev) => prev,
-        staleTime: 1000 * 60 * 5,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const selectedUser = selectedUserId

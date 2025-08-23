@@ -35,6 +35,20 @@ const FinalizedResultReview: React.FC<FinalizedResultReviewProps> = ({
         },
     });
 
+    const rejectMutation = useMutation({
+        mutationFn: () =>
+            reviewFinalizedResult(result.id, FinalizedResultStatusEnum.Rejected),
+        onSuccess: (message) => {
+            toast.success(message || "Result rejected successfully.");
+            queryClient.invalidateQueries({ queryKey: ["pendingFinalizedResults"] });
+            onFinalized?.();
+            onClose();
+        },
+        onError: (err: any) => {
+            toast.error(err.message || "Failed to reject result.");
+        },
+    });
+
     const statusColors = {
         Pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
         Confirmed:
@@ -98,6 +112,16 @@ const FinalizedResultReview: React.FC<FinalizedResultReviewProps> = ({
                     fullWidth={false}
                 >
                     Finalize Result
+                </Button>
+                <Button
+                    onClick={() => rejectMutation.mutate()}
+                    disabled={rejectMutation.isPending}
+                    isLoading={rejectMutation.isPending}
+                    loadingText="Rejecting..."
+                    variant="red"
+                    fullWidth={false}
+                >
+                    Reject Result
                 </Button>
             </div>
         </div>

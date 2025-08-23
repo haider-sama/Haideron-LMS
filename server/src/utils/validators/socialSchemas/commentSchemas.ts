@@ -7,12 +7,17 @@ export const CreateCommentSchema = z.object({
 });
 
 export const GetCommentsQuerySchema = z.object({
-    parentId: z.string().optional(), // null or not provided = root comments
+    parentId: z.string().uuid().optional(), // null or not provided = root comments
     sort: z.enum(["newest", "oldest", "top", "best"]).optional().default("newest"),
-    page: z.string().default("1"),
-    limit: z.string().default("10"),
+    limit: z
+        .string()
+        .regex(/^\d+$/)
+        .transform(Number)
+        .optional()
+        .default("10"), // page size
+    offsetKey: z.string().datetime().optional(), // ISO string of last comment createdAt for cursor pagination
 });
 
 export const UpdateCommentSchema = z.object({
-  content: z.string().min(1, "Content cannot be empty").max(10000),
+    content: z.string().min(1, "Content cannot be empty").max(10000),
 });

@@ -40,18 +40,24 @@ const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
     });
 
     // Fetch programs
-    const { data: programsData, isLoading: programsLoading, error: programsError } = useQuery({
+    const { data: programsData = [], isLoading: programsLoading, error: programsError } = useQuery({
         queryKey: ["programs", isAdmin, isDepartmentHead, dashboard?.program?.id],
         queryFn: async () => {
-            if (isAdmin) {
-                const res = await getPrograms();
-                return res.programs || [];
-            } else if (isDepartmentHead && dashboard?.program?.id) {
-                return [dashboard.program];
+            try {
+                if (isAdmin) {
+                    const res = await getPrograms();
+                    return res.programs || [];
+                } else if (isDepartmentHead && dashboard?.program?.id) {
+                    return [dashboard.program];
+                }
+                return [];
+            } catch (err) {
+                toast.error((err as Error).message || "Failed to fetch programs");
+                throw err;
             }
-            return [];
         },
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: false, // important to prevent retries that trigger multiple toasts
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     useEffect(() => {
@@ -72,7 +78,7 @@ const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
             return res.data || [];
         },
         enabled: !!form.programId, // wait until programId is valid
-        staleTime: 1000 * 60 * 5,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     // Form change handler
@@ -134,7 +140,7 @@ const CreateCourse: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
     if (programsError || cataloguesError) {
         return <ErrorStatus message="Failed to fetch data, try refreshing..." />
     }
-    
+
     return (
         <div className="max-w-4xl mx-auto p-4">
             <h2 className="text-2xl font-semibold text-center mb-8">Create Course</h2>

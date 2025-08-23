@@ -6,7 +6,6 @@ import { v2 as cloudinary } from "cloudinary";
 import { closeDb, connectToDatabase, db } from './db/db';
 import { CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_CLOUD_NAME, FRONTEND_URL, PORT } from './constants/env';
 import helmet from 'helmet';
-import { connectRedis } from './lib/redis';
 import { users } from './db/schema';
 import authRouter from './routes/auth.routes';
 import adminRouter from './routes/admin.routes';
@@ -26,6 +25,17 @@ import assessmentRouter from './routes/core/teacher/assessment.routes';
 import resultRouter from './routes/core/teacher/result.routes';
 import { catchMissedJobs, startCronJobs } from './cron';
 import auditLogRouter from './routes/audit.log.routes';
+import { connectRedis, redisClient } from './lib/redis';
+import { SettingsService } from './utils/settings/SettingsService';
+import client from "prom-client";
+import { authorizeRoles } from './middleware/auth';
+import { AudienceEnum } from './shared/enums';
+import forumRouter from './routes/social/forum/forum.routes';
+import forumUserRouter from './routes/social/forum/forum.user.routes';
+import postRouter from './routes/social/post/post.routes';
+import postUserRouter from './routes/social/post/post.user.routes';
+import commentRouter from './routes/social/comment/comment.routes';
+import commentUserRouter from './routes/social/comment/comment.user.routes';
 
 dotenv.config();
 
@@ -37,6 +47,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.disable('x-powered-by');
+
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics();
 
 cloudinary.config({
     cloud_name: CLOUDINARY_CLOUD_NAME,
@@ -66,12 +79,50 @@ app.use('/api/v1/results/', resultRouter);
 
 app.use('/api/v1/audit-logs/', auditLogRouter);
 
+
+app.use('/api/v1/forum/', forumRouter);
+app.use('/api/v1/forum/public/', forumUserRouter);
+app.use('/api/v1/post/', postRouter);
+app.use('/api/v1/post/public/', postUserRouter);
+app.use('/api/v1/comment/', commentRouter);
+app.use('/api/v1/comment/public/', commentUserRouter);
+
+app.get("/healthz", authorizeRoles(AudienceEnum.Admin), (req, res) => res.status(200).send("ok"));
+app.get("/readyz", authorizeRoles(AudienceEnum.Admin), async (req, res) => {
+    try {
+        // DB check
+        await db.execute("SELECT 1");
+
+        // Redis check
+        if (!redisClient.isOpen) {
+            throw new Error("Redis not connected");
+        }
+
+        res.status(200).send("ready");
+    } catch (err: any) {
+        res.status(500).send("not ready: " + err.message);
+    }
+});
+
+if (process.env.NODE_ENV === "production") {
+    app.get("/metrics", authorizeRoles(AudienceEnum.Admin), async (req, res) => {
+        res.set("Content-Type", client.register.contentType);
+        res.end(await client.register.metrics());
+    });
+} else {
+    app.get("/metrics", async (req, res) => {
+        res.set("Content-Type", client.register.contentType);
+        res.end(await client.register.metrics());
+    });
+}
+
 const startServer = async () => {
     console.time("Total Startup Time");
 
     try {
-        await connectToDatabase(); // Optional connection check
-        // await connectRedis(); // If you're using Redis
+        await connectToDatabase();  // Optional connection check
+        await connectRedis();
+        SettingsService.invalidateCache();  // whenever admin updates settings in DB
 
         // Example: test DB query
         // const firstUser = await db.select().from(users).limit(1);

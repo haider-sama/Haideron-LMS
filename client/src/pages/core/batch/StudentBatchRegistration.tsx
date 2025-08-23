@@ -51,6 +51,7 @@ const StudentBatchRegistration: React.FC = () => {
             return programs || [];
         },
         enabled: !!user,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const programs = programsQuery.data || [];
@@ -63,6 +64,7 @@ const StudentBatchRegistration: React.FC = () => {
             return data.batches || [];
         },
         enabled: !!selectedProgramId,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const batches = batchesQuery.data || [];
@@ -92,6 +94,7 @@ const StudentBatchRegistration: React.FC = () => {
             return { data: studentRes.data as StudentWithEnrollmentStatus[], totalPages: studentRes.totalPages };
         },
         enabled: !!selectedProgramId && programs.length > 0,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const studentsData = studentsQuery.data?.data || [];

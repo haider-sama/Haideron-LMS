@@ -6,27 +6,46 @@ const client: RedisClientType = createClient({
     password: REDIS_PASS,
     socket: {
         host: REDIS_HOSTNAME,
-        port: REDIS_PORT
+        port: REDIS_PORT,
+        tls: NODE_ENV === "production" ? true : undefined,
     }
 });
 
-client.on('error', (err: Error) => {
-    console.log('Redis Client Error', err);
+client.on("error", (err: Error) => {
+    console.error("Redis Client Error", err.message);
 });
 
-async function connectRedis() {
-    if (!client.isOpen) {
-        console.time("Redis Connect Time");
-        await client.connect();
-        console.timeEnd("Redis Connect Time");
+const baseDelay = 5000; // ms
 
-        if (NODE_ENV !== 'production') {
-            await client.set('foo', 'bar');
-            const result = await client.get('foo');
-            console.log("Redis test value:", result);
+export async function connectRedis() {
+    let attempt = 0;
+
+    while (true) {
+        try {
+            if (!client.isOpen) {
+                console.time("Redis Connect Time");
+                await client.connect();
+                console.timeEnd("Redis Connect Time");
+
+                if (NODE_ENV !== "production") {
+                    await client.set("foo", "bar");
+                    const result = await client.get("foo");
+                    console.log("Redis test value:", result);
+                }
+
+                console.log("Redis connected");
+            }
+            break; // exit loop once connected
+        } catch (err: any) {
+            attempt++;
+            console.error(
+                `Redis connection failed (attempt ${attempt}): ${err.message}`
+            );
+
+            const wait = baseDelay * attempt; // backoff increases with attempts
+            console.log(`Retrying Redis in ${wait / 1000}s...`);
+            await new Promise((res) => setTimeout(res, wait));
         }
-
-        console.log('Redis connected');
     }
 }
 

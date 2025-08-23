@@ -46,6 +46,7 @@ const CreateBatchForm: React.FC<CreateBatchFormProps> = ({ programs, onClose }) 
         queryKey: ["catalogues", form.programId],
         queryFn: () => getCataloguesByProgram({ programId: form.programId, limit: MAX_PAGE_LIMIT }),
         enabled: !!form.programId, // only fetch if program selected
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const catalogues = cataloguesData?.data || [];

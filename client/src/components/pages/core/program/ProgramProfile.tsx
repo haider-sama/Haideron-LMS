@@ -29,6 +29,7 @@ const ProgramProfile = ({ programId, fetchProgram, updateProgram }: ProgramProps
         enabled: !!programId,
         queryFn: () => fetchProgram(programId),
         retry: false,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const program = data?.program;

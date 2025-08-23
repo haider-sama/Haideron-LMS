@@ -2,7 +2,7 @@ import { z } from "zod";
 import { PostTypeEnum, VoteTypeEnum } from "../../../shared/social.enums";
 
 export const CreatePostSchema = z.object({
-    forumId: z.string({ required_error: "Forum ID is required." }),
+    forumId: z.string().uuid({ message: "Invalid Forum ID." }),
     type: z.nativeEnum(PostTypeEnum, {
         required_error: "Post type is required.",
         invalid_type_error: "Invalid post type.",
@@ -39,20 +39,17 @@ export const UpdatePostSchema = z.object({
 });
 
 export const PostQuerySchema = z.object({
-    page: z.string().regex(/^\d+$/).default("1"),
-    limit: z.string().regex(/^\d+$/).default("10"),
-    forumId: z.string().optional(),
+    limit: z
+        .string()
+        .regex(/^\d+$/)
+        .default("10")
+        .transform((val) => parseInt(val, 10)), // auto convert to number
     type: z.nativeEnum(PostTypeEnum).optional(),
-    sort: z.enum(["recent", "top", "trending"]).optional(),
+    sort: z.enum(["recent", "top", "trending"]).optional().default("recent"),
     search: z.string().min(1).optional(),
-    archived: z.string().optional(),
-});
-
-export const PollVoteSchema = z.object({
-    optionId: z.string(),
-    isAnonymous: z.boolean().optional().default(false),
-});
-
-export const PostVoteSchema = z.object({
-  voteType: z.nativeEnum(VoteTypeEnum),
+    archived: z.enum(["true", "false"]).optional(),
+    lastPostCreatedAt: z
+        .string()
+        .datetime()
+        .optional(), // cursor for infinite scroll
 });

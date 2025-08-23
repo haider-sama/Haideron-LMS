@@ -6,6 +6,7 @@ import { registerCronJob } from "./index";
 const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
 });
+
 const db = drizzle(pool);
 
 function computeCutoff(retainMonths: number): [number, number] {

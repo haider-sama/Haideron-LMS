@@ -38,6 +38,7 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
     const { data: course, error: courseError } = useQuery({
         queryKey: ["course", courseId],
         queryFn: () => fetchCourse(courseId),
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     /** Map backend Course -> frontend EditableCourse */
@@ -56,6 +57,7 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
     const { data: programs, isLoading: programsLoading, error: programsError } = useQuery({
         queryKey: ["programs"],
         queryFn: () => getPrograms(),
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     /** --- Fetch Catalogues and PLOs (enabled only if programId exists) --- */
@@ -64,6 +66,7 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
         queryFn: () =>
             getCataloguesByProgram({ programId: editFields.programId! }),
         enabled: !!editFields.programId,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     useEffect(() => {
@@ -86,6 +89,7 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
     const { data: preReqCourses } = useQuery({
         queryKey: ["courses", preReqSearch],
         queryFn: () => getCourses({ limit: MAX_PAGE_LIMIT, search: preReqSearch }),
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     const { data: coReqCourses } = useQuery({
@@ -107,6 +111,7 @@ const CourseProfile: React.FC<CourseProfileProps> = ({ courseId, fetchCourse, up
     const { data: facultyData, isError: facultyError } = useQuery({
         queryKey: ["faculty", { limit: 10, search: facultySearch }],
         queryFn: () => getFacultyMembers({ limit: MAX_PAGE_LIMIT, search: facultySearch }),
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     if (facultyError) toast.error("Failed to fetch faculty");

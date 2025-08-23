@@ -37,6 +37,6 @@ semesterRouter
         verifyToken,
         authorizeRoles(AudienceEnum.Admin, AudienceEnum.DepartmentHead),
         semesterController.deleteSemesterById
-    );;
+    );
 
 export default semesterRouter;

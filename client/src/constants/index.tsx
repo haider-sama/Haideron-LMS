@@ -14,7 +14,7 @@ export const ALLOW_PUBLIC_REGISTRATION: boolean = true;
 export const ALLOW_EMAIL_MIGRATION: boolean = false;
 
 export const MOBILE_BREAKPOINT = 768; // px, adjust if needed
-export const MAX_PAGE_LIMIT = 100;
+export const MAX_PAGE_LIMIT = 10;
 
 // Define roles to restrict FROM
 export const restrictedRoles = [

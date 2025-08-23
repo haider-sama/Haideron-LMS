@@ -28,6 +28,7 @@ const EditPEOList = ({ programId }: EditPEOListProps) => {
         queryFn: () => getPEOsForProgram(programId),
         enabled: !!programId,
         retry: false,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     // Sync data to local state

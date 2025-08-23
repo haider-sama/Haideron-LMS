@@ -19,6 +19,12 @@ export * from "./models/core/program/program.model";
 export * from "./models/core/semester/activated.semester.model";
 export * from "./models/core/semester/semester.model";
 
-export * from "./models/logs/audit.log.model"
+export * from "./models/logs/audit.log.model";
+
+export * from "./models/social/comment.model";
+export * from "./models/social/forum.model";
+export * from "./models/social/post.model";
+
+export * from "./models/logs/admin.settings.model";
 
 // Example table

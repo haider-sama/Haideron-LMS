@@ -29,6 +29,7 @@ const EditPLOList: React.FC<EditPLOListProps> = ({ programId }) => {
         },
         enabled: !!programId,
         retry: false,
+        staleTime: 1000 * 60 * 5, // 5 min cache
     });
 
     // Side effect for setting state

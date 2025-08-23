@@ -118,9 +118,11 @@ const UserProfile = ({ userId, fetchUser, updateUser }: UserProfileProps) => {
                 {user ? (
                     <>
                         <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start">
-                            {/* TODO: Avatar - need a new avatar endpoint for admins to change avatar */}
                             <div className="w-full max-w-[160px] flex justify-center">
-                                <AvatarUpload avatarURL={user.avatarURL} />
+                                <AvatarUpload 
+                                    avatarURL={user.avatarURL}
+                                    targetUserId={userId}
+                                />
                             </div>
 
                             {/* Inputs */}

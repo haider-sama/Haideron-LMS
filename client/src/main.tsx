@@ -12,7 +12,8 @@ import { ToastProvider } from './context/ToastContext.tsx';
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            retry: 0,
+            retry: 1, // or 0 during offline testing
+            staleTime: 1000 * 60 * 5,
         },
     },
 });

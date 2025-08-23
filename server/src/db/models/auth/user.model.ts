@@ -41,7 +41,7 @@ export const users = pgTable("users", {
     // (if the search vector doesn't exist in the table) #then
     // Don't push the tables with .notNull() - Else all data will be removed
     searchVector: tsvector("search_vector")
-        .notNull() 
+        .notNull()
         .generatedAlwaysAs(
             (): SQL => sql`
           setweight(to_tsvector('english', coalesce(${users.firstName}, '')), 'A') ||
@@ -50,10 +50,12 @@ export const users = pgTable("users", {
           setweight(to_tsvector('english', coalesce(${users.city}, '')), 'C') ||
           setweight(to_tsvector('english', coalesce(${users.country}, '')), 'C')
         `
-    ),
+        ),
 },
     (table) => [
         index("users_search_idx").using("gin", table.searchVector),
+        index("users_created_at_idx").on(table.createdAt),
+        index("users_last_online_idx").on(table.lastOnline),
     ]);
 
 export const teacherInfo = pgTable("teacher_info", {

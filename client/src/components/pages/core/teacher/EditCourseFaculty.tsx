@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { useToast } from "../../../../context/ToastContext";
 import { usePermissions } from "../../../../hooks/usePermissions";
@@ -11,7 +11,6 @@ import ErrorStatus from "../../../ui/ErrorStatus";
 import { Input, SelectInput, TextAreaInput } from "../../../ui/Input";
 import { Button } from "../../../ui/Button";
 import CLOEditor from "../course/CLOEditor";
-import { useSafeQuery } from "../../../../hooks/useSafeQuery";
 
 interface EditCourseFacultyProps {
     courseId: string;
@@ -29,13 +28,12 @@ const EditCourseFaculty: React.FC<EditCourseFacultyProps> = ({ courseId }) => {
     const [expandedCLOs, setExpandedCLOs] = useState<number[]>([]);
 
     /** --- Fetch Course --- */
-    const { data: course, error: courseError } = useSafeQuery(
-        ["course", courseId],
-        () => getCourseById(courseId),
-        {
-            enabled: !!courseId,
-        }
-    );
+    const { data: course, error: courseError } = useQuery({
+        queryKey: ["course", courseId],
+        queryFn: () => getCourseById(courseId),
+        enabled: !!courseId,
+        staleTime: 1000 * 60 * 5, // 5 min cache
+    });
 
     /** Map backend -> editable fields */
     useEffect(() => {
@@ -50,13 +48,13 @@ const EditCourseFaculty: React.FC<EditCourseFacultyProps> = ({ courseId }) => {
     }, [course]);
 
     /** --- Fetch PLOs for faculty program --- */
-    const { data: plosData } = useSafeQuery(
-        ["plos", program?.id],
-        () => getPLOsForProgram(program!.id),
-        {
-            enabled: !!program?.id,
-        }
-    );
+    const { data: plosData } = useQuery({
+        queryKey: ["plos", program?.id],
+        queryFn: () => getPLOsForProgram(program!.id),
+        enabled: !!program?.id,
+        staleTime: 1000 * 60 * 5, // 5 min cache
+    });
+
 
     const ploOptions =
         plosData?.plos?.map((p) => ({
