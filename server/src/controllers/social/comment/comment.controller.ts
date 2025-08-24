@@ -498,11 +498,6 @@ export const updateComment = async (req: Request, res: Response) => {
 
         return res.status(OK).json({
             message: "Comment updated successfully",
-            comment: {
-                id: updatedComment?.id,
-                content: updatedComment?.content,
-                updatedAt: updatedComment?.updatedAt,
-            },
         });
     } catch (err) {
         console.error("[COMMENT_UPDATE_ERROR]", err);
@@ -656,7 +651,6 @@ export const toggleBestComment = async (req: Request, res: Response) => {
 
         return res.status(OK).json({
             message: newIsBest ? "Comment marked as best" : "Comment unmarked as best",
-            isBest: newIsBest,
         });
     } catch (err) {
         console.error("[COMMENT_TOGGLE_BEST_ERROR]", err);

@@ -80,12 +80,12 @@ app.use('/api/v1/results/', resultRouter);
 app.use('/api/v1/audit-logs/', auditLogRouter);
 
 
-app.use('/api/v1/forum/', forumRouter);
-app.use('/api/v1/forum/public/', forumUserRouter);
-app.use('/api/v1/post/', postRouter);
-app.use('/api/v1/post/public/', postUserRouter);
-app.use('/api/v1/comment/', commentRouter);
-app.use('/api/v1/comment/public/', commentUserRouter);
+app.use('/api/v1/forums/', forumRouter);
+app.use('/api/v1/forums/public/', forumUserRouter);
+app.use('/api/v1/posts/', postRouter);
+app.use('/api/v1/posts/public/', postUserRouter);
+app.use('/api/v1/comments/', commentRouter);
+app.use('/api/v1/comments/public/', commentUserRouter);
 
 app.get("/healthz", authorizeRoles(AudienceEnum.Admin), (req, res) => res.status(200).send("ok"));
 app.get("/readyz", authorizeRoles(AudienceEnum.Admin), async (req, res) => {

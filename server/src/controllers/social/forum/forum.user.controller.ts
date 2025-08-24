@@ -79,65 +79,6 @@ export const requestForumCreation = async (req: Request, res: Response) => {
     }
 };
 
-export const toggleForumMembership = async (req: Request, res: Response) => {
-    if (!(await SettingsService.isForumsEnabled())) {
-        return res.status(FORBIDDEN).json({ message: "Forums are disabled by admin" });
-    }
-
-    try {
-        const userId = req.userId;
-        const { forumId } = req.params;
-
-        // Ensure forum exists
-        const forum = await db
-            .select()
-            .from(forums)
-            .where(eq(forums.id, forumId))
-            .limit(1)
-            .then((rows) => rows[0]);
-
-        if (!forum) {
-            return res.status(NOT_FOUND).json({ message: "Forum not found" });
-        }
-
-        // Check membership
-        const existing = await db
-            .select()
-            .from(forumMembers)
-            .where(and(eq(forumMembers.forumId, forumId), eq(forumMembers.userId, userId)))
-            .limit(1)
-            .then((rows) => rows[0]);
-
-        if (existing) {
-            // Leave forum
-            const result = await db
-                .delete(forumMembers)
-                .where(and(eq(forumMembers.forumId, forumId), eq(forumMembers.userId, userId)));
-
-            if (result.rowCount === 0) {
-                return res.status(BAD_REQUEST).json({
-                    message: "You are not a member of this forum",
-                });
-            }
-
-            return res.status(OK).json({ message: "Successfully left the forum" });
-        } else {
-            // Join forum
-            await db.insert(forumMembers).values({
-                forumId,
-                userId,
-            });
-
-            return res.status(OK).json({ message: "Successfully joined the forum" });
-        }
-    } catch (error) {
-        console.error("Toggle forum membership error:", error);
-        return res
-            .status(INTERNAL_SERVER_ERROR)
-            .json({ message: "Error toggling forum membership" });
-    }
-};
-
 export const getMembershipStatus = async (req: Request, res: Response) => {
     if (!(await SettingsService.isForumsEnabled())) {
         return res.status(FORBIDDEN).json({ message: "Forums are disabled by admin" });
@@ -199,7 +140,15 @@ export const getForumFooterInfo = async (req: Request, res: Response) => {
         const now = new Date();
         const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
 
-        // Fetch online users (joined with forumProfiles)
+        // Update current user's lastOnline timestamp (if logged in)
+        if (req.userId) {
+            await db
+                .update(users)
+                .set({ lastOnline: now })
+                .where(eq(users.id, req.userId));
+        }
+
+        // Fetch online users (leftJoin with forumProfiles to include all users)
         const onlineUsers = await db
             .select({
                 username: forumProfiles.username,
@@ -207,7 +156,7 @@ export const getForumFooterInfo = async (req: Request, res: Response) => {
                 lastOnline: users.lastOnline,
             })
             .from(users)
-            .innerJoin(forumProfiles, eq(forumProfiles.userId, users.id))
+            .leftJoin(forumProfiles, eq(forumProfiles.userId, users.id))
             .where(gte(users.lastOnline, tenMinutesAgo));
 
         const totalOnline = onlineUsers.length;
@@ -239,11 +188,9 @@ export const getForumFooterInfo = async (req: Request, res: Response) => {
                 .then((rows) => rows[0]?.count || 0),
 
             db
-                .select({
-                    username: forumProfiles.username,
-                })
+                .select({ username: forumProfiles.username })
                 .from(users)
-                .innerJoin(forumProfiles, eq(forumProfiles.userId, users.id))
+                .leftJoin(forumProfiles, eq(forumProfiles.userId, users.id))
                 .orderBy(desc(users.createdAt))
                 .limit(1)
                 .then((rows) => rows[0]),
@@ -316,7 +263,17 @@ export const joinForum = async (req: Request, res: Response) => {
             userId,
         });
 
-        return res.status(OK).json({ message: "Successfully joined the forum" });
+        const [{ count }] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(forumMembers)
+            .where(eq(forumMembers.forumId, forumId));
+
+        return res.status(OK).json({
+            message: "Successfully joined the forum",
+            membersCount: Number(count),
+            isMember: true,
+
+        });
     } catch (error) {
         console.error("Error joining forum:", error);
         return res.status(INTERNAL_SERVER_ERROR).json({ message: "Error joining forum" });
@@ -359,7 +316,17 @@ export const leaveForum = async (req: Request, res: Response) => {
             return res.status(BAD_REQUEST).json({ message: "You are not a member of this forum" });
         }
 
-        return res.status(OK).json({ message: "Successfully left the forum" });
+        const [{ count }] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(forumMembers)
+            .where(eq(forumMembers.forumId, forumId));
+
+        return res.status(OK).json({
+            message: "Successfully left the forum",
+            membersCount: Number(count),
+            isMember: false,
+
+        });
     } catch (error) {
         console.error("Error leaving forum:", error);
         return res.status(INTERNAL_SERVER_ERROR).json({ message: "Error leaving forum" });

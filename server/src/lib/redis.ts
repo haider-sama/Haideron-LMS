@@ -49,4 +49,4 @@ export async function connectRedis() {
     }
 }
 
-export { client as redisClient, connectRedis };
+export { client as redisClient };

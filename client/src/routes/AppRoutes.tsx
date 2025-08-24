@@ -32,6 +32,9 @@ import StudentTranscriptPage from "../pages/core/student/StudentTranscriptPage";
 import OfferedCoursesList from "../pages/core/teacher/OfferedCoursesList";
 import PendingFinalizedResultsList from "../pages/core/result/PendingFinalizedResultsList";
 import AuditLogPage from "../pages/admin/AuditLogPage";
+import SocialShell from "../pages/main/SocialShell";
+import ForumPage from "../pages/social/forum/ForumPage";
+import ModeratorsPage from "../components/social/pages/forum/ModeratorsPage";
 // import SocialShell from "../pages/main/SocialShell";
 
 interface AppRoutesProps {
@@ -277,11 +280,11 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
 
             </Route>
 
-            {/* <Route element={<SocialShell />}>
+            <Route element={<SocialShell />}>
                 <Route path="/forums" element={<ForumPage />} />
-                <Route path="/forums/:slug" element={<ForumDetailPage />} />
+                {/* <Route path="/forums/:slug" element={<ForumDetailPage />} /> */}
                 <Route path="/forums/:forumId/moderators" element={<ModeratorsPage />} />
-                <Route path="/forums/:forumSlug/:postSlug" element={<PostPage />} />
+                {/* <Route path="/forums/:forumSlug/:postSlug" element={<PostPage />} />
 
                 <Route
                     path="/forums/profile"
@@ -293,9 +296,9 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                         />
                     }
                 />
-                <Route path="/forums/profile/:userIdOrUsername" element={<UserForumProfile />} />
+                <Route path="/forums/profile/:userIdOrUsername" element={<UserForumProfile />} /> */}
 
-            </Route> */}
+            </Route>
 
             <Route path="*" element={<Navigate to="/" />} />
         </Routes>

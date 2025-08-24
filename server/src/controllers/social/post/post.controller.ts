@@ -319,23 +319,25 @@ export const getPostBySlug = async (req: OptionalAuthRequest, res: Response) => 
         const isAdminViewer = [AudienceEnum.Admin, AudienceEnum.CommunityAdmin].includes(viewerRole);
 
         // Build author object
-        const authorData = isAdminViewer
-            ? author
-                ? {
-                    id: author.id,
-                    avatarURL: author.avatarURL,
-                    role: author.role,
-                    firstName: author.firstName,
-                    lastName: author.lastName,
-                    email: author.email,
-                }
-                : null
-            : profile
-                ? {
-                    username: profile.username,
-                    displayName: profile.displayName,
-                }
-                : { username: "unknown", displayName: "unknown" };
+        const authorData = row.author
+            ? {
+                id: row.author.id,
+                avatarURL: row.author.avatarURL,
+                forumProfile: row.profile
+                    ? {
+                        username: row.profile.username,
+                        displayName: row.profile.displayName,
+                        bio: row.profile.bio,
+                        reputation: row.profile.reputation,
+                        badges: row.profile.badges,
+                    }
+                    : null,
+            }
+            : {
+                id: "unknown",
+                avatarURL: null,
+                forumProfile: null,
+            };
 
         // Fetch counts from Redis (fallback to DB)
         const likeCountStr = await redisClient.get(`post:${post.id}:likeCount`);
@@ -445,25 +447,6 @@ export const getPostById = async (req: OptionalAuthRequest, res: Response) => {
         }
         const isAdminViewer = [AudienceEnum.Admin, AudienceEnum.CommunityAdmin].includes(viewerRole);
 
-        // Build author object
-        const authorData = isAdminViewer
-            ? author
-                ? {
-                    id: author.id,
-                    avatarURL: author.avatarURL,
-                    role: author.role,
-                    firstName: author.firstName,
-                    lastName: author.lastName,
-                    email: author.email,
-                }
-                : null
-            : profile
-                ? {
-                    username: profile.username,
-                    displayName: profile.displayName,
-                }
-                : { username: "unknown", displayName: "unknown" };
-
         // Fetch counts from Redis (fallback to DB)
         const likeCountStr = await redisClient.get(`post:${post.id}:likeCount`);
         const upvoteCountStr = await redisClient.get(`post:${post.id}:upvoteCount`);
@@ -472,6 +455,26 @@ export const getPostById = async (req: OptionalAuthRequest, res: Response) => {
         const likeCount = likeCountStr ? parseInt(likeCountStr) : post.likeCount;
         const upvoteCount = upvoteCountStr ? parseInt(upvoteCountStr) : post.upvoteCount;
         const downvoteCount = downvoteCountStr ? parseInt(downvoteCountStr) : post.downvoteCount;
+
+        const authorData = row.author
+            ? {
+                id: row.author.id,
+                avatarURL: row.author.avatarURL,
+                forumProfile: row.profile
+                    ? {
+                        username: row.profile.username,
+                        displayName: row.profile.displayName,
+                        bio: row.profile.bio,
+                        reputation: row.profile.reputation,
+                        badges: row.profile.badges,
+                    }
+                    : null,
+            }
+            : {
+                id: "unknown",
+                avatarURL: null,
+                forumProfile: null,
+            };
 
         return res.status(OK).json({
             post: {
@@ -562,7 +565,6 @@ export const updatePost = async (req: Request, res: Response) => {
 
         return res.status(OK).json({
             message: "Post updated successfully.",
-            post: updatedPost,
         });
     } catch (err) {
         console.error("Error updating post:", err);
@@ -757,47 +759,9 @@ export const togglePinPost = async (req: Request, res: Response) => {
 
         return res.status(OK).json({
             message: `Post ${pin ? "pinned" : "unpinned"} successfully.`,
-            post: updatedPost,
         });
     } catch (err) {
         console.error("Error pinning/unpinning post:", err);
         return res.status(INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });
     }
 };
-
-// /**
-//  * @route GET /api/v1/social/posts/:postId/metrics
-//  * @desc Get post metrics
-//  */
-// export const getPostMetrics = async (req: Request, res: Response) => {
-//     const { postId } = req.params;
-//     const userId = req.userId;
-
-//     try {
-//         const post = await Post.findById(postId)
-//             .select("likeCount upvoteCount downvoteCount")
-//             .lean();
-
-//         if (!post) {
-//             return res.status(NOT_FOUND).json({ message: "Post not found" });
-//         }
-
-//         const [hasLiked, vote, commentCount] = await Promise.all([
-//             PostLike.exists({ postId, userId }),
-//             PostVote.findOne({ postId, userId }).lean(),
-//             Comment.countDocuments({ postId, isDeleted: false }), // Only count non-deleted comments
-//         ]);
-
-//         return res.status(OK).json({
-//             likeCount: post.likeCount || 0,
-//             upvoteCount: post.upvoteCount || 0,
-//             downvoteCount: post.downvoteCount || 0,
-//             userVote: vote?.voteType || null,
-//             hasLiked: !!hasLiked,
-//             commentCount,
-//         });
-//     } catch (err) {
-//         console.error("Error fetching post metrics:", err);
-//         return res.status(INTERNAL_SERVER_ERROR).json({ message: "Internal server error" });
-//     }
-// };

@@ -8,14 +8,6 @@ import { forumUserController } from "../../../controllers";
 dotenv.config();
 const forumUserRouter = express.Router();
 
-forumUserRouter.get(
-    "/info",
-    safeLimiter,
-    optionalVerifyToken,
-    forumUserController.getForumFooterInfo
-);
-
-
 forumUserRouter.post(
     "/request",
     strictLimiter,
@@ -32,6 +24,20 @@ forumUserRouter.post(
         AudienceEnum.CommunityAdmin
     ),
     forumUserController.requestForumCreation
+);
+
+forumUserRouter.get(
+    "/:forumId/membership-status",
+    normalLimiter,
+    optionalVerifyToken,
+    forumUserController.getMembershipStatus
+);
+
+forumUserRouter.get(
+    "/info",
+    safeLimiter,
+    optionalVerifyToken,
+    forumUserController.getForumFooterInfo
 );
 
 forumUserRouter.post(
@@ -66,13 +72,6 @@ forumUserRouter.post(
         AudienceEnum.CommunityAdmin
     ),
     forumUserController.leaveForum
-);
-
-forumUserRouter.get(
-    "/:forumId/membership-status",
-    normalLimiter,
-    optionalVerifyToken,
-    forumUserController.getMembershipStatus
 );
 
 export default forumUserRouter;

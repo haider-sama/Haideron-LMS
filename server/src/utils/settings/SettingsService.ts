@@ -34,8 +34,54 @@ export class SettingsService {
         }
 
         // 3. DB fallback
-        const rows = await db.select().from(adminSettings).limit(1);
-        if (!rows[0]) throw new Error("Admin settings not found");
+        let rows = await db.select().from(adminSettings).limit(1);
+
+        if (!rows[0]) {
+            console.warn("Admin settings not found, creating default settings...");
+
+            // Use partial type: database will fill default id/createdAt/updatedAt
+            const defaultSettings = {
+                allowForums: true,
+                allowPosts: true,
+                allowComments: true,
+                allowLikes: true,
+                allowMessages: true,
+                allowUserRegistration: true,
+                maintenanceMode: false,
+                enableEmailNotifications: true,
+                enablePushNotifications: true,
+                maxUploadSizeMB: 50,
+                maxPostsPerDay: 10,
+                createdBy: null,
+                updatedBy: null,
+            };
+
+            // Insert and return the row
+            const inserted = await db
+                .insert(adminSettings)
+                .values(defaultSettings)
+                .returning({
+                    id: adminSettings.id,
+                    allowForums: adminSettings.allowForums,
+                    allowPosts: adminSettings.allowPosts,
+                    allowComments: adminSettings.allowComments,
+                    allowLikes: adminSettings.allowLikes,
+                    allowMessages: adminSettings.allowMessages,
+                    allowUserRegistration: adminSettings.allowUserRegistration,
+                    maintenanceMode: adminSettings.maintenanceMode,
+                    enableEmailNotifications: adminSettings.enableEmailNotifications,
+                    enablePushNotifications: adminSettings.enablePushNotifications,
+                    maxUploadSizeMB: adminSettings.maxUploadSizeMB,
+                    maxPostsPerDay: adminSettings.maxPostsPerDay,
+                    createdBy: adminSettings.createdBy,
+                    updatedBy: adminSettings.updatedBy,
+                    createdAt: adminSettings.createdAt,
+                    updatedAt: adminSettings.updatedAt,
+                });
+
+            rows = inserted;
+
+        }
 
         this.cachedSettings = rows[0];
         this.lastFetch = now;

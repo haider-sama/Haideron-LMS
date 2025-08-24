@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import slugify from "slugify";
 import { AudienceEnum } from "../../../shared/enums";
 import { ForumStatusEnum, ForumTypeEnum } from "../../../shared/social.enums";
-import { CreateForumSchema, ForumQuerySchema, UpdateForumSchema, UpdateForumStatusSchema } from "../../../utils/validators/socialSchemas/forumSchemas";
+import { CreateForumSchema, ForumQuerySchema, UpdateForumStatusSchema } from "../../../utils/validators/socialSchemas/forumSchemas";
 import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../../constants/http";
 import { db } from "../../../db/db";
 import { forumModerators, forumProfiles, forums, posts, users } from "../../../db/schema";
@@ -274,6 +274,33 @@ export const getForums = async (req: OptionalAuthRequest, res: Response) => {
             });
         }
 
+        // Fetch moderators for all forums in one query
+        const moderatorsMap: Record<string, Array<{ id: string; firstName: string; lastName: string; email: string; avatarURL?: string }>> = {};
+        if (forumIds.length > 0) {
+            const modRows = await db.select({
+                forumId: forumModerators.forumId,
+                id: users.id,
+                firstName: users.firstName,
+                lastName: users.lastName,
+                email: users.email,
+                avatarURL: users.avatarURL,
+            })
+                .from(forumModerators)
+                .innerJoin(users, eq(forumModerators.userId, users.id))
+                .where(sql`${forumModerators.forumId} IN (${sql.join(forumIds, sql`,`)})`);
+
+            modRows.forEach(mod => {
+                if (!moderatorsMap[mod.forumId]) moderatorsMap[mod.forumId] = [];
+                moderatorsMap[mod.forumId].push({
+                    id: mod.id,
+                    firstName: mod.firstName ?? "",
+                    lastName: mod.lastName ?? "",
+                    email: mod.email,
+                    avatarURL: mod.avatarURL ?? "",
+                });
+            });
+        }
+
         // Format forums with post counts and user info
         const forumsWithDetails = forumRows.map(f => {
             if (!f.creator) {
@@ -292,6 +319,7 @@ export const getForums = async (req: OptionalAuthRequest, res: Response) => {
                     lastName: isAdmin ? f.creator.lastName : undefined,
                     avatarURL: f.creator.avatarURL,
                 },
+                moderators: moderatorsMap[f.forum.id] || [],
             };
         }).filter(Boolean); // remove any nulls
 
@@ -384,7 +412,7 @@ export const updateForum = async (req: Request, res: Response) => {
         const userId = req.userId;
 
         // Validate request body
-        const parsed = UpdateForumSchema.safeParse(req.body);
+        const parsed = CreateForumSchema.safeParse(req.body);
         if (!parsed.success) {
             return res.status(BAD_REQUEST).json({
                 message: "Validation failed",
@@ -396,8 +424,6 @@ export const updateForum = async (req: Request, res: Response) => {
             title: string;
             description?: string;
             type?: ForumTypeEnum;
-            status?: ForumStatusEnum;
-            isArchived?: boolean;
             slug?: string;
         }>;
 
@@ -463,7 +489,7 @@ export const updateForum = async (req: Request, res: Response) => {
             .where(eq(forums.id, forumId))
             .returning();
 
-        return res.status(OK).json(updatedForum);
+        return res.status(OK).json({ message: "Forum updated successfully." });
 
     } catch (err) {
         console.error("Error updating forum:", err);
@@ -769,7 +795,7 @@ export const uploadForumIcon = async (req: Request, res: Response) => {
 
         return res
             .status(OK)
-            .json({ message: "Icon uploaded successfully", iconUrl, forum: updatedForum });
+            .json({ message: "Icon uploaded successfully" });
     } catch (err) {
         console.error("Error uploading forum icon:", err);
         return res
@@ -952,8 +978,6 @@ export const assignModerator = async (req: Request, res: Response) => {
 
         return res.status(OK).json({
             message: "Moderator assigned successfully",
-            moderatorId: userId,
-            forumId,
         });
     } catch (err) {
         console.error("Assign moderator error:", err);
@@ -1068,8 +1092,6 @@ export const removeModerator = async (req: Request, res: Response) => {
 
         return res.status(OK).json({
             message: "Moderator removed successfully",
-            moderatorId: userId,
-            forumId,
         });
     } catch (err) {
         console.error("Remove moderator error:", err);

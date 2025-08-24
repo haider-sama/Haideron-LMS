@@ -19,13 +19,6 @@ export const ForumQuerySchema = z.object({
     createdBy: z.string().optional(),
 });
 
-export const UpdateForumSchema = z.object({
-    title: z.string().min(3).optional(),
-    description: z.string().optional(),
-    iconUrl: z.string().url().optional(),
-    type: z.nativeEnum(ForumTypeEnum).optional(),
-});
-
 export const UpdateForumStatusSchema = z.object({
     status: z.nativeEnum(ForumStatusEnum, {
         errorMap: () => ({ message: "Invalid forum status" }),

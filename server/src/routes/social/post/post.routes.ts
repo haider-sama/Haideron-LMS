@@ -9,7 +9,7 @@ dotenv.config();
 const postRouter = express.Router();
 
 postRouter.post(
-    "/",
+    "/create",
     normalLimiter,
     verifyToken,
     authorizeRoles(

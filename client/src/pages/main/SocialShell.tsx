@@ -1,7 +1,6 @@
 import { Outlet } from "react-router-dom";
-import SocialHeader from "../../components/pages/social/pages/main/header/SocialHeader";
-import { ForumFooter } from "../../components/pages/social/pages/main/ForumFooter";
-
+import SocialHeader from "../../components/social/pages/main/SocialHeader";
+import { ForumFooter } from "../../components/social/pages/main/ForumFooter";
 
 export const SocialShell = () => {
     return (

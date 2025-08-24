@@ -8,17 +8,20 @@ import { forumController } from "../../../controllers";
 dotenv.config();
 const forumRouter = express.Router();
 
-forumRouter.route("/")
-    .post(
-        normalLimiter,
-        verifyToken,
-        authorizeRoles(AudienceEnum.Admin, AudienceEnum.CommunityAdmin),
-        forumController.createForum
-    ).get(
-        safeLimiter,
-        optionalVerifyToken,
-        forumController.getForums
-    );
+forumRouter.post(
+    "/create",
+    normalLimiter,
+    verifyToken,
+    authorizeRoles(AudienceEnum.Admin, AudienceEnum.CommunityAdmin),
+    forumController.createForum
+);
+
+forumRouter.get(
+    "/",
+    safeLimiter,
+    optionalVerifyToken,
+    forumController.getForums
+);
 
 forumRouter.get(
     "/:slug",

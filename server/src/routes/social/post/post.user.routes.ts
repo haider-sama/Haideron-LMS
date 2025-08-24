@@ -43,7 +43,7 @@ postUserRouter.delete(
 );
 
 postUserRouter.post(
-    "/:postId/vote",
+    "/:postId/upvote",
     normalLimiter,
     verifyToken,
     authorizeRoles(
@@ -59,7 +59,7 @@ postUserRouter.post(
 );
 
 postUserRouter.post(
-    "/:postId/vote",
+    "/:postId/downvote",
     normalLimiter,
     verifyToken,
     authorizeRoles(
@@ -74,10 +74,10 @@ postUserRouter.post(
     postUserController.downvotePost
 );
 
-// postUserRouter.get(
-//     "/:postId/metrics",
-//     optionalVerifyToken,
-//     postUserController.getPostMetrics
-// );
+postUserRouter.get(
+    "/:postId/metrics",
+    optionalVerifyToken,
+    postUserController.getPostMetrics
+);
 
 export default postUserRouter;

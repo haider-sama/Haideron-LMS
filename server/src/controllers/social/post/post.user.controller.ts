@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../../constants/http";
 import { db } from "../../../db/db";
-import { posts } from "../../../db/schema";
-import { eq } from "drizzle-orm";
+import { comments, postLikes, posts, postVotes } from "../../../db/schema";
+import { and, count, eq } from "drizzle-orm";
 import { redisClient } from "../../../lib/redis";
 
 // Helper keys
@@ -174,5 +174,95 @@ export const downvotePost = async (req: Request, res: Response) => {
     } catch (err) {
         console.error("Error downvoting post:", err);
         return res.status(INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });
+    }
+};
+
+export const getPostMetrics = async (req: Request, res: Response) => {
+    const { postId } = req.params;
+    const userId = req.userId;
+
+    try {
+        // Ensure post exists
+        const postRow = await db
+            .select({ id: posts.id })
+            .from(posts)
+            .where(eq(posts.id, postId))
+            .limit(1)
+            .then(r => r[0]);
+
+        if (!postRow) {
+            return res.status(NOT_FOUND).json({ message: "Post not found" });
+        }
+
+        // Redis keys
+        const { setKey: likeSetKey, countKey: likeCountKey } = getRedisLikeKeys(postId);
+        const { upvoteSetKey, downvoteSetKey, upvoteCountKey, downvoteCountKey } = getRedisVoteKeys(postId);
+
+        // Fetch from Redis first
+        const [likeCountStr, upvoteCountStr, downvoteCountStr, hasLiked, upvoted, downvoted] = await Promise.all([
+            redisClient.get(likeCountKey),
+            redisClient.get(upvoteCountKey),
+            redisClient.get(downvoteCountKey),
+            redisClient.sIsMember(likeSetKey, userId),
+            redisClient.sIsMember(upvoteSetKey, userId),
+            redisClient.sIsMember(downvoteSetKey, userId),
+        ]);
+
+        let likeCount = likeCountStr ? parseInt(likeCountStr) : null;
+        let upvoteCount = upvoteCountStr ? parseInt(upvoteCountStr) : null;
+        let downvoteCount = downvoteCountStr ? parseInt(downvoteCountStr) : null;
+
+        // Fallback to DB if Redis misses
+        if (likeCount === null) {
+            const [{ count: dbLikeCount }] = await db
+                .select({ count: count() })
+                .from(postLikes)
+                .where(eq(postLikes.postId, postId));
+            likeCount = Number(dbLikeCount);
+            await redisClient.set(likeCountKey, likeCount); // hydrate cache
+        }
+
+        if (upvoteCount === null) {
+            const [{ count: dbUpvoteCount }] = await db
+                .select({ count: count() })
+                .from(postVotes)
+                .where(and(eq(postVotes.postId, postId), eq(postVotes.voteType, "UPVOTE")));
+            upvoteCount = Number(dbUpvoteCount);
+            await redisClient.set(upvoteCountKey, upvoteCount);
+        }
+
+        if (downvoteCount === null) {
+            const [{ count: dbDownvoteCount }] = await db
+                .select({ count: count() })
+                .from(postVotes)
+                .where(and(eq(postVotes.postId, postId), eq(postVotes.voteType, "DOWNVOTE")));
+            downvoteCount = Number(dbDownvoteCount);
+            await redisClient.set(downvoteCountKey, downvoteCount);
+        }
+
+        // Comment count (always DB since it changes often & filtered by deleted flag)
+        const [{ count: dbCommentCount }] = await db
+            .select({ count: count() })
+            .from(comments)
+            .where(and(eq(comments.postId, postId), eq(comments.isDeleted, false)));
+
+        const commentCount = Number(dbCommentCount);
+
+        // User vote status
+        let userVote: "UPVOTE" | "DOWNVOTE" | null = null;
+        if (upvoted) userVote = "UPVOTE";
+        else if (downvoted) userVote = "DOWNVOTE";
+
+        return res.status(OK).json({
+            likeCount,
+            upvoteCount,
+            downvoteCount,
+            commentCount,
+            hasLiked: !!hasLiked,
+            userVote,
+        });
+    } catch (err) {
+        console.error("Error fetching post metrics:", err);
+        return res.status(INTERNAL_SERVER_ERROR).json({ message: "Internal server error" });
     }
 };
