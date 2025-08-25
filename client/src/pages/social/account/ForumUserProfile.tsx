@@ -15,11 +15,17 @@ import { VisibilityEnum } from '../../../../../server/src/shared/social.enums';
 import { ForumProfile } from '../../../../../server/src/shared/interfaces';
 import { UpdateUserPayload } from '../../../constants/core/interfaces';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSettings } from '../../../hooks/admin/useSettings';
+import FeatureDisabledPage from '../../forbidden/FeatureDisabledPage';
+import TopCenterLoader from '../../../components/ui/TopCenterLoader';
 
 const ForumUserProfile: React.FC = () => {
     const { user } = usePermissions();
     const toast = useToast();
     const queryClient = useQueryClient();
+
+    const { publicSettings, isLoading: isSettingsLoading } = useSettings(); // user-mode public settings
+    const isForumsEnabled = publicSettings?.allowForums ?? false;
 
     const [forumProfile, setForumProfile] = useState<Partial<ForumProfile>>({
         username: "",
@@ -29,7 +35,7 @@ const ForumUserProfile: React.FC = () => {
         interests: [],
         visibility: VisibilityEnum.public,
     });
-    
+
     const [_, setInterestsInput] = useState(""); // comma-separated input
 
     // Initialize form state
@@ -47,6 +53,18 @@ const ForumUserProfile: React.FC = () => {
             setInterestsInput(interests?.join(", ") || "");
         }
     }, [user]);
+
+    if (isSettingsLoading) {
+        return <TopCenterLoader />;
+    }
+
+    if (!isForumsEnabled) {
+        return <FeatureDisabledPage
+            heading="Forums Disabled"
+            message="The forums feature has been disabled by the administrators. Please contact them for more information."
+            homeUrl="/"
+        />;
+    }
 
     if (!user) {
         return (

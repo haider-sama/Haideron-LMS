@@ -1,6 +1,6 @@
 import { OAuth2Client } from 'google-auth-library';
 import { Response, Request } from 'express';
-import { BAD_REQUEST, INTERNAL_SERVER_ERROR, OK } from '../../constants/http';
+import { BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, OK } from '../../constants/http';
 import generateToken from '../../utils/token-utils/generateToken';
 import crypto from 'crypto';
 import { GOOGLE_CLIENT_ID } from '../../constants/env';
@@ -9,6 +9,7 @@ import { users } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 import { hashValue } from '../../utils/bcrypt';
 import { AudienceEnum } from '../../shared/enums';
+import { SettingsService } from '../../utils/settings/SettingsService';
 
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -38,6 +39,10 @@ export const loginWithGoogle = async (req: Request, res: Response) => {
         let user = userResult[0];
 
         if (!user) {
+            if (!(await SettingsService.isUserRegistrationAllowed())) {
+                return res.status(FORBIDDEN).json({ message: "Registration is disabled by admin." });
+            }
+
             // Generate a random password
             const randomPassword = crypto.randomBytes(16).toString('hex');
             const hashedPassword = await hashValue(randomPassword);

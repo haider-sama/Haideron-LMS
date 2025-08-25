@@ -8,25 +8,20 @@ import { GLOBAL_TITLE } from "../../../../constants";
 import SearchBar from "../../../ui/SearchBar";
 import SocialBreadcrumbs from "../../ui/SocialBreadcrumbs";
 
-
 const SocialHeader: React.FC = () => {
     const { user, isLoggedIn, handleLogout } = useAuth();
 
     return (
         <div className="bg-gray-50 text-white shadow-md">
             <div className="border-b border-gray-200">
-                <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="text-xl font-semibold tracking-wide flex items-center text-primary antialiased">
-                        <span className="drop-shadow-sm">{GLOBAL_TITLE}</span>
-                        <ReleaseBadge />
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <SearchBar
-                            value={""}
-                            onSearch={(query: string) => {
-                                console.log('Search:', query);
-                            }}
-                        />
+                <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-col gap-2 md:gap-0">
+
+                    <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-2 text-xl font-semibold tracking-wide text-primary antialiased">
+                            <span className="drop-shadow-sm">{GLOBAL_TITLE}</span>
+                            <ReleaseBadge />
+                        </div>
+
                         <div className="flex items-center gap-4">
                             {isLoggedIn && user ? (
                                 <ForumUserDropdown
@@ -34,10 +29,10 @@ const SocialHeader: React.FC = () => {
                                         user.forumProfile?.username ??
                                         user.forumProfile?.displayName ??
                                         user.firstName ??
-                                        "Unknown User" // final fallback
+                                        "Unknown User"
                                     }
                                     email={user.email ?? ""}
-                                    avatarUrl={user?.avatarURL ?? undefined}  // normalize null -> undefined
+                                    avatarUrl={user?.avatarURL ?? undefined}
                                     onLogout={handleLogout}
                                 />
                             ) : (
@@ -59,6 +54,15 @@ const SocialHeader: React.FC = () => {
                                 </>
                             )}
                         </div>
+                    </div>
+
+                    <div className="mt-2 w-full">
+                        <SearchBar
+                            value=""
+                            onSearch={(query: string) => {
+                                console.log("Search:", query);
+                            }}
+                        />
                     </div>
                 </div>
             </div>

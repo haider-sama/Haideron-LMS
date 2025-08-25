@@ -1,5 +1,6 @@
 import { User } from "../../../../server/src/shared/interfaces";
 import { API_BASE_URL } from "../../constants";
+import { AdminSettings, PublicSettings } from "../../constants/admin/interfaces";
 import { BulkRegisterError, BulkRegisterResult, FetchUsersFilters, PublicUser } from "../../constants/core/interfaces";
 import { BulkUser, PaginatedUserResponse } from "../../constants/core/interfaces";
 
@@ -189,4 +190,70 @@ export const fetchUserProfileById = async (userId: string): Promise<PublicUser> 
     } catch (error) {
         throw error; // Re-throw the error after logging it
     }
+};
+
+export const fetchPublicSettingsFrontend = async (): Promise<PublicSettings> => {
+    const res = await fetch(`${LOCAL_BASE_URL}/settings/public`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        const error = new Error(data.message || 'Failed to fetch public settings');
+        (error as any).response = res;
+        (error as any).body = data;
+        throw error;
+    }
+
+    return data.data as PublicSettings;
+};
+
+export const fetchAdminSettingsFrontend = async (): Promise<AdminSettings> => {
+    const res = await fetch(`${LOCAL_BASE_URL}/settings`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        const error = new Error(data.message || 'Failed to fetch admin settings');
+        (error as any).response = res;
+        (error as any).body = data;
+        throw error;
+    }
+
+    return data.data as AdminSettings;
+};
+
+export const updateAdminSettings = async (
+    updatedFields: Partial<AdminSettings>
+): Promise<AdminSettings> => {
+    const res = await fetch(`${LOCAL_BASE_URL}/settings`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedFields),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        const error = new Error(data.message || 'Failed to update admin settings');
+        (error as any).response = res;
+        (error as any).body = data;
+        throw error;
+    }
+
+    return data.data as AdminSettings;
 };

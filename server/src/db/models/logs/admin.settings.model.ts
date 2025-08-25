@@ -16,6 +16,7 @@ export const adminSettings = pgTable(
 
         // Platform-level toggles
         allowUserRegistration: boolean("allow_user_registration").default(true).notNull(),
+        allowEmailMigration: boolean("allow_email_migration").default(true).notNull(),
         maintenanceMode: boolean("maintenance_mode").default(false).notNull(),
         enableEmailNotifications: boolean("enable_email_notifications").default(true).notNull(),
         enablePushNotifications: boolean("enable_push_notifications").default(true).notNull(),

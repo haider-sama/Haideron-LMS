@@ -220,6 +220,10 @@ export const getForumFooterInfo = async (req: Request, res: Response) => {
 };
 
 export const joinForum = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isForumsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Forums are disabled by admin" });
+    }
+
     const userId = req.userId;
     const { forumId } = req.params;
 
@@ -281,6 +285,10 @@ export const joinForum = async (req: Request, res: Response) => {
 };
 
 export const leaveForum = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isForumsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Forums are disabled by admin" });
+    }
+
     const userId = req.userId;
     const { forumId } = req.params;
 

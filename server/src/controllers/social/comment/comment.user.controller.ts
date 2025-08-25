@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED } from "../../../constants/http";
 import { redisClient } from "../../../lib/redis";
+import { SettingsService } from "../../../utils/settings/SettingsService";
 
 export const getRedisCommentKeys = (commentId: string) => ({
     setKey: `comment:${commentId}:likes`,
@@ -8,6 +9,10 @@ export const getRedisCommentKeys = (commentId: string) => ({
 });
 
 export const likeComment = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isLikesEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Likes are disabled by admin" });
+    }
+
     const { commentId } = req.params;
     const userId = req.userId;
 
@@ -49,6 +54,10 @@ export const likeComment = async (req: Request, res: Response) => {
 };
 
 export const unlikeComment = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isLikesEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Likes are disabled by admin" });
+    }
+
     const { commentId } = req.params;
     const userId = req.userId;
 

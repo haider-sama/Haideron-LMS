@@ -9,31 +9,42 @@ export const ForumFooter: React.FC = () => {
     const location = useLocation();
     const pathname = location.pathname;
 
-    // Match routes
     const isMainPage = pathname === "/forums";
     const isForumView = matchPath("/forums/:slug", pathname);
     const isPostView = matchPath("/forums/:forumSlug/:postSlug", pathname);
 
     const shouldShowForumFooter = isForumView || isPostView;
-
     const shouldShowMainContent = isMainPage;
     const shouldShowForumContent = shouldShowForumFooter;
 
     const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
-    
-    const { data, isLoading, isError } = useQuery({
+
+    // Always fetch forum footer info (or fallback to empty/default values)
+    const { data} = useQuery({
         queryKey: ["forumFooterInfo"],
         queryFn: getForumFooterInfo,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        gcTime: 10 * 60 * 1000,   // replaces cacheTime
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
         retry: false,
         refetchOnWindowFocus: false,
-        enabled: isOnline,        // disables fetching when offline
+        enabled: isOnline,
+        initialData: {
+            online: { total: 0, registered: 0, hidden: 0, guests: 0 },
+            registeredUsernames: [],
+            statistics: { totalPosts: 0, totalTopics: 0, totalMembers: 0, newestMember: "N/A" },
+        },
     });
+
+    const footerData = data || {
+        online: { total: 0, registered: 0, hidden: 0, guests: 0 },
+        registeredUsernames: [],
+        statistics: { totalPosts: 0, totalTopics: 0, totalMembers: 0, newestMember: "N/A" },
+    };
+
 
     return (
         <div className="bg-gray-100 border-t border-gray-300 text-sm text-gray-700 p-4 space-y-4">
-            {(shouldShowMainContent || shouldShowForumContent) && !isLoading && !isError && data && (
+            {(shouldShowMainContent || shouldShowForumContent) && (
                 <>
                     {shouldShowMainContent && (
                         <>
@@ -42,14 +53,16 @@ export const ForumFooter: React.FC = () => {
                                     <FaUsers /> Who is online
                                 </h4>
                                 <p>
-                                    In total there are <strong>{data.online.total}</strong> users online ::
-                                    <strong> {data.online.registered}</strong> registered,{" "}
-                                    <strong>{data.online.hidden}</strong> hidden and{" "}
-                                    <strong>{data.online.guests}</strong> guests
+                                    In total there are <strong>{footerData.online.total}</strong> users online ::
+                                    <strong> {footerData.online.registered}</strong> registered,{" "}
+                                    <strong>{footerData.online.hidden}</strong> hidden and{" "}
+                                    <strong>{footerData.online.guests}</strong> guests
                                 </p>
                                 <p>
                                     Registered users:{" "}
-                                    {data.registeredUsernames.length > 0 ? data.registeredUsernames.join(", ") : "None"}
+                                    {footerData.registeredUsernames.length > 0
+                                        ? footerData.registeredUsernames.join(", ")
+                                        : "None"}
                                 </p>
                             </div>
 
@@ -58,11 +71,11 @@ export const ForumFooter: React.FC = () => {
                                     <FaChartBar /> Statistics
                                 </h4>
                                 <p>
-                                    Total posts <strong>{data.statistics.totalPosts.toLocaleString()}</strong> • Total topics{" "}
-                                    <strong>{data.statistics.totalTopics.toLocaleString()}</strong> • Total members{" "}
-                                    <strong>{data.statistics.totalMembers.toLocaleString()}</strong>
+                                    Total posts <strong>{footerData.statistics.totalPosts.toLocaleString()}</strong> •
+                                    Total topics <strong>{footerData.statistics.totalTopics.toLocaleString()}</strong> •
+                                    Total members <strong>{footerData.statistics.totalMembers.toLocaleString()}</strong>
                                     <br />
-                                    Our newest member <strong>{data.statistics.newestMember}</strong>
+                                    Our newest member <strong>{footerData.statistics.newestMember}</strong>
                                 </p>
                             </div>
                         </>
@@ -76,10 +89,10 @@ export const ForumFooter: React.FC = () => {
                             <p>
                                 Users browsing this forum:{" "}
                                 <em>
-                                    {data.online.registered === 0
+                                    {footerData.online.registered === 0
                                         ? "No registered users"
-                                        : `${data.online.registered} registered user(s)`}{" "}
-                                    and {data.online.guests} guest(s)
+                                        : `${footerData.online.registered} registered user(s)`}{" "}
+                                    and {footerData.online.guests} guest(s)
                                 </em>
                             </p>
                         </div>

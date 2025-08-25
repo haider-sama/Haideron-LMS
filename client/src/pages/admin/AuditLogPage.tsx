@@ -81,7 +81,6 @@ const AuditLogPage: React.FC = () => {
             {!isError && (
                 <div className="mt-4 overflow-x-auto border rounded-sm border-gray-300 bg-white dark:bg-darkSurface dark:border-darkBorderLight">
                     <table className="min-w-full text-sm text-left">
-
                         <thead className="bg-gray-100 text-gray-700 uppercase text-xs tracking-wide dark:bg-darkMuted dark:text-darkTextSecondary">
                             <tr className="border-b border-gray-300 dark:border-darkBorderLight">
                                 <th className="px-4 py-2">Actor</th>
@@ -94,22 +93,15 @@ const AuditLogPage: React.FC = () => {
                         </thead>
                         <tbody>
                             {isLoading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-4 py-6">
+                                <tr><td colSpan={6} className="px-4 py-6">
                                         <div className="flex flex-col items-center justify-center w-full h-full gap-2">
                                             <TopCenterLoader />
                                             <span className="text-gray-600 dark:text-darkTextMuted text-sm">
                                                 Loading logs...
                                             </span>
                                         </div>
-                                    </td>
-                                </tr>
-                            ) : logs.length > 0 ? (
-                                logs.map((log) => (
-                                    <tr
-                                        key={log.id}
-                                        className="border-b last:border-b-0 hover:bg-gray-50 dark:border-darkBorderLight dark:hover:bg-darkMuted transition"
-                                    >
+                                    </td></tr>) : logs.length > 0 ? ( logs.map((log) => (
+                                    <tr key={log.id} className="border-b last:border-b-0 hover:bg-gray-50 dark:border-darkBorderLight dark:hover:bg-darkMuted transition">
                                         <td className="px-4 py-2 font-medium text-gray-800 dark:text-darkTextPrimary">
                                             {truncateName(log.actorId)}
                                         </td>

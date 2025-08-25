@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
-import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED } from "../../../constants/http";
+import { CONFLICT, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED } from "../../../constants/http";
 import { db } from "../../../db/db";
 import { comments, postLikes, posts, postVotes } from "../../../db/schema";
 import { and, count, eq } from "drizzle-orm";
 import { redisClient } from "../../../lib/redis";
 import { publishLikeEvent } from "../../../lib/rabbitMQ";
+import { SettingsService } from "../../../utils/settings/SettingsService";
 
 // Helper keys
 export const getRedisLikeKeys = (postId: string) => ({
@@ -13,6 +14,10 @@ export const getRedisLikeKeys = (postId: string) => ({
 });
 
 export const likePost = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isLikesEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Likes are disabled by admin" });
+    }
+
     const { postId } = req.params;
     const userId = req.userId;
 
@@ -52,6 +57,10 @@ export const likePost = async (req: Request, res: Response) => {
 };
 
 export const unlikePost = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isLikesEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Likes are disabled by admin" });
+    }
+
     const { postId } = req.params;
     const userId = req.userId;
 
@@ -99,6 +108,10 @@ export const getRedisVoteKeys = (postId: string) => ({
 });
 
 export const upvotePost = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isLikesEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Likes are disabled by admin" });
+    }
+
     const { postId } = req.params;
     const userId = req.userId;
 
@@ -156,6 +169,10 @@ export const upvotePost = async (req: Request, res: Response) => {
 };
 
 export const downvotePost = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isLikesEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Likes are disabled by admin" });
+    }
+
     const { postId } = req.params;
     const userId = req.userId;
 
@@ -213,6 +230,10 @@ export const downvotePost = async (req: Request, res: Response) => {
 };
 
 export const getPostMetrics = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isPostsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Posts are disabled by admin" });
+    }
+
     const { postId } = req.params;
     const userId = req.userId;
 

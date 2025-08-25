@@ -17,7 +17,6 @@ import Unauthorized from "../pages/forbidden/Unauthorized";
 import InternalError from "../pages/forbidden/InternalError";
 import { AudienceEnum } from "../../../server/src/shared/enums";
 import HomePage from "../pages/main/HomePage";
-import { ALLOW_EMAIL_MIGRATION, ALLOW_PUBLIC_REGISTRATION } from "../constants";
 import RequestEmailChange from "../pages/auth/verification/RequestEmailChange";
 import EmailChangeVerification from "../pages/auth/verification/EmailChangeVerification";
 import FacultyManagement from "../pages/core/FacultyManagement";
@@ -39,6 +38,8 @@ import ForumDetailPage from "../pages/social/forum/ForumDetailPage";
 import PostPage from "../pages/social/post/PostPage";
 import ForumUserProfile from "../pages/social/account/ForumUserProfile";
 import UserForumProfile from "../pages/social/account/UserForumProfile";
+import AdminSettingsPanel from "../pages/admin/AdminSettingsPanel";
+import { useSettings } from "../hooks/admin/useSettings";
 
 interface AppRoutesProps {
     isLoggedIn: boolean;
@@ -46,6 +47,8 @@ interface AppRoutesProps {
 };
 
 const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
+    const { publicSettings } = useSettings(); // fetch public settings (user mode)
+
     return (
         <Routes>
 
@@ -59,7 +62,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                 }
             />
 
-            {ALLOW_PUBLIC_REGISTRATION === true && (
+            {(publicSettings?.allowUserRegistration ?? false) && (
                 <Route
                     path="/register"
                     element={
@@ -81,7 +84,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                 }
             />
 
-            {ALLOW_EMAIL_MIGRATION && (
+            {(publicSettings?.allowEmailMigration ?? false) && (
                 <Route
                     path="/request-email-change"
                     element={
@@ -94,7 +97,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                 />
             )}
 
-            {ALLOW_EMAIL_MIGRATION && (
+            {(publicSettings?.allowEmailMigration ?? false) && (
                 <Route path="/verify-email-change" element={<EmailChangeVerification />} />
             )}
 
@@ -133,6 +136,15 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                             isAllowed={isLoggedIn && role === AudienceEnum.Admin}
                             redirectTo="/forbidden"
                             element={<AuditLogPage />}
+                        />
+                    }
+                />
+                <Route path="/admin/settings"
+                    element={
+                        <ProtectedRoute
+                            isAllowed={isLoggedIn && role === AudienceEnum.Admin}
+                            redirectTo="/forbidden"
+                            element={<AdminSettingsPanel />}
                         />
                     }
                 />

@@ -60,11 +60,19 @@ adminRouter.route("/settings")
         verifyToken,
         authorizeRoles(AudienceEnum.Admin),
         adminSettingsController.fetchAdminSettings
-    ).patch(
+    ).put(
         normalLimiter,
         verifyToken,
         authorizeRoles(AudienceEnum.Admin),
         adminSettingsController.updateAdminSettings
     );
+
+adminRouter.get(
+    "/settings/public",
+    normalLimiter,
+    verifyToken,
+    authorizeRoles(AudienceEnum.Admin),
+    adminSettingsController.fetchAdminSettings
+);
 
 export default adminRouter;

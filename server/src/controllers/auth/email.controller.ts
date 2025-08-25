@@ -10,12 +10,12 @@ import { VerificationCodeType } from "../../shared/enums";
 import { fifteenMinutesFromNow } from "../../utils/date";
 import { BAD_REQUEST, CONFLICT, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../constants/http";
 import { emailOnlySchema, verifyEmailSchema } from "../../utils/validators/lms-schemas/authSchemas";
-import { ALLOW_EMAIL_MIGRATION } from "../../constants/env";
 import { db } from "../../db/db";
 import { users } from "../../db/schema";
 import { verificationCodes } from "../../db/models/auth/verificationCode.model";
 import { userSessions } from "../../db/models/auth/userSession.model";
 import { and, eq, gt } from "drizzle-orm";
+import { SettingsService } from "../../utils/settings/SettingsService";
 
 dotenv.config();
 
@@ -200,8 +200,8 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
 };
 
 export const requestEmailChange = async (req: Request, res: Response) => {
-    if (ALLOW_EMAIL_MIGRATION !== "true") {
-        return res.status(FORBIDDEN).json({ message: "Email migration is currently disabled." });
+    if (!(await SettingsService.isEmailMigrationAllowed())) {
+        return res.status(FORBIDDEN).json({ message: "Email Migration is disabled by admin" });
     }
 
     const parsed = emailOnlySchema.safeParse(req.body);
@@ -271,8 +271,8 @@ export const requestEmailChange = async (req: Request, res: Response) => {
 };
 
 export const verifyEmailChange = async (req: Request, res: Response) => {
-    if (ALLOW_EMAIL_MIGRATION !== "true") {
-        return res.status(FORBIDDEN).json({ message: "Email migration is currently disabled." });
+    if (!(await SettingsService.isEmailMigrationAllowed())) {
+        return res.status(FORBIDDEN).json({ message: "Email Migration is disabled by admin" });
     }
 
     const parsed = verifyEmailSchema.safeParse(req.body);

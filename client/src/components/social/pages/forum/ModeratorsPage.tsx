@@ -1,6 +1,9 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
 import { ForumModerator } from "../../../../constants/social/interfaces";
+import { useSettings } from "../../../../hooks/admin/useSettings";
+import TopCenterLoader from "../../../ui/TopCenterLoader";
+import FeatureDisabledPage from "../../../../pages/forbidden/FeatureDisabledPage";
 
 const ModeratorsPage: React.FC = () => {
     const location = useLocation();
@@ -10,6 +13,21 @@ const ModeratorsPage: React.FC = () => {
     }) || {};
 
     const otherModerators = moderators;
+
+    const { publicSettings, isLoading: isSettingsLoading } = useSettings(); // user-mode public settings
+    const isForumsEnabled = publicSettings?.allowForums ?? false;
+
+    if (isSettingsLoading) {
+        return <TopCenterLoader />;
+    }
+
+    if (!isForumsEnabled) {
+        return <FeatureDisabledPage
+            heading="Forums Disabled"
+            message="The forums feature has been disabled by the administrators. Please contact them for more information."
+            homeUrl="/"
+        />;
+    }
 
     return (
         <div className="max-w-6xl mx-auto py-8 px-4">

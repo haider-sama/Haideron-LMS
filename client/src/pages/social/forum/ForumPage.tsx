@@ -18,6 +18,8 @@ import ForumContainer from "../../../components/social/pages/forum/ForumContaine
 import { Pagination } from "../../../components/ui/Pagination";
 import Modal from "../../../components/ui/Modal";
 import RequestForumCreation from "../../../components/social/pages/forum/RequestFormCreation";
+import FeatureDisabledPage from "../../forbidden/FeatureDisabledPage";
+import { useSettings } from "../../../hooks/admin/useSettings";
 
 
 const ForumPage: React.FC = () => {
@@ -33,6 +35,9 @@ const ForumPage: React.FC = () => {
     const [showArchived, setShowArchived] = useState(false);
 
     const navigate = useNavigate();
+
+    const { publicSettings, isLoading: isSettingsLoading } = useSettings(); // user-mode public settings
+    const isForumsEnabled = publicSettings?.allowForums ?? false;
 
     // --- Main forums query ---
     const { data, isLoading, isError, error, isFetching } = useQuery({
@@ -57,6 +62,7 @@ const ForumPage: React.FC = () => {
                 createdBy: showMyForums ? user?.id : undefined,
             }),
         staleTime: 1000 * 60,
+        enabled: isForumsEnabled,
     });
 
     // Trigger toast in useEffect, not in queryFn
@@ -73,12 +79,13 @@ const ForumPage: React.FC = () => {
         queries: forumIds.map(forumId => ({
             queryKey: ["forum-posts", forumId],
             queryFn: () =>
-                filterPostsByForumId(forumId, { 
-                    limit: 1, 
-                    lastPostCreatedAt: new Date().toISOString()  
+                filterPostsByForumId(forumId, {
+                    limit: 1,
+                    lastPostCreatedAt: new Date().toISOString()
                 }),
             staleTime: 1000 * 60,
             retry: 2,
+            enabled: isForumsEnabled,
         })),
     });
 
@@ -104,6 +111,18 @@ const ForumPage: React.FC = () => {
     useEffect(() => {
         setPage(1);
     }, [type, status, searchQuery, showArchived]);
+
+    if (isSettingsLoading) {
+        return <TopCenterLoader />;
+    }
+
+    if (!isForumsEnabled) {
+        return <FeatureDisabledPage
+            heading="Forums Disabled"
+            message="The forums feature has been disabled by the administrators. Please contact them for more information."
+            homeUrl="/"
+        />;
+    }
 
     return (
         <div className="bg-gray-50 min-h-screen py-8 px-4">

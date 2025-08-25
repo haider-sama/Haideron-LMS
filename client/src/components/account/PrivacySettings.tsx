@@ -3,8 +3,8 @@ import { useToast } from "../../context/ToastContext";
 import { setTheme } from "../../store/themeSlice";
 import { RootState } from "../../store/authStore";
 import { Link } from "react-router-dom";
-import { ALLOW_EMAIL_MIGRATION } from "../../constants";
 import { Button } from "../ui/Button";
+import { useSettings } from "../../hooks/admin/useSettings";
 
 type PrivacySettingsProps = {
     onClose?: () => void; // Optional prop
@@ -14,6 +14,8 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({ onClose }) => {
     const dispatch = useDispatch();
     const toast = useToast();
     const theme = useSelector((state: RootState) => state.theme.mode);
+
+    const { publicSettings } = useSettings(); // fetch public settings (user mode)
 
     const handleThemeToggle = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newTheme = e.target.value as "light" | "dark";
@@ -56,7 +58,6 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({ onClose }) => {
                 </select>
             </div>
 
-            {/* Migrate Email Setting */}
             <div className="bg-gray-50 dark:bg-darkMuted border border-gray-200 dark:border-darkBorderLight rounded-xl p-6 shadow-sm flex items-center justify-between">
                 <div>
                     <h3 className="text-md font-semibold text-gray-800 dark:text-darkTextPrimary">
@@ -67,9 +68,9 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({ onClose }) => {
                     </p>
                 </div>
 
-                {ALLOW_EMAIL_MIGRATION ? (
+                {publicSettings?.allowEmailMigration ? (
                     <Link to="/request-email-change" onClick={onClose}>
-                        <Button size='md' fullWidth={false} variant="blue">
+                        <Button size="sm" fullWidth={false} variant="green">
                             Migrate Email Now
                         </Button>
                     </Link>

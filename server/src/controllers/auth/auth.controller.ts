@@ -12,7 +12,6 @@ import { clearAuthCookies } from "../../utils/token-utils/cookies";
 import { loginSchema, registerSchema } from "../../utils/validators/lms-schemas/authSchemas";
 import { ZodError } from "zod";
 import * as UAParser from "ua-parser-js";
-import { ALLOW_PUBLIC_REGISTRATION } from "../../constants/env";
 import { db } from "../../db/db";
 import { TeacherInfoWithQualifications } from "../../shared/interfaces";
 import { VisibilityEnum } from "../../shared/social.enums";
@@ -21,6 +20,7 @@ import { compareValue, hashValue } from "../../utils/bcrypt";
 import { verificationCodes } from "../../db/models/auth/verificationCode.model";
 import { userSessions } from "../../db/models/auth/userSession.model";
 import { and, eq, sql } from "drizzle-orm";
+import { SettingsService } from "../../utils/settings/SettingsService";
 
 dotenv.config();
 
@@ -112,13 +112,13 @@ export async function validateToken(req: Request, res: Response) {
 }
 
 export async function register(req: Request, res: Response) {
+    if (!(await SettingsService.isUserRegistrationAllowed())) {
+        return res.status(FORBIDDEN).json({ message: "Registration is disabled by admin" });
+    }
+
     try {
         const parsed = registerSchema.parse(req.body);
         const { email, password } = parsed;
-
-        if (!ALLOW_PUBLIC_REGISTRATION) {
-            return res.status(FORBIDDEN).json({ message: "Public registration is disabled by the administrator." });
-        }
 
         // Check if user exists
         const userExists = await db.query.users.findFirst({

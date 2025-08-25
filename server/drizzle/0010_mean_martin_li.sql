@@ -1,0 +1,1 @@
+ALTER TABLE "admin_settings" ADD COLUMN "allow_email_migration" boolean DEFAULT true NOT NULL;

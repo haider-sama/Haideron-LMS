@@ -9,6 +9,7 @@ import { AudienceEnum } from "../../../shared/enums";
 import { OptionalAuthRequest } from "../../../middleware/auth";
 import { redisClient } from "../../../lib/redis";
 import { getRedisLikeKeys, getRedisVoteKeys } from "./post.user.controller";
+import { SettingsService } from "../../../utils/settings/SettingsService";
 
 // /**
 //  * Helper functions
@@ -49,6 +50,10 @@ export async function generateUniqueSlug(title: string): Promise<string> {
 };
 
 export const createPost = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isPostsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Posts are disabled by admin" });
+    }
+
     const userId = req.userId;
 
     try {
@@ -128,6 +133,10 @@ export const createPost = async (req: Request, res: Response) => {
 };
 
 export const filterPosts = async (req: OptionalAuthRequest, res: Response) => {
+    if (!(await SettingsService.isPostsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Posts are disabled by admin" });
+    }
+
     const userId = req.userId;
 
     try {
@@ -262,6 +271,10 @@ export const filterPosts = async (req: OptionalAuthRequest, res: Response) => {
 };
 
 export const getPostBySlug = async (req: OptionalAuthRequest, res: Response) => {
+    if (!(await SettingsService.isPostsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Posts are disabled by admin" });
+    }
+
     const { slug } = req.params;
     const userId = req.userId;
 
@@ -402,6 +415,10 @@ export const getPostBySlug = async (req: OptionalAuthRequest, res: Response) => 
 };
 
 export const getPostById = async (req: OptionalAuthRequest, res: Response) => {
+    if (!(await SettingsService.isPostsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Posts are disabled by admin" });
+    }
+
     const { postId } = req.params;
     const userId = req.userId;
 
@@ -528,6 +545,10 @@ export const getPostById = async (req: OptionalAuthRequest, res: Response) => {
 };
 
 export const updatePost = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isPostsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Posts are disabled by admin" });
+    }
+
     const userId = req.userId;
     const { postId } = req.params;
 
@@ -609,6 +630,10 @@ export const updatePost = async (req: Request, res: Response) => {
 };
 
 export const archivePost = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isPostsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Posts are disabled by admin" });
+    }
+
     const userId = req.userId;
     const { postId } = req.params;
 
@@ -674,6 +699,10 @@ export const archivePost = async (req: Request, res: Response) => {
 };
 
 export const restorePost = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isPostsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Posts are disabled by admin" });
+    }
+
     const userId = req.userId;
     const { postId } = req.params;
 
@@ -743,6 +772,10 @@ export const restorePost = async (req: Request, res: Response) => {
 };
 
 export const togglePinPost = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isPostsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Posts are disabled by admin" });
+    }
+
     const userId = req.userId;
     const { postId } = req.params;
     const { pin } = req.body as { pin: boolean }; // ensure boolean type

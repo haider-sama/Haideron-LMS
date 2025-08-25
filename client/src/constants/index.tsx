@@ -4,7 +4,7 @@ import { FaHome, FaGraduationCap, FaFileAlt, FaBookOpen, FaChalkboardTeacher, Fa
 import { HiAcademicCap, HiOutlineUserAdd } from "react-icons/hi";
 import { MdAdminPanelSettings, MdDashboard, MdHistory, MdListAlt, MdManageAccounts, MdPersonAddAlt1, MdRateReview } from "react-icons/md";
 import { RiGraduationCapFill } from "react-icons/ri";
-import { FiBookOpen, FiUserCheck } from "react-icons/fi";
+import { FiBookOpen, FiSettings, FiUserCheck } from "react-icons/fi";
 import { BsBookHalf } from "react-icons/bs";
 
 export const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "";
@@ -66,6 +66,7 @@ export const navLinks: NavLink[] = [
             { label: 'User Registration', href: '/admin/user-registration', icon: HiOutlineUserAdd, roles: [AudienceEnum.Admin] },
             { label: 'User Management', href: '/admin/user-management', icon: MdManageAccounts, roles: [AudienceEnum.Admin] },
             { label: 'Audit Logs', href: '/admin/audit-logs', icon: MdHistory, roles: [AudienceEnum.Admin] },
+            { label: 'Settings', href: '/admin/settings', icon: FiSettings, roles: [AudienceEnum.Admin] },
         ],
     },
     {

@@ -11,6 +11,8 @@ import { StatusMessage } from "../../../ui/StatusMessage";
 import CommentCard from "./CommentCard";
 import Modal from "../../../ui/Modal";
 import { RepliesThread } from "./RepliesThread";
+import { useSettings } from "../../../../hooks/admin/useSettings";
+import FeatureDisabledPage from "../../../../pages/forbidden/FeatureDisabledPage";
 
 interface CommentConversationProps {
     postId: string;
@@ -25,6 +27,10 @@ const CommentConversation: React.FC<CommentConversationProps> = ({ postId }) => 
     const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
     const [sortBy, setSortBy] = useState<"newest" | "oldest" | "top" | "best">("newest");
     const toast = useToast();
+
+
+    const { publicSettings } = useSettings(); // user-mode public settings
+    const isCommentsEnabled = publicSettings?.allowComments ?? false;
 
     const {
         data,
@@ -51,6 +57,7 @@ const CommentConversation: React.FC<CommentConversationProps> = ({ postId }) => 
         getNextPageParam: (lastPage) => lastPage.meta.nextOffsetKey ?? null,
         refetchOnWindowFocus: false,
         staleTime: 1000 * 60 * 2,
+        enabled: isCommentsEnabled,
     });
 
     const createCommentMutation = useMutation<
@@ -166,6 +173,14 @@ const CommentConversation: React.FC<CommentConversationProps> = ({ postId }) => 
         { value: "top", label: "Top Liked" },
         { value: "best", label: "Best" },
     ];
+
+    if (!isCommentsEnabled) {
+        return <FeatureDisabledPage
+            heading="Comments Disabled"
+            message="The comments feature has been disabled by the administrators. Please contact them for more information."
+            homeUrl="/"
+        />;
+    }
 
     const hasNoComments = status === "success" &&
         data?.pages.every((page) => page.comments.length === 0);

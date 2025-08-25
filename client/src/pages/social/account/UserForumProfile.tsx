@@ -10,17 +10,35 @@ import ForumSignaturePreview from '../../../components/social/pages/account/Foru
 import UserForumStatsCard, { formatDate } from '../../../components/social/pages/account/UserForumStatsCard';
 import { UserWithRelations } from '../../../../../server/src/shared/interfaces';
 import { VisibilityEnum } from '../../../../../server/src/shared/social.enums';
+import { useSettings } from '../../../hooks/admin/useSettings';
+import FeatureDisabledPage from '../../forbidden/FeatureDisabledPage';
+import TopCenterLoader from '../../../components/ui/TopCenterLoader';
 
 
 const UserForumProfile: React.FC = () => {
     const { userIdOrUsername } = useParams<{ userIdOrUsername?: string }>();
 
+    const { publicSettings, isLoading: isSettingsLoading } = useSettings(); // user-mode public settings
+    const isForumsEnabled = publicSettings?.allowForums ?? false;
+
     const { data: user, isLoading, error } = useQuery<UserWithRelations>({
         queryKey: ['userForumProfile', { userIdOrUsername }],
         queryFn: () => getUserForumProfile(userIdOrUsername!),
-        enabled: !!userIdOrUsername,
+        enabled: !!userIdOrUsername || isForumsEnabled,
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
+
+    if (isSettingsLoading) {
+        return <TopCenterLoader />;
+    }
+
+    if (!isForumsEnabled) {
+        return <FeatureDisabledPage
+            heading="Forums Disabled"
+            message="The forums feature has been disabled by the administrators. Please contact them for more information."
+            homeUrl="/"
+        />;
+    }
 
     if (isLoading) {
         return <div className="text-center py-10 text-gray-500 dark:text-gray-400">Loading forum profile...</div>;

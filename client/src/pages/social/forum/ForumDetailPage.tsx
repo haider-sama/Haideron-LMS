@@ -11,6 +11,9 @@ import Modal from "../../../components/ui/Modal";
 import { ForumStatusEnum, ForumTypeEnum } from "../../../../../server/src/shared/social.enums";
 import { CreatePost } from "../../../components/social/pages/post/CreatePost";
 import ForumPosts from "./ForumPosts";
+import FeatureDisabledPage from "../../forbidden/FeatureDisabledPage";
+import { useSettings } from "../../../hooks/admin/useSettings";
+import TopCenterLoader from "../../../components/ui/TopCenterLoader";
 
 const ForumDetailPage = () => {
     const { slug } = useParams();
@@ -18,6 +21,8 @@ const ForumDetailPage = () => {
     const initialForum: ForumWithDetails | null = state?.forum;
     const [showCreatePostModal, setShowCreatePostModal] = useState(false);
 
+    const { publicSettings, isLoading: isSettingsLoading } = useSettings(); // user-mode public settings
+    const isForumsEnabled = publicSettings?.allowForums ?? false;
 
     const { data: forum, isLoading: forumLoading, isError: forumError } = useQuery<ForumWithDetails | null>({
         queryKey: ['forum-by-slug', slug],
@@ -48,7 +53,7 @@ const ForumDetailPage = () => {
             return mapped;
         },
         initialData: initialForum,
-        enabled: !!slug,
+        enabled: !!slug || isForumsEnabled,
         staleTime: 1000 * 60 * 5,
         retry: 1,
     });
@@ -56,12 +61,24 @@ const ForumDetailPage = () => {
     const { data: membership, isLoading: membershipLoading, refetch: refetchMembership } = useQuery({
         queryKey: ['forum-membership', forum?.id],
         queryFn: () => forum ? getForumMembershipStatus(forum.id) : Promise.reject('No forum ID'),
-        enabled: !!forum,
+        enabled: !!forum || isForumsEnabled,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
         staleTime: 1000 * 60 * 5,
         retry: 1,
     });
+
+    if (isSettingsLoading) {
+        return <TopCenterLoader />;
+    }
+
+    if (!isForumsEnabled) {
+        return <FeatureDisabledPage
+            heading="Forums Disabled"
+            message="The forums feature has been disabled by the administrators. Please contact them for more information."
+            homeUrl="/"
+        />;
+    }
 
     if (!forum || forumLoading || forumError) {
         return (

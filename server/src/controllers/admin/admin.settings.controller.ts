@@ -24,6 +24,28 @@ export async function fetchAdminSettings(req: Request, res: Response) {
     }
 }
 
+export async function fetchPublicSettings(req: Request, res: Response) {
+    try {
+        const settings = await SettingsService.getSettings();
+        // Only expose safe settings
+        const publicSettings = {
+            allowForums: settings.allowForums,
+            allowPosts: settings.allowPosts,
+            allowComments: settings.allowComments,
+            allowLikes: settings.allowLikes,
+            allowUserRegistration: settings.allowUserRegistration,
+            allowEmailMigration: settings.allowEmailMigration,
+            enableEmailNotifications: settings.enableEmailNotifications,
+            enablePushNotifications: settings.enablePushNotifications,
+            maintenanceMode: settings.maintenanceMode,
+        };
+        res.status(OK).json({ data: publicSettings });
+    } catch (err) {
+        console.error(err);
+        res.status(INTERNAL_SERVER_ERROR).json({ message: "Cannot fetch settings." });
+    }
+}
+
 export async function updateAdminSettings(req: Request, res: Response) {
     const isAdmin = await assertAdmin(req, res);
     if (isAdmin !== true) return isAdmin; // block non-admins
@@ -39,6 +61,7 @@ export async function updateAdminSettings(req: Request, res: Response) {
             | "allowLikes"
             | "allowMessages"
             | "allowUserRegistration"
+            | "allowEmailMigration"
             | "maintenanceMode"
             | "enableEmailNotifications"
             | "enablePushNotifications"
@@ -52,6 +75,7 @@ export async function updateAdminSettings(req: Request, res: Response) {
             "allowLikes",
             "allowMessages",
             "allowUserRegistration",
+            "allowEmailMigration",
             "maintenanceMode",
             "enableEmailNotifications",
             "enablePushNotifications",

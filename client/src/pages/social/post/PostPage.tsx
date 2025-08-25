@@ -11,6 +11,9 @@ import { getPostBySlug } from "../../../api/social/post/post-api";
 import { downvoteOnPost, upvoteOnPost } from "../../../api/social/post/post-user-api";
 import { useToast } from "../../../context/ToastContext";
 import CommentConversation from "../../../components/social/pages/comment/CommentConversation";
+import { useSettings } from "../../../hooks/admin/useSettings";
+import FeatureDisabledPage from "../../forbidden/FeatureDisabledPage";
+import TopCenterLoader from "../../../components/ui/TopCenterLoader";
 
 const PostPage: React.FC = () => {
     const { forumSlug, postSlug } = useParams<{ forumSlug: string; postSlug: string }>();
@@ -20,6 +23,9 @@ const PostPage: React.FC = () => {
     const toast = useToast();
     const { isLoggedIn } = usePermissions();
 
+    const { publicSettings, isLoading: isSettingsLoading } = useSettings(); // user-mode public settings
+    const isPostsEnabled = publicSettings?.allowPosts ?? false;
+
     const {
         data,
         status,
@@ -27,7 +33,7 @@ const PostPage: React.FC = () => {
     } = useQuery<{ post: Post }, Error>({
         queryKey: ["post", postSlug],
         queryFn: () => getPostBySlug(postSlug!),
-        enabled: !!postSlug,
+        enabled: !!postSlug || isPostsEnabled,
     });
 
     const post = data?.post;
@@ -120,9 +126,20 @@ const PostPage: React.FC = () => {
         }
     };
 
+    if (isSettingsLoading) {
+        return <TopCenterLoader />;
+    }
+
+    if (!isPostsEnabled) {
+        return <FeatureDisabledPage
+            heading="Posts Disabled"
+            message="The posts feature has been disabled by the administrators. Please contact them for more information."
+            homeUrl="/"
+        />;
+    }
 
     return (
-        <div className="p-4 space-y-6 max-w-4xl mx-auto my-8">
+        <div className="p-4 space-y-6 max-w-4xl w-full mx-auto my-8">
             <StatusMessage
                 status={status as "idle" | "loading" | "error" | "success"}
                 error={error}

@@ -47,6 +47,7 @@ export class SettingsService {
                 allowLikes: true,
                 allowMessages: true,
                 allowUserRegistration: true,
+                allowEmailMigration: false,
                 maintenanceMode: false,
                 enableEmailNotifications: true,
                 enablePushNotifications: true,
@@ -68,6 +69,7 @@ export class SettingsService {
                     allowLikes: adminSettings.allowLikes,
                     allowMessages: adminSettings.allowMessages,
                     allowUserRegistration: adminSettings.allowUserRegistration,
+                    allowEmailMigration: adminSettings.allowEmailMigration,
                     maintenanceMode: adminSettings.maintenanceMode,
                     enableEmailNotifications: adminSettings.enableEmailNotifications,
                     enablePushNotifications: adminSettings.enablePushNotifications,
@@ -125,6 +127,7 @@ export class SettingsService {
 
     // ---------- Platform Toggles ----------
     static isUserRegistrationAllowed() { return this.isEnabled("allowUserRegistration"); }
+    static isEmailMigrationAllowed() { return this.isEnabled("allowEmailMigration"); }
     static isMaintenanceMode() { return this.isEnabled("maintenanceMode"); }
     static isEmailNotificationsEnabled() { return this.isEnabled("enableEmailNotifications"); }
     static isPushNotificationsEnabled() { return this.isEnabled("enablePushNotifications"); }

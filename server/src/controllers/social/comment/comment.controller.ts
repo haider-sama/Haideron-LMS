@@ -7,8 +7,13 @@ import { AudienceEnum } from "../../../shared/enums";
 import { OptionalAuthRequest } from "../../../middleware/auth";
 import { redisClient } from "../../../lib/redis";
 import { CreateCommentSchema, GetCommentsQuerySchema, UpdateCommentSchema } from "../../../utils/validators/socialSchemas/commentSchemas";
+import { SettingsService } from "../../../utils/settings/SettingsService";
 
 export const createComment = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isCommentsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Comments are disabled by admin" });
+    }
+
     const userId = req.userId;
 
     const parsed = CreateCommentSchema.safeParse(req.body);
@@ -87,6 +92,10 @@ export const createComment = async (req: Request, res: Response) => {
 };
 
 export const getCommentsForPost = async (req: OptionalAuthRequest, res: Response) => {
+    if (!(await SettingsService.isCommentsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Comments are disabled by admin" });
+    }
+
     const { postId } = req.params;
     const userId = req.userId;
 
@@ -216,6 +225,10 @@ export const getCommentsForPost = async (req: OptionalAuthRequest, res: Response
 };
 
 export const getCommentById = async (req: OptionalAuthRequest, res: Response) => {
+    if (!(await SettingsService.isCommentsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Comments are disabled by admin" });
+    }
+
     const { commentId } = req.params;
     const userId = req.userId;
 
@@ -311,6 +324,10 @@ export const getCommentById = async (req: OptionalAuthRequest, res: Response) =>
 };
 
 export const getRepliesForComment = async (req: OptionalAuthRequest, res: Response) => {
+    if (!(await SettingsService.isCommentsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Comments are disabled by admin" });
+    }
+
     const { postId, parentId } = req.params;
     const userId = req.userId;
 
@@ -453,6 +470,10 @@ export const getRepliesForComment = async (req: OptionalAuthRequest, res: Respon
 };
 
 export const updateComment = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isCommentsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Comments are disabled by admin" });
+    }
+
     const { commentId } = req.params;
     const userId = req.userId;
 
@@ -510,6 +531,10 @@ export const updateComment = async (req: Request, res: Response) => {
 };
 
 export const deleteComment = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isCommentsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Comments are disabled by admin" });
+    }
+
     const { commentId } = req.params;
     const userId = req.userId;
 
@@ -588,6 +613,10 @@ export const deleteComment = async (req: Request, res: Response) => {
 };
 
 export const toggleBestComment = async (req: Request, res: Response) => {
+    if (!(await SettingsService.isCommentsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Comments are disabled by admin" });
+    }
+
     const { commentId } = req.params;
     const userId = req.userId;
 

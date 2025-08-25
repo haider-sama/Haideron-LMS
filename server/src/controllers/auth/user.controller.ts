@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 import { TeacherQualification } from "../../shared/interfaces";
 import { VisibilityEnum } from "../../shared/social.enums";
 import { isValidUUID } from "../../utils/validators/lms-schemas/isValidUUID";
+import { SettingsService } from "../../utils/settings/SettingsService";
 
 dotenv.config();
 
@@ -89,6 +90,12 @@ export async function updateUserProfile(req: Request, res: Response) {
 
         // 4. Handle forumProfile updates for all roles
         if ('forumProfile' in data && data.forumProfile) {
+            if (!(await SettingsService.isForumsEnabled())) {
+                return res.status(FORBIDDEN).json({
+                    message: "Forums are disabled by admin. You can't update your forum profile"
+                });
+            }
+
             const mergedForumProfile = {
                 ...forumProfile,
                 ...data.forumProfile,
@@ -491,6 +498,10 @@ export async function getUserProfile(req: Request, res: Response) {
 }
 
 export async function getUserForumProfile(req: Request, res: Response) {
+    if (!(await SettingsService.isForumsEnabled())) {
+        return res.status(FORBIDDEN).json({ message: "Forums are disabled by admin" });
+    }
+
     const { userIdOrUsername } = req.params;
 
     try {
