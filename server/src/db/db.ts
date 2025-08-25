@@ -2,13 +2,17 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import dotenv from "dotenv";
 import * as schema from "./schema";
+import { DATABASE_URL } from "../constants/env";
 
 dotenv.config();
 
 const retryDelay = 5000;
 
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: DATABASE_URL,
+    max: 20,                  // maximum concurrent connections
+    idleTimeoutMillis: 30000, // close idle clients after 30s
+    connectionTimeoutMillis: 5000, // fail if can't connect in 5s
 });
 
 export const db = drizzle(pool, { schema });

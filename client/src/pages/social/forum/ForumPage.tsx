@@ -73,7 +73,10 @@ const ForumPage: React.FC = () => {
         queries: forumIds.map(forumId => ({
             queryKey: ["forum-posts", forumId],
             queryFn: () =>
-                filterPostsByForumId(forumId, { limit: 1 }),
+                filterPostsByForumId(forumId, { 
+                    limit: 1, 
+                    lastPostCreatedAt: new Date().toISOString()  
+                }),
             staleTime: 1000 * 60,
             retry: 2,
         })),

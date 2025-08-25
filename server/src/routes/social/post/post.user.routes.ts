@@ -1,8 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
-import { authorizeRoles, optionalVerifyToken, verifyToken } from "../../../middleware/auth";
+import { fastVerifyToken, optionalVerifyToken } from "../../../middleware/auth";
 import { normalLimiter, safeLimiter, strictLimiter } from "../../../utils/limiter/rateLimiter";
-import { AudienceEnum } from "../../../shared/enums";
 import { postUserController } from "../../../controllers";
 
 dotenv.config();
@@ -11,66 +10,28 @@ const postUserRouter = express.Router();
 postUserRouter.post(
     "/:postId/like",
     normalLimiter,
-    verifyToken,
-    authorizeRoles(
-        AudienceEnum.Guest,
-        AudienceEnum.Student,
-        AudienceEnum.DepartmentTeacher,
-        AudienceEnum.DepartmentHead,
-        AudienceEnum.Admin,
-        AudienceEnum.ForumModerator,
-        AudienceEnum.ForumCurator,
-        AudienceEnum.CommunityAdmin
-    ),
+    fastVerifyToken,
     postUserController.likePost
 );
 
 postUserRouter.delete(
     "/:postId/unlike",
     normalLimiter,
-    verifyToken,
-    authorizeRoles(
-        AudienceEnum.Guest,
-        AudienceEnum.Student,
-        AudienceEnum.DepartmentTeacher,
-        AudienceEnum.DepartmentHead,
-        AudienceEnum.Admin,
-        AudienceEnum.ForumModerator,
-        AudienceEnum.ForumCurator,
-        AudienceEnum.CommunityAdmin
-    ),
+    fastVerifyToken,
     postUserController.unlikePost
 );
 
 postUserRouter.post(
     "/:postId/upvote",
     normalLimiter,
-    verifyToken,
-    authorizeRoles(
-        AudienceEnum.Student,
-        AudienceEnum.DepartmentTeacher,
-        AudienceEnum.DepartmentHead,
-        AudienceEnum.Admin,
-        AudienceEnum.ForumModerator,
-        AudienceEnum.ForumCurator,
-        AudienceEnum.CommunityAdmin
-    ),
+    fastVerifyToken,
     postUserController.upvotePost
 );
 
 postUserRouter.post(
     "/:postId/downvote",
     normalLimiter,
-    verifyToken,
-    authorizeRoles(
-        AudienceEnum.Student,
-        AudienceEnum.DepartmentTeacher,
-        AudienceEnum.DepartmentHead,
-        AudienceEnum.Admin,
-        AudienceEnum.ForumModerator,
-        AudienceEnum.ForumCurator,
-        AudienceEnum.CommunityAdmin
-    ),
+    fastVerifyToken,
     postUserController.downvotePost
 );
 

@@ -36,6 +36,7 @@ import postRouter from './routes/social/post/post.routes';
 import postUserRouter from './routes/social/post/post.user.routes';
 import commentRouter from './routes/social/comment/comment.routes';
 import commentUserRouter from './routes/social/comment/comment.user.routes';
+import { initRabbitMQ } from './lib/rabbitMQ';
 
 dotenv.config();
 
@@ -120,8 +121,10 @@ const startServer = async () => {
     console.time("Total Startup Time");
 
     try {
-        await connectToDatabase();  // Optional connection check
+        await connectToDatabase();
         await connectRedis();
+        // await redisClient.flushDb();
+        // await initRabbitMQ();
         SettingsService.invalidateCache();  // whenever admin updates settings in DB
 
         // Example: test DB query

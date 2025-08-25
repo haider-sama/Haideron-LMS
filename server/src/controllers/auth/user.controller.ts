@@ -8,6 +8,7 @@ import { forumProfiles, teacherInfo, teacherQualifications, users } from "../../
 import { eq } from "drizzle-orm";
 import { TeacherQualification } from "../../shared/interfaces";
 import { VisibilityEnum } from "../../shared/social.enums";
+import { isValidUUID } from "../../utils/validators/lms-schemas/isValidUUID";
 
 dotenv.config();
 
@@ -495,33 +496,34 @@ export async function getUserForumProfile(req: Request, res: Response) {
     try {
         let user;
 
-        // Detect if userIdOrUsername is a UUID (simple regex for UUID v4)
+
         const isUUIDv4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userIdOrUsername);
 
-        if (isUUIDv4) {
-            // Lookup by user id (UUID)
-            user = await db
-                .select({
-                    userId: users.id,
-                    role: users.role,
-                    firstName: users.firstName,
-                    lastName: users.lastName,
-                    lastOnline: users.lastOnline,
-                    avatarURL: users.avatarURL,
+        const selectColumns = {
+            userId: users.id,
+            role: users.role,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            lastOnline: users.lastOnline,
+            avatarURL: users.avatarURL,
 
-                    forumProfileId: forumProfiles.id,
-                    forumUsername: forumProfiles.username,
-                    forumDisplayName: forumProfiles.displayName,
-                    forumBio: forumProfiles.bio,
-                    forumSignature: forumProfiles.signature,
-                    forumInterests: forumProfiles.interests,
-                    forumBadges: forumProfiles.badges,
-                    forumReputation: forumProfiles.reputation,
-                    forumVisibility: forumProfiles.visibility,
-                    forumPostCount: forumProfiles.postCount,
-                    forumCommentCount: forumProfiles.commentCount,
-                    forumJoinedAt: forumProfiles.joinedAt,
-                })
+            forumProfileId: forumProfiles.id,
+            forumUsername: forumProfiles.username,
+            forumDisplayName: forumProfiles.displayName,
+            forumBio: forumProfiles.bio,
+            forumSignature: forumProfiles.signature,
+            forumInterests: forumProfiles.interests,
+            forumBadges: forumProfiles.badges,
+            forumReputation: forumProfiles.reputation,
+            forumVisibility: forumProfiles.visibility,
+            forumPostCount: forumProfiles.postCount,
+            forumCommentCount: forumProfiles.commentCount,
+            forumJoinedAt: forumProfiles.joinedAt,
+        };
+
+        if (isUUIDv4) {
+            user = await db
+                .select(selectColumns)
                 .from(users)
                 .leftJoin(forumProfiles, eq(forumProfiles.userId, users.id))
                 .where(eq(users.id, userIdOrUsername))
@@ -529,29 +531,8 @@ export async function getUserForumProfile(req: Request, res: Response) {
                 .execute()
                 .then(rows => rows[0]);
         } else {
-            // Lookup by forumProfile.username
             user = await db
-                .select({
-                    userId: users.id,
-                    role: users.role,
-                    firstName: users.firstName,
-                    lastName: users.lastName,
-                    lastOnline: users.lastOnline,
-                    avatarURL: users.avatarURL,
-
-                    forumProfileId: forumProfiles.id,
-                    forumUsername: forumProfiles.username,
-                    forumDisplayName: forumProfiles.displayName,
-                    forumBio: forumProfiles.bio,
-                    forumSignature: forumProfiles.signature,
-                    forumInterests: forumProfiles.interests,
-                    forumBadges: forumProfiles.badges,
-                    forumReputation: forumProfiles.reputation,
-                    forumVisibility: forumProfiles.visibility,
-                    forumPostCount: forumProfiles.postCount,
-                    forumCommentCount: forumProfiles.commentCount,
-                    forumJoinedAt: forumProfiles.joinedAt,
-                })
+                .select(selectColumns)
                 .from(users)
                 .leftJoin(forumProfiles, eq(forumProfiles.userId, users.id))
                 .where(eq(forumProfiles.username, userIdOrUsername))
@@ -564,11 +545,20 @@ export async function getUserForumProfile(req: Request, res: Response) {
             return res.status(404).json({ message: "Forum profile not found." });
         }
 
+        // Minimal info for private profile
         if (user.forumVisibility === VisibilityEnum.private) {
-            return res.status(FORBIDDEN).json({ message: "This forum profile is private." });
+            return res.json({
+                id: user.userId,
+                role: user.role,
+                avatarURL: user.avatarURL,
+                forumProfile: {
+                    username: user.forumUsername,
+                    visibility: user.forumVisibility,
+                },
+            });
         }
 
-        // Return sanitized public forum profile data
+        // Full info for public profile
         const publicProfile = {
             id: user.userId,
             role: user.role,
@@ -587,6 +577,7 @@ export async function getUserForumProfile(req: Request, res: Response) {
                 postCount: user.forumPostCount,
                 commentCount: user.forumCommentCount,
                 joinedAt: user.forumJoinedAt,
+                visibility: user.forumVisibility,
             },
         };
 

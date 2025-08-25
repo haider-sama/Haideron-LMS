@@ -22,7 +22,7 @@ const ForumInfoCard: React.FC<ForumInfoCardProps> = ({ forum, memberCount }) => 
             : forum.creator?.displayName ?? forum.creator?.username ?? forum.createdBy;
             
     return (
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 w-full md:w-80 sticky top-6">
+        <div className="bg-white rounded-sm border border-gray-300 p-4 w-full md:w-80 sticky top-6">
             <h2 className="text-xl font-bold text-gray-900 mb-3">
                 About f/{forum.slug || forum.title.toLowerCase().replace(/\s+/g, "")}
             </h2>
@@ -31,7 +31,7 @@ const ForumInfoCard: React.FC<ForumInfoCardProps> = ({ forum, memberCount }) => 
                 {forum.description || "No description available."}
             </p>
 
-            <div className="text-sm text-gray-700 space-y-3 border-t border-gray-200 pt-4">
+            <div className="text-sm text-gray-700 space-y-3 border-t border-gray-300 pt-4">
                 <div className="flex items-center gap-2">
                     <FiCalendar className="text-gray-500" />
                     <span className="font-medium">Created:</span> {createdAt}
@@ -71,7 +71,7 @@ const ForumInfoCard: React.FC<ForumInfoCardProps> = ({ forum, memberCount }) => 
             </div>
 
             {forum.moderators?.length > 0 && (
-                <div className="mt-5 border-t border-gray-200 pt-4">
+                <div className="mt-4 border-t border-gray-300 pt-4">
                     <p className="text-sm font-semibold text-gray-800 mb-2">Moderators</p>
                     <ul className="text-sm text-gray-600 space-y-1">
                         {forum.moderators.map((mod) => (

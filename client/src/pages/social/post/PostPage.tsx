@@ -1,158 +1,157 @@
-// import React, { useState } from "react";
-// import { useParams } from "react-router-dom";
-// import { usePermissions } from "../../../hooks/usePermissions";
-// import { useMutation, useQuery, useQueryClient } from "react-query";
-// import { voteOnPost, getPostBySlug } from "../../../api/social/postApi";
-// import { VoteTypeEnum } from "../../../../../server/src/shared/social.enums";
-// import PostCard from "../../../components/pages/social/pages/post/PostCard";
-// import Modal from "../../../components/ui/Modal";
-// import { EditPost } from "../../../components/pages/social/pages/post/EditPost";
-// import { Forum, Post } from "../../../constants/social/social-types";
-// import CommentConversation from "../../../components/pages/social/pages/comment/CommentConversation";
-// import { StatusMessage } from "../../../components/ui/social/StatusMessage";
+import React, { useState } from "react";
+import { useParams } from "react-router-dom";
+import { usePermissions } from "../../../hooks/usePermissions";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ForumWithDetails, Post, PostMetrics, PostVoteResponse } from "../../../constants/social/interfaces";
+import { StatusMessage } from "../../../components/ui/StatusMessage";
+import PostCard from "../../../components/social/pages/post/PostCard";
+import { EditPost } from "../../../components/social/pages/post/EditPost";
+import Modal from "../../../components/ui/Modal";
+import { getPostBySlug } from "../../../api/social/post/post-api";
+import { downvoteOnPost, upvoteOnPost } from "../../../api/social/post/post-user-api";
+import { useToast } from "../../../context/ToastContext";
+import CommentConversation from "../../../components/social/pages/comment/CommentConversation";
 
-// const PostPage: React.FC = () => {
-//     const { forumSlug, postSlug } = useParams<{ forumSlug: string; postSlug: string }>();
-//     const queryClient = useQueryClient();
-//     const [editingPost, setEditingPost] = useState<Post | null>(null);
+const PostPage: React.FC = () => {
+    const { forumSlug, postSlug } = useParams<{ forumSlug: string; postSlug: string }>();
+    const [editingPost, setEditingPost] = useState<Post | null>(null);
 
-//     const { isLoggedIn } = usePermissions();
+    const queryClient = useQueryClient();
+    const toast = useToast();
+    const { isLoggedIn } = usePermissions();
 
-//     const {
-//         data,
-//         status,
-//         error,
-//     } = useQuery(
-//         ["post", postSlug],
-//         () => getPostBySlug(postSlug!), // Slug only
-//         { enabled: !!postSlug }
-//     );
+    const {
+        data,
+        status,
+        error,
+    } = useQuery<{ post: Post }, Error>({
+        queryKey: ["post", postSlug],
+        queryFn: () => getPostBySlug(postSlug!),
+        enabled: !!postSlug,
+    });
 
-//     const post = data?.post;
+    const post = data?.post;
 
-//     const upvoteMutation = useMutation(
-//         (postId: string) => voteOnPost(postId, VoteTypeEnum.UPVOTE),
-//         {
-//             onMutate: async (postId) => {
-//                 await queryClient.cancelQueries(["postMetrics", postId]);
+    const upvoteMutation = useMutation<PostVoteResponse, Error, string>({
+        mutationFn: (postId) => upvoteOnPost(postId),
+        onMutate: async (postId) => {
+            await queryClient.cancelQueries({ queryKey: ["postMetrics", postId] });
 
-//                 const previous = queryClient.getQueryData<any>(["postMetrics", postId]);
+            queryClient.setQueryData<PostMetrics>(["postMetrics", postId], (oldMetrics) => {
+                if (!oldMetrics) return oldMetrics;
 
-//                 queryClient.setQueryData(["postMetrics", postId], (old: any) => {
-//                     if (!old) return old;
+                let upvoteCount = oldMetrics.upvoteCount;
+                let downvoteCount = oldMetrics.downvoteCount;
 
-//                     const previousVote = old.userVote;
-//                     let upvoteCount = old.upvoteCount || 0;
-//                     let downvoteCount = old.downvoteCount || 0;
+                // Handle switching votes
+                if (oldMetrics.userVote === "DOWNVOTE") {
+                    downvoteCount = Math.max(downvoteCount - 1, 0);
+                }
+                if (oldMetrics.userVote !== "UPVOTE") {
+                    upvoteCount += 1;
+                }
 
-//                     if (previousVote === "DOWNVOTE") downvoteCount--;
-//                     if (previousVote !== "UPVOTE") upvoteCount++;
+                return {
+                    ...oldMetrics,
+                    upvoteCount,
+                    downvoteCount,
+                    userVote: "UPVOTE",
+                };
+            });
+        },
+        onError: (err, postId) => {
+            queryClient.invalidateQueries({ queryKey: ["postMetrics", postId] });
+            toast.error(err.message || "Failed to upvote post");
+        },
+        onSettled: (_data, _err, postId) => {
+            queryClient.invalidateQueries({ queryKey: ["forumPosts", forumSlug] });
+            queryClient.invalidateQueries({ queryKey: ["postMetrics", postId] });
+            queryClient.invalidateQueries({ queryKey: ["post", postSlug] });
+        },
+    });
 
-//                     return {
-//                         ...old,
-//                         userVote: "UPVOTE",
-//                         upvoteCount: Math.max(0, upvoteCount),
-//                         downvoteCount: Math.max(0, downvoteCount),
-//                     };
-//                 });
+    const downvoteMutation = useMutation<PostVoteResponse, Error, string>({
+        mutationFn: (postId) => downvoteOnPost(postId),
+        onMutate: async (postId) => {
+            await queryClient.cancelQueries({ queryKey: ["postMetrics", postId] });
 
-//                 return { previous, postId };
-//             },
-//             onError: (_err, _postId, context) => {
-//                 if (context?.previous && context.postId) {
-//                     queryClient.setQueryData(["postMetrics", context.postId], context.previous);
-//                 }
-//             },
-//             onSuccess: (_, postId) => {
-//                 queryClient.invalidateQueries(["post", postSlug]);
-//                 queryClient.invalidateQueries(["postMetrics", postId]);
-//             }
-//         }
-//     );
+            queryClient.setQueryData<PostMetrics>(["postMetrics", postId], (oldMetrics) => {
+                if (!oldMetrics) return oldMetrics;
 
-//     const downvoteMutation = useMutation(
-//         (postId: string) => voteOnPost(postId, VoteTypeEnum.DOWNVOTE),
-//         {
-//             onMutate: async (postId) => {
-//                 await queryClient.cancelQueries(["postMetrics", postId]);
+                let upvoteCount = oldMetrics.upvoteCount;
+                let downvoteCount = oldMetrics.downvoteCount;
 
-//                 const previous = queryClient.getQueryData<any>(["postMetrics", postId]);
+                // Handle switching votes
+                if (oldMetrics.userVote === "UPVOTE") {
+                    upvoteCount = Math.max(upvoteCount - 1, 0);
+                }
+                if (oldMetrics.userVote !== "DOWNVOTE") {
+                    downvoteCount += 1;
+                }
 
-//                 queryClient.setQueryData(["postMetrics", postId], (old: any) => {
-//                     if (!old) return old;
+                return {
+                    ...oldMetrics,
+                    upvoteCount,
+                    downvoteCount,
+                    userVote: "DOWNVOTE",
+                };
+            });
+        },
+        onError: (err, postId) => {
+            queryClient.invalidateQueries({ queryKey: ["postMetrics", postId] });
+            toast.error(err.message || "Failed to downvote post");
+        },
+        onSettled: (_data, _err, postId) => {
+            queryClient.invalidateQueries({ queryKey: ["forumPosts", forumSlug] });
+            queryClient.invalidateQueries({ queryKey: ["postMetrics", postId] });
+            queryClient.invalidateQueries({ queryKey: ["post", postSlug] });
+        },
+    });
 
-//                     const previousVote = old.userVote;
-//                     let upvoteCount = old.upvoteCount || 0;
-//                     let downvoteCount = old.downvoteCount || 0;
+    const handleUpvote = (postId: string) => {
+        if (isLoggedIn && !upvoteMutation.isPending) {
+            upvoteMutation.mutate(postId);
+        }
+    };
 
-//                     if (previousVote === "UPVOTE") upvoteCount--;
-//                     if (previousVote !== "DOWNVOTE") downvoteCount++;
+    const handleDownvote = (postId: string) => {
+        if (isLoggedIn && !downvoteMutation.isPending) {
+            downvoteMutation.mutate(postId);
+        }
+    };
 
-//                     return {
-//                         ...old,
-//                         userVote: "DOWNVOTE",
-//                         upvoteCount: Math.max(0, upvoteCount),
-//                         downvoteCount: Math.max(0, downvoteCount),
-//                     };
-//                 });
 
-//                 return { previous, postId };
-//             },
-//             onError: (_err, _postId, context) => {
-//                 if (context?.previous && context.postId) {
-//                     queryClient.setQueryData(["postMetrics", context.postId], context.previous);
-//                 }
-//             },
-//             onSuccess: (_, postId) => {
-//                 queryClient.invalidateQueries(["post", postSlug]);
-//                 queryClient.invalidateQueries(["postMetrics", postId]);
-//             }
-//         }
-//     );
+    return (
+        <div className="p-4 space-y-6 max-w-4xl mx-auto my-8">
+            <StatusMessage
+                status={status as "idle" | "loading" | "error" | "success"}
+                error={error}
+                loadingText="Loading post..."
+                errorText="Failed to load post."
+            >
+                {!post && "Post not found."}
+            </StatusMessage>
 
-//     const handleUpvote = () => {
-//         if (isLoggedIn && !upvoteMutation.isLoading && post?._id) {
-//             upvoteMutation.mutate(post._id);
-//         }
-//     };
+            {post && (
+                <PostCard
+                    forum={{ slug: forumSlug } as ForumWithDetails}
+                    post={post}
+                    onUpvote={handleUpvote}
+                    onDownvote={handleDownvote}
+                    onEditPost={setEditingPost}
+                    mode="full"
+                />
+            )}
 
-//     const handleDownvote = () => {
-//         if (isLoggedIn && !downvoteMutation.isLoading && post?._id) {
-//             downvoteMutation.mutate(post._id);
-//         }
-//     };
+            {post && <CommentConversation postId={post.id} />}
 
-//     return (
-//         <div className="p-4 space-y-6 max-w-4xl mx-auto my-8">
-//             <StatusMessage
-//                 status={status}
-//                 error={error}
-//                 loadingText="Loading post..."
-//                 errorText="Failed to load post."
-//             >
-//                 {!post && "Post not found."}
-//             </StatusMessage>
+            {editingPost && (
+                <Modal isOpen={!!editingPost} onClose={() => setEditingPost(null)}>
+                    <EditPost post={editingPost} onClose={() => setEditingPost(null)} />
+                </Modal>
+            )}
+        </div>
+    );
+};
 
-//             {post && (
-//                 <PostCard
-//                     forum={{ slug: forumSlug } as Forum}
-//                     post={post}
-//                     onUpvote={handleUpvote}
-//                     onDownvote={handleDownvote}
-//                     onEditPost={setEditingPost}
-//                     mode="full"
-//                 />
-//             )}
-
-//             {post && <CommentConversation postId={post._id} />}
-
-//             {editingPost && (
-//                 <Modal isOpen={!!editingPost} onClose={() => setEditingPost(null)}>
-//                     <EditPost post={editingPost} onClose={() => setEditingPost(null)} />
-//                 </Modal>
-//             )}
-//         </div>
-//     );
-// };
-
-// export default PostPage;
+export default PostPage;

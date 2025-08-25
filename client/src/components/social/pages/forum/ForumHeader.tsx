@@ -30,10 +30,11 @@ interface ForumHeaderProps {
     isMember: boolean;
     isLoading: boolean;
     onCreatePostClick: () => void;
+    refetchMembership: () => void;
 }
 
 const ForumHeader = ({ forum, isMember, isLoading,
-    onCreatePostClick
+    onCreatePostClick, refetchMembership
 }: ForumHeaderProps) => {
 
     const toast = useToast();
@@ -55,6 +56,7 @@ const ForumHeader = ({ forum, isMember, isLoading,
         onSuccess: () => {
             toast.success("Joined forum");
             queryClient.invalidateQueries({ queryKey: ["forum-membership", forum.id] });
+            refetchMembership();
         },
         onError: (err: any) => {
             toast.error(err.message || "Failed to join forum");
@@ -66,6 +68,7 @@ const ForumHeader = ({ forum, isMember, isLoading,
         onSuccess: () => {
             toast.neutral("Left forum");
             queryClient.invalidateQueries({ queryKey: ["forum-membership", forum.id] });
+            refetchMembership();
         },
         onError: (err: any) => {
             toast.error(err.message || "Failed to leave forum");
@@ -73,7 +76,7 @@ const ForumHeader = ({ forum, isMember, isLoading,
     });
 
     return (
-        <div className="rounded-xl overflow-hidden mb-6 shadow">
+        <div className="rounded-sm overflow-hidden mb-6 shadow-sm border border-gray-300">
             {/* Banner */}
             <div className={`h-32 w-full bg-gradient-to-br ${fromColor} ${toColor}`} />
 
@@ -121,7 +124,7 @@ const ForumHeader = ({ forum, isMember, isLoading,
                             loadingText="Joining..."
                             disabled={joinMutation.isPending}
                             size="sm"
-                            variant="gray"
+                            variant="green"
                             fullWidth={false}
                         >
                             Join
@@ -135,7 +138,7 @@ const ForumHeader = ({ forum, isMember, isLoading,
                             loadingText="Leaving..."
                             disabled={leaveMutation.isPending}
                             size="sm"
-                            variant="gray"
+                            variant="red"
                             fullWidth={false}
                         >
                             Leave
@@ -144,12 +147,16 @@ const ForumHeader = ({ forum, isMember, isLoading,
 
                     <Button
                         onClick={handlePostClick}
-                        disabled={!isLoggedIn}
+                        disabled={!isLoggedIn || !isMember}
                         size="sm"
                         variant="gray"
                         fullWidth={false}
                     >
-                        {isLoggedIn ? "Create Post" : "Login to Create Post"}
+                        {!isLoggedIn
+                            ? "Login to Create Post"
+                            : !isMember
+                                ? "Join forum to create a post"
+                                : "Create Post"}
                     </Button>
 
                 </div>

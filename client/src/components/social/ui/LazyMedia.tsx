@@ -40,10 +40,13 @@ const LazyMedia: React.FC<LazyMediaProps> = ({ src, alt, isSingle = false, isPre
     return (
         <div
             ref={ref}
-            className={`rounded-lg overflow-hidden bg-muted 
+            className={`
+                relative rounded-lg overflow-hidden bg-muted
                 ${isSingle ? "w-full max-w-2xl mx-auto" : "min-h-[120px]"}
                 ${isPreview ? "w-full h-full" : ""}
-                flex justify-center items-center`}
+                flex justify-center items-center
+            `}
+            style={{ minHeight: mediaType === "image" ? 200 : undefined }} // Example fixed space
         >
             {isVisible && (
                 <>

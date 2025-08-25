@@ -13,26 +13,20 @@ import {
 } from 'react-icons/fi';
 import { ForumBadgeEnum } from '../../../../../../server/src/shared/social.enums';
 import { useForumBadges } from '../../../../hooks/badges/useForumBadges';
-import { ForumProfile } from '../../../../constants/social/interfaces';
+import { UserWithRelations } from '../../../../../../server/src/shared/interfaces';
 
 type UserForumStatsCardProps = {
-    user: ForumProfile & Partial<{
-        postCount: number;
-        commentCount: number;
-        interests: string[];
-        joinedAt: string;
-        lastOnline: string;
-    }>;
+    user: UserWithRelations
 };
 
 const UserForumStatsCard: React.FC<UserForumStatsCardProps> = ({ user }) => {
-    const stats = user;
+    const stats = user.forumProfile;
 
     const isForumBadgeEnum = (value: string): value is ForumBadgeEnum => {
         return Object.values(ForumBadgeEnum).includes(value as ForumBadgeEnum);
     };
 
-    const validBadges = (stats.badges ?? []).filter(isForumBadgeEnum);
+    const validBadges = (stats?.badges ?? []).filter(isForumBadgeEnum);
     const badges = useForumBadges(validBadges);
 
     return (
@@ -47,12 +41,12 @@ const UserForumStatsCard: React.FC<UserForumStatsCardProps> = ({ user }) => {
 
                 {/* Definition list */}
                 <dl className="grid sm:grid-cols-2 gap-x-4 gap-y-3 text-sm text-gray-700">
-                    <Stat label="Username" value={stats.username} Icon={FiUser} />
-                    <Stat label="Display Name" value={stats.displayName ?? "N/A"} Icon={FiType} />
-                    <Stat label="Reputation" value={stats.reputation?.toString() ?? "0"} Icon={FiStar} />
-                    <Stat label="Posts" value={stats.postCount?.toString() ?? "0"} Icon={FiFileText} />
-                    <Stat label="Comments" value={stats.commentCount?.toString() ?? "0"} Icon={FiMessageSquare} />
-                    <Stat label="Interests" value={stats.interests?.join(", ") ?? "None"} Icon={FiHeart} />
+                    <Stat label="Username" value={stats?.username} Icon={FiUser} />
+                    <Stat label="Display Name" value={stats?.displayName ?? "N/A"} Icon={FiType} />
+                    <Stat label="Reputation" value={stats?.reputation?.toString() ?? "0"} Icon={FiStar} />
+                    <Stat label="Posts" value={stats?.postCount?.toString() ?? "0"} Icon={FiFileText} />
+                    <Stat label="Comments" value={stats?.commentCount?.toString() ?? "0"} Icon={FiMessageSquare} />
+                    <Stat label="Interests" value={stats?.interests?.join(", ") ?? "None"} Icon={FiHeart} />
 
                     <dt className="flex items-center gap-2 font-medium text-gray-600 col-span-2 sm:col-span-1">
                         <FiAward className="text-green-600" />
@@ -80,8 +74,8 @@ const UserForumStatsCard: React.FC<UserForumStatsCardProps> = ({ user }) => {
                         )}
                     </dd>
 
-                    <Stat label="Joined" value={formatDate(stats.joinedAt ?? "")} Icon={FiCalendar} />
-                    <Stat label="Last Online" value={formatDate(stats.lastOnline ?? "")} Icon={FiClock} />
+                    <Stat label="Joined" value={formatDate(stats?.joinedAt)} Icon={FiCalendar} />
+                    <Stat label="Last Online" value={formatDate(user.lastOnline)} Icon={FiClock} />
                 </dl>
             </div>
         </div>
@@ -106,11 +100,14 @@ const Stat = ({
     </>
 );
 
-const formatDate = (iso: string) => {
+export const formatDate = (date?: Date | string): string => {
+    if (!date) return "—";
+
+    const d = typeof date === "string" ? new Date(date) : date;
     try {
-        return format(new Date(iso), 'd MMM yyyy, h:mm a');
+        return format(d, "d MMM yyyy, h:mm a");
     } catch {
-        return '—';
+        return "—";
     }
 };
 

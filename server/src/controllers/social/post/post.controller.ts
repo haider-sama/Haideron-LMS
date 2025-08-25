@@ -3,7 +3,7 @@ import slugify from "slugify";
 import { CreatePostSchema, PostQuerySchema, UpdatePostSchema } from "../../../utils/validators/socialSchemas/postSchemas";
 import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../../constants/http";
 import { db } from "../../../db/db";
-import { forumModerators, forumProfiles, forums, posts, users } from "../../../db/schema";
+import { forumMembers, forumModerators, forumProfiles, forums, posts, users } from "../../../db/schema";
 import { and, desc, eq, lt, sql } from "drizzle-orm";
 import { AudienceEnum } from "../../../shared/enums";
 import { OptionalAuthRequest } from "../../../middleware/auth";
@@ -61,6 +61,31 @@ export const createPost = async (req: Request, res: Response) => {
         }
 
         const { forumId, type, content, linkPreview, mediaUrls } = parsed.data;
+
+        const forum = await db
+            .select()
+            .from(forums)
+            .where(eq(forums.id, forumId))
+            .limit(1)
+            .then(rows => rows[0]);
+
+        if (!forum) {
+            return res.status(NOT_FOUND).json({ message: "Forum not found" });
+        }
+
+        // Check if user is a member of the forum
+        const membership = await db
+            .select()
+            .from(forumMembers)
+            .where(and(eq(forumMembers.forumId, forumId), eq(forumMembers.userId, userId)))
+            .limit(1)
+            .then(rows => rows[0]);
+
+        if (!membership) {
+            return res.status(FORBIDDEN).json({
+                message: "You must be a member of this forum to create a post",
+            });
+        }
 
         const slug = await generateUniqueSlug(content as string);
 
@@ -200,8 +225,17 @@ export const filterPosts = async (req: OptionalAuthRequest, res: Response) => {
                     downvoteCount,
                     author: {
                         id: row.author.id,
+                        role: row.author.role,
                         avatarURL: row.author.avatarURL,
-                        forumProfile: row.profile?.username,
+                        forumProfile: row.profile
+                            ? {
+                                username: row.profile.username,
+                                displayName: row.profile.displayName,
+                                bio: row.profile.bio,
+                                reputation: row.profile.reputation,
+                                badges: row.profile.badges,
+                            }
+                            : null,
                     },
                 };
             })
@@ -323,6 +357,7 @@ export const getPostBySlug = async (req: OptionalAuthRequest, res: Response) => 
             ? {
                 id: row.author.id,
                 avatarURL: row.author.avatarURL,
+                role: row.author.role,
                 forumProfile: row.profile
                     ? {
                         username: row.profile.username,
@@ -460,6 +495,7 @@ export const getPostById = async (req: OptionalAuthRequest, res: Response) => {
             ? {
                 id: row.author.id,
                 avatarURL: row.author.avatarURL,
+                role: row.author.role,
                 forumProfile: row.profile
                     ? {
                         username: row.profile.username,

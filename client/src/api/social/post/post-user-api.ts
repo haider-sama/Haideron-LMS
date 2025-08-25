@@ -4,6 +4,8 @@ import { PostLikeResponse, PostMetrics, PostVoteResponse } from "../../../consta
 const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/posts/public`;
 
 export const likePost = async (postId: string): Promise<PostLikeResponse> => {
+    const start = performance.now(); // start timer
+
     const res = await fetch(`${LOCAL_BASE_URL}/${postId}/like`, {
         method: "POST",
         headers: {
@@ -14,6 +16,9 @@ export const likePost = async (postId: string): Promise<PostLikeResponse> => {
 
     const data = await res.json();
 
+    const end = performance.now(); // end timer
+    console.log(`[API] likePost(${postId}) took ${(end - start).toFixed(2)} ms`);
+
     if (!res.ok) {
         throw new Error(data.message || "Failed to like post.");
     }
@@ -21,8 +26,9 @@ export const likePost = async (postId: string): Promise<PostLikeResponse> => {
     return data as PostLikeResponse;
 };
 
-// --- Unlike a post ---
 export const unlikePost = async (postId: string): Promise<PostLikeResponse> => {
+    const start = performance.now(); // start timer
+
     const res = await fetch(`${LOCAL_BASE_URL}//${postId}/unlike`, {
         method: "DELETE",
         headers: {
@@ -33,6 +39,9 @@ export const unlikePost = async (postId: string): Promise<PostLikeResponse> => {
 
     const data = await res.json();
 
+    const end = performance.now(); // end timer
+    console.log(`[API] unlikePost(${postId}) took ${(end - start).toFixed(2)} ms`);
+
     if (!res.ok) {
         throw new Error(data.message || "Failed to unlike post.");
     }
@@ -41,6 +50,8 @@ export const unlikePost = async (postId: string): Promise<PostLikeResponse> => {
 };
 
 export const upvoteOnPost = async (postId: string): Promise<PostVoteResponse> => {
+    const start = performance.now(); // start timer
+
     const res = await fetch(`${LOCAL_BASE_URL}/${postId}/upvote`, {
         method: "POST",
         headers: {
@@ -50,6 +61,11 @@ export const upvoteOnPost = async (postId: string): Promise<PostVoteResponse> =>
     });
 
     const data = await res.json();
+
+
+    const end = performance.now(); // end timer
+    console.log(`[API] upvotePost(${postId}) took ${(end - start).toFixed(2)} ms`);
+
     if (!res.ok) {
         throw new Error(data.message || "Failed to upvote post.");
     }
@@ -58,6 +74,8 @@ export const upvoteOnPost = async (postId: string): Promise<PostVoteResponse> =>
 };
 
 export const downvoteOnPost = async (postId: string): Promise<PostVoteResponse> => {
+    const start = performance.now(); // start timer
+
     const res = await fetch(`${LOCAL_BASE_URL}/${postId}/downvote`, {
         method: "POST",
         headers: {
@@ -67,6 +85,11 @@ export const downvoteOnPost = async (postId: string): Promise<PostVoteResponse> 
     });
 
     const data = await res.json();
+
+    const end = performance.now(); // end timer
+    console.log(`[API] downvotePost(${postId}) took ${(end - start).toFixed(2)} ms`);
+
+
     if (!res.ok) {
         throw new Error(data.message || "Failed to downvote post.");
     }

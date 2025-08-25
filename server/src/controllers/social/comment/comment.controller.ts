@@ -51,6 +51,10 @@ export const createComment = async (req: Request, res: Response) => {
                 return res.status(BAD_REQUEST).json({ message: "Parent comment does not belong to the same post." });
             }
 
+            if (parent.parentId) {
+                return res.status(BAD_REQUEST).json({ message: "Cannot reply to a reply comment." });
+            }
+
             // Increment childrenCount of parent
             await db
                 .update(comments)

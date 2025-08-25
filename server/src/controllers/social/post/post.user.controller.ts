@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
-import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "../../../constants/http";
+import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED } from "../../../constants/http";
 import { db } from "../../../db/db";
 import { comments, postLikes, posts, postVotes } from "../../../db/schema";
 import { and, count, eq } from "drizzle-orm";
 import { redisClient } from "../../../lib/redis";
+import { publishLikeEvent } from "../../../lib/rabbitMQ";
 
 // Helper keys
 export const getRedisLikeKeys = (postId: string) => ({
@@ -15,67 +16,76 @@ export const likePost = async (req: Request, res: Response) => {
     const { postId } = req.params;
     const userId = req.userId;
 
-    try {
-        // Check if post exists
-        const postRow = await db
-            .select({ id: posts.id })
-            .from(posts)
-            .where(eq(posts.id, postId))
-            .limit(1)
-            .then(r => r[0]);
-        if (!postRow) return res.status(NOT_FOUND).json({ message: "Post not found." });
+    if (!userId) return res.status(UNAUTHORIZED).json({ message: "Not logged in" });
 
+    try {
         const { setKey, countKey } = getRedisLikeKeys(postId);
 
         // Check if already liked
         const alreadyLiked = await redisClient.sIsMember(setKey, userId);
-        if (alreadyLiked) return res.status(CONFLICT).json({ message: "Post already liked." });
 
-        // Add like
-        await redisClient.sAdd(setKey, userId);
-        await redisClient.incr(countKey);
+        let likeCount: number;
 
-        const likeCountStr = await redisClient.get(countKey);
-        const likeCount = likeCountStr ? parseInt(likeCountStr) : 0;
+        if (!alreadyLiked) {
+            // Only add + increment if not already liked
+            const pipeline = redisClient.multi();
+            pipeline.sAdd(setKey, userId);
+            pipeline.incr(countKey);
+            const results = await pipeline.exec();
+            const likeCountReply = results?.[1]; // INCR reply
+            likeCount = Math.max(parseInt(String(likeCountReply ?? "0"), 10), 0);
+        } else {
+            // Just read count
+            const count = await redisClient.get(countKey);
+            likeCount = parseInt(count ?? "0", 10);
+        }
 
-        return res.status(OK).json({ message: "Post liked.", liked: true, likeCount });
+        return res.status(OK).json({
+            message: alreadyLiked ? "Already liked." : "Post liked.",
+            liked: true,
+            likeCount,
+        });
     } catch (err) {
-        console.error("Error liking post:", err);
+        console.error("[POST_LIKE_ERROR]", err);
         return res.status(INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });
     }
 };
 
-// Unlike a post
 export const unlikePost = async (req: Request, res: Response) => {
     const { postId } = req.params;
     const userId = req.userId;
 
-    try {
-        // Check if post exists
-        const postRow = await db
-            .select({ id: posts.id })
-            .from(posts)
-            .where(eq(posts.id, postId))
-            .limit(1)
-            .then(r => r[0]);
-        if (!postRow) return res.status(NOT_FOUND).json({ message: "Post not found." });
+    if (!userId) return res.status(UNAUTHORIZED).json({ message: "Not logged in" });
 
+    try {
         const { setKey, countKey } = getRedisLikeKeys(postId);
 
-        // Check if not liked yet
+        // Check if actually liked
         const alreadyLiked = await redisClient.sIsMember(setKey, userId);
-        if (!alreadyLiked) return res.status(CONFLICT).json({ message: "Post not liked yet." });
 
-        // Remove like
-        await redisClient.sRem(setKey, userId);
-        await redisClient.decr(countKey);
+        let likeCount: number;
 
-        const likeCountStr = await redisClient.get(countKey);
-        const likeCount = likeCountStr ? parseInt(likeCountStr) : 0;
+        if (alreadyLiked) {
+            // Only remove + decrement if previously liked
+            const pipeline = redisClient.multi();
+            pipeline.sRem(setKey, userId);
+            pipeline.decr(countKey);
+            const results = await pipeline.exec();
+            const likeCountReply = results?.[1]; // DECR reply
+            likeCount = Math.max(parseInt(String(likeCountReply ?? "0"), 10), 0);
+        } else {
+            // Just read count
+            const count = await redisClient.get(countKey);
+            likeCount = parseInt(count ?? "0", 10);
+        }
 
-        return res.status(OK).json({ message: "Post unliked.", liked: false, likeCount });
+        return res.status(OK).json({
+            message: alreadyLiked ? "Post unliked." : "Not previously liked.",
+            liked: false,
+            likeCount,
+        });
     } catch (err) {
-        console.error("Error unliking post:", err);
+        console.error("[POST_UNLIKE_ERROR]", err);
         return res.status(INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });
     }
 };
@@ -92,40 +102,53 @@ export const upvotePost = async (req: Request, res: Response) => {
     const { postId } = req.params;
     const userId = req.userId;
 
-    try {
-        // Check post exists
-        const postRow = await db
-            .select({ id: posts.id })
-            .from(posts)
-            .where(eq(posts.id, postId))
-            .limit(1)
-            .then(r => r[0]);
-        if (!postRow) return res.status(NOT_FOUND).json({ message: "Post not found." });
+    if (!userId) return res.status(UNAUTHORIZED).json({ message: "Not logged in" });
 
+    try {
         const { upvoteSetKey, downvoteSetKey, upvoteCountKey, downvoteCountKey } = getRedisVoteKeys(postId);
 
+        // Check current membership
         const alreadyUpvoted = await redisClient.sIsMember(upvoteSetKey, userId);
+        const alreadyDownvoted = await redisClient.sIsMember(downvoteSetKey, userId);
+
+        console.log("User ID:", userId);
+        console.log("Post ID:", postId);
+        console.log("Already Upvoted?", alreadyUpvoted);
+        console.log("Already Downvoted?", alreadyDownvoted);
+
+        // Atomic pipeline
+        const pipeline = redisClient.multi();
 
         if (alreadyUpvoted) {
-            // Undo upvote
-            await redisClient.sRem(upvoteSetKey, userId);
-            await redisClient.decr(upvoteCountKey);
+            pipeline.sRem(upvoteSetKey, userId);
+            pipeline.decr(upvoteCountKey);
         } else {
-            // Remove downvote if exists
-            const hadDownvote = await redisClient.sIsMember(downvoteSetKey, userId);
-            if (hadDownvote) {
-                await redisClient.sRem(downvoteSetKey, userId);
-                await redisClient.decr(downvoteCountKey);
+            if (alreadyDownvoted) {
+                pipeline.sRem(downvoteSetKey, userId);
+                pipeline.decr(downvoteCountKey);
             }
-            // Add upvote
-            await redisClient.sAdd(upvoteSetKey, userId);
-            await redisClient.incr(upvoteCountKey);
+            pipeline.sAdd(upvoteSetKey, userId);
+            pipeline.incr(upvoteCountKey);
         }
 
-        const upvoteCount = parseInt((await redisClient.get(upvoteCountKey)) || "0");
-        const downvoteCount = parseInt((await redisClient.get(downvoteCountKey)) || "0");
+        await pipeline.exec();
 
-        return res.status(OK).json({ upvoteCount, downvoteCount, upvoted: !alreadyUpvoted });
+        const [upvoteCountStr, downvoteCountStr] = await Promise.all([
+            redisClient.get(upvoteCountKey),
+            redisClient.get(downvoteCountKey),
+        ]);
+
+        const upvoteCount = Math.max(parseInt(upvoteCountStr || "0", 10), 0);
+        const downvoteCount = Math.max(parseInt(downvoteCountStr || "0", 10), 0);
+
+        console.log("Upvote Count:", upvoteCount);
+        console.log("Downvote Count:", downvoteCount);
+
+        return res.status(OK).json({
+            upvoted: !alreadyUpvoted,
+            upvoteCount,
+            downvoteCount,
+        });
     } catch (err) {
         console.error("Error upvoting post:", err);
         return res.status(INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });
@@ -136,41 +159,53 @@ export const downvotePost = async (req: Request, res: Response) => {
     const { postId } = req.params;
     const userId = req.userId;
 
+    if (!userId) return res.status(UNAUTHORIZED).json({ message: "Not logged in" });
+
     try {
-        // Check post exists
-        const postRow = await db
-            .select({ id: posts.id })
-            .from(posts)
-            .where(eq(posts.id, postId))
-            .limit(1)
-            .then(r => r[0]);
-
-        if (!postRow) return res.status(NOT_FOUND).json({ message: "Post not found." });
-
         const { upvoteSetKey, downvoteSetKey, upvoteCountKey, downvoteCountKey } = getRedisVoteKeys(postId);
 
+        // Check current membership
         const alreadyDownvoted = await redisClient.sIsMember(downvoteSetKey, userId);
+        const alreadyUpvoted = await redisClient.sIsMember(upvoteSetKey, userId);
+
+        console.log("User ID:", userId);
+        console.log("Post ID:", postId);
+        console.log("Already Upvoted?", alreadyUpvoted);
+        console.log("Already Downvoted?", alreadyDownvoted);
+
+        // Atomic pipeline
+        const pipeline = redisClient.multi();
 
         if (alreadyDownvoted) {
-            // Undo downvote
-            await redisClient.sRem(downvoteSetKey, userId);
-            await redisClient.decr(downvoteCountKey);
+            pipeline.sRem(downvoteSetKey, userId);
+            pipeline.decr(downvoteCountKey);
         } else {
-            // Remove upvote if exists
-            const hadUpvote = await redisClient.sIsMember(upvoteSetKey, userId);
-            if (hadUpvote) {
-                await redisClient.sRem(upvoteSetKey, userId);
-                await redisClient.decr(upvoteCountKey);
+            if (alreadyUpvoted) {
+                pipeline.sRem(upvoteSetKey, userId);
+                pipeline.decr(upvoteCountKey);
             }
-            // Add downvote
-            await redisClient.sAdd(downvoteSetKey, userId);
-            await redisClient.incr(downvoteCountKey);
+            pipeline.sAdd(downvoteSetKey, userId);
+            pipeline.incr(downvoteCountKey);
         }
 
-        const upvoteCount = parseInt((await redisClient.get(upvoteCountKey)) || "0");
-        const downvoteCount = parseInt((await redisClient.get(downvoteCountKey)) || "0");
+        await pipeline.exec();
 
-        return res.status(OK).json({ upvoteCount, downvoteCount, downvoted: !alreadyDownvoted });
+        const [upvoteCountStr, downvoteCountStr] = await Promise.all([
+            redisClient.get(upvoteCountKey),
+            redisClient.get(downvoteCountKey),
+        ]);
+
+        const upvoteCount = Math.max(parseInt(upvoteCountStr || "0", 10), 0);
+        const downvoteCount = Math.max(parseInt(downvoteCountStr || "0", 10), 0);
+
+        console.log("Upvote Count:", upvoteCount);
+        console.log("Downvote Count:", downvoteCount);
+
+        return res.status(OK).json({
+            downvoted: !alreadyDownvoted,
+            upvoteCount,
+            downvoteCount,
+        });
     } catch (err) {
         console.error("Error downvoting post:", err);
         return res.status(INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });

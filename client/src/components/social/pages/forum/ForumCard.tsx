@@ -46,6 +46,10 @@ const ForumCard: React.FC<ForumCardProps> = ({
 }) => {
     const { label, className } = useStatusBadge(forum.status);
 
+    const latestPostUserInitials = latestPost?.author?.forumProfile
+        ? `(${latestPost.author.forumProfile.username ?? ""}) ${latestPost.author.forumProfile.displayName ?? ""}`
+        : "Anonymous";
+
     return (
         <tr className="border-b hover:bg-gray-100 transition">
             {/* Forum Info */}
@@ -113,7 +117,7 @@ const ForumCard: React.FC<ForumCardProps> = ({
                             />
                         ) : (
                             <div className="w-6 h-6 rounded bg-gray-300 text-xs text-white flex items-center justify-center font-semibold mt-1">
-                                {`${latestPost.author.forumProfile?.displayName?.[0] ?? ""}${latestPost.author.forumProfile?.username?.[0] ?? ""}`}
+                               {latestPostUserInitials}
                             </div>
                         )}
 
@@ -121,9 +125,7 @@ const ForumCard: React.FC<ForumCardProps> = ({
                         <div className="flex flex-col">
                             <span className="font-medium truncate">
                                 by{" "}
-                                {latestPost.author.forumProfile?.username ??
-                                    latestPost.author.forumProfile?.displayName ??
-                                    ""}
+                                {truncateName(latestPostUserInitials || "", 25)}
                             </span>
 
                             <span className="text-xs text-gray-600">
@@ -131,7 +133,7 @@ const ForumCard: React.FC<ForumCardProps> = ({
                             </span>
 
                             <div className="text-gray-700 truncate text-sm">
-                                {truncateName(latestPost.content || "", 30)}
+                                {truncateName(latestPost.content || "", 25)}
                             </div>
                         </div>
                     </div>

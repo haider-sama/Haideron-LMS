@@ -171,6 +171,7 @@ export interface Post {
 
 export interface PostAuthor {
     id: string;
+    role: string;
     avatarURL: string | null;
     forumProfile?: ForumProfile | null;
 }
@@ -189,7 +190,7 @@ export interface FilterPostsParams {
     sort?: "recent" | "top" | "trending";
     search?: string;
     archived?: string;
-    lastPostCreatedAt?: string;
+    lastPostCreatedAt: string;
 };
 
 export interface FilterPostsResponse {
@@ -246,7 +247,7 @@ export interface GetCommentsParams {
     parentId?: string;
     sort?: "newest" | "oldest" | "top" | "best";
     limit?: number;
-    offsetKey?: string; // ISO string for cursor
+    offsetKey?: string | null; // ISO string for cursor
 }
 
 export interface CommentAuthor {

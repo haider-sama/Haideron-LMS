@@ -1,5 +1,5 @@
 import { AssessmentTypeEnum, AudienceEnum, BatchEnrollmentStatus, ClassSectionEnum, DegreeEnum, DepartmentEnum, DomainEnum, FacultyTypeEnum, FinalizedResultStatusEnum, KnowledgeAreaEnum, StrengthEnum, SubjectLevelEnum, SubjectTypeEnum, TeacherDesignationEnum, TermEnum } from "../../../../server/src/shared/enums";
-import { Course, Program, ProgramCatalogue, TeacherInfo, TeacherInfoWithQualifications, User } from "../../../../server/src/shared/interfaces";
+import { Course, ForumProfile, Program, ProgramCatalogue, TeacherInfo, TeacherInfoWithQualifications, TeacherQualification, User } from "../../../../server/src/shared/interfaces";
 
 export interface RegisterFormData {
     email: string;
@@ -90,6 +90,28 @@ export interface RegisterProgramPayload {
     requirements?: string;
     vision?: string;
     mission?: string;
+}
+
+export interface UpdateUserPayload {
+    // Top-level user fields that can be updated
+    firstName?: string | null;
+    lastName?: string | null;
+    displayName?: string | null;
+    fatherName?: string | null;
+    city?: string | null;
+    country?: string | null;
+    address?: string | null;
+    email?: string;
+    department?: DepartmentEnum | null;
+    role?: AudienceEnum;
+
+    // Forum profile updates (partial allowed)
+    forumProfile?: Partial<ForumProfile>;
+
+    // Teacher info updates (partial allowed)
+    teacherInfo?: Partial<TeacherInfo> & {
+        qualifications?: Partial<TeacherQualification>[];
+    };
 }
 
 export interface GetProgramsParams {

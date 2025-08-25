@@ -1,5 +1,6 @@
 {
     "dependencies": {
+        "amqplib": "^0.10.8",
         "bcryptjs": "^2.4.3",
         "cloudinary": "^2.4.0",
         "cookie-parser": "^1.4.6",
@@ -39,6 +40,7 @@
         "db:push": "npx drizzle-kit push"
     },
     "devDependencies": {
+        "@types/amqplib": "^0.10.7",
         "@types/bcryptjs": "^2.4.6",
         "@types/cookie-parser": "^1.4.7",
         "@types/cors": "^2.8.17",

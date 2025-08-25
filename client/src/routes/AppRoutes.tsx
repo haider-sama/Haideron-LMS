@@ -35,7 +35,10 @@ import AuditLogPage from "../pages/admin/AuditLogPage";
 import SocialShell from "../pages/main/SocialShell";
 import ForumPage from "../pages/social/forum/ForumPage";
 import ModeratorsPage from "../components/social/pages/forum/ModeratorsPage";
-// import SocialShell from "../pages/main/SocialShell";
+import ForumDetailPage from "../pages/social/forum/ForumDetailPage";
+import PostPage from "../pages/social/post/PostPage";
+import ForumUserProfile from "../pages/social/account/ForumUserProfile";
+import UserForumProfile from "../pages/social/account/UserForumProfile";
 
 interface AppRoutesProps {
     isLoggedIn: boolean;
@@ -282,9 +285,9 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
 
             <Route element={<SocialShell />}>
                 <Route path="/forums" element={<ForumPage />} />
-                {/* <Route path="/forums/:slug" element={<ForumDetailPage />} /> */}
+                <Route path="/forums/:slug" element={<ForumDetailPage />} />
                 <Route path="/forums/:forumId/moderators" element={<ModeratorsPage />} />
-                {/* <Route path="/forums/:forumSlug/:postSlug" element={<PostPage />} />
+                <Route path="/forums/:forumSlug/:postSlug" element={<PostPage />} />
 
                 <Route
                     path="/forums/profile"
@@ -292,11 +295,11 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isLoggedIn, role }) => {
                         <ProtectedRoute
                             isAllowed={isLoggedIn}
                             redirectTo="/login"
-                            element={<ForumProfile />}
+                            element={<ForumUserProfile />}
                         />
                     }
                 />
-                <Route path="/forums/profile/:userIdOrUsername" element={<UserForumProfile />} /> */}
+                <Route path="/forums/profile/:userIdOrUsername" element={<UserForumProfile />} />
 
             </Route>
 

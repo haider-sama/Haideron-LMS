@@ -1,5 +1,6 @@
-import { User } from "../../../../server/src/shared/interfaces";
+import { UserWithRelations } from "../../../../server/src/shared/interfaces";
 import { API_BASE_URL } from "../../constants";
+import { UpdateUserPayload } from "../../constants/core/interfaces";
 
 const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/auth`;
 
@@ -16,7 +17,7 @@ export const fetchUserProfile = async () => {
     return res.json();
 };
 
-export const updateUserProfile = async (userData: Partial<User>): Promise<User> => {
+export const updateUserProfile = async (userData: UpdateUserPayload): Promise<UserWithRelations> => {
     const res = await fetch(`${LOCAL_BASE_URL}/update/profile`, {
         method: "PUT",
         credentials: "include",
@@ -27,7 +28,9 @@ export const updateUserProfile = async (userData: Partial<User>): Promise<User> 
     });
 
     const data = await res.json();
+
     // console.log("Received response:", data);
+    
     if (!res.ok) {
         const error: any = new Error(data.message || "Failed to update profile");
         if (data.errors) {
