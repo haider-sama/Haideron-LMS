@@ -191,9 +191,9 @@ We ❤️ contributions from developers!
 
 📜 [See LICENSE](./LICENSE) for details or [contact us](vegeta.khan2000@gmail.com) for commercial usage.
 
+<br>
 
 ## 💰 Estimated Self-Hosting Costs
-
 If you choose to host Haideron-LMS yourself, here’s a detailed cost breakdown based on different scales of deployment.  
 Costs vary by provider (AWS, DigitalOcean, Render, Supabase), so these are **approximate monthly estimates**.
 
