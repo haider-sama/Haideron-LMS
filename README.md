@@ -5,13 +5,13 @@
 <h1 align="center">Haideron-LMS</h1>
 
 <p align="center">
-  A <strong>scalable, modern outcome-based Learning Management System (LMS)</strong> built for institutions that value performance, reliability, and ease of use.<br>
+  A <strong>scalable, modern outcome-based Learning Management System (LMS)</strong> built for institutions that value performance, reliability, and ease of use.
   Designed with <strong>Node.js, TypeScript, PostgreSQL (via Drizzle ORM)</strong>, and <strong>Redis (for the social layer)</strong> — Haideron-LMS delivers a smooth, secure, and intuitive learning experience for administrators, faculty, and students.
 </p>
 
 <br>
 
-<p align="center">
+<p>
   ⭐ <b>If you find this project helpful, consider giving it a star on GitHub — it motivates us to keep improving!</b> ⭐
 </p>
 
@@ -136,3 +136,25 @@ cd client/
 npm run dev
 cd server/
 npm run dev
+
+<br>
+
+🤝 Contributing
+
+We ❤️ contributions from developers!
+- Fork the repository
+- Create a new branch (git checkout -b feature/your-feature-name)
+- Commit your changes (git commit -m "Add feature: your feature name")
+- Push to your branch (git push origin feature/your-feature-name)
+- Open a Pull Request and describe your changes
+
+💡 Pro Tip: Check open issues or create a new one before starting to avoid duplicate work.
+
+<br>
+
+📄 License
+- This project is licensed under the Commercial License for institutions.
+- ✅ Free for personal, educational, and non-commercial research use
+- 💰 Commercial License required for universities, colleges, or organizations (500 USD/year)
+
+📜 See LICENSE for details or contact us for commercial usage
