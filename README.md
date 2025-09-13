@@ -2,10 +2,12 @@
   <img src="https://github.com/haider-sama/Haideron-LMS/blob/master/devlog/github_banner.png" alt="Banner" width="512" height="128">
 </p>
 
-# 📚 HaideronOS-LMS
+<h1 align="center">Haideron-LMS</h1>
+<p align="center">
+  A <strong>scalable, modern outcome-based Learning Management System (LMS)</strong> built for institutions that value performance, reliability, and ease of use.<br>
+  Designed with <strong>Node.js, TypeScript, PostgreSQL (via Drizzle ORM)</strong>, and <strong>Redis (for the social layer)</strong> — Haideron-LMS delivers a smooth, secure, and intuitive learning experience for administrators, faculty, and students.
+</p>
 
-A **scalable, modern Learning Management System (LMS)** built for institutions that value performance, reliability, and ease of use.  
-Designed with **Node.js, TypeScript, PostgreSQL (via Drizzle ORM)**, and **Redis (for the social layer)** — HaideronOS-LMS delivers a smooth, secure, and intuitive learning experience for administrators, faculty, and students.
 
 ---
 
