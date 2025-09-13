@@ -62,33 +62,18 @@ Designed with **Node.js, TypeScript, PostgreSQL (via Drizzle ORM)**, and **Redis
 - **Logging System** – track and audit critical operations  
 - **Minimal Training Required** – optimized for usability by non-technical staff  
 
----
 
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|------|-------------|
-| **Backend** | Node.js + TypeScript |
-| **Database** | PostgreSQL (Drizzle ORM) |
-| **Caching / Realtime** | Redis (for social features) |
-| **Auth** | JWT + Refresh Tokens |
-| **UI/UX** | Modern, responsive, mobile-first |
-
----
-
-## 📸 Screenshots / Demo
-*(Add screenshots or a GIF demo here once available)*
-
----
-
-## 🏗️ Installation & Setup
+## ⚙️ Installation & Setup
 
 ```bash
 # Clone the repo
-git clone https://github.com/yourusername/HaideronOS-LMS.git
+git clone https://github.com/haider-sama/Haideron-LMS.git
 
 # Install dependencies
-cd HaideronOS-LMS
+cd Haideron-LMS
+cd client/
+npm install
+cd server/
 npm install
 
 # Configure environment variables
@@ -96,7 +81,12 @@ cp .env.example .env
 # Edit .env with DB credentials, JWT secrets, etc.
 
 # Run migrations
+cd server/
 npm run db:migrate
+npm run db:push
 
 # Start development server
+cd client/
+npm run dev
+cd server/
 npm run dev
