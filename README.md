@@ -158,4 +158,4 @@ We ❤️ contributions from developers!
 - ✅ Free for personal, educational, and non-commercial research use
 - 💰 Commercial License required for universities, colleges, or organizations (500 USD/year)
 
-📜 See LICENSE for details or contact us for commercial usage
+📜 [See LICENSE](./LICENSE) for details or [contact us](vegeta.khan2000@gmail.com) for commercial usage.
