@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/haider-sama/Haideron-LMS/blob/master/devlog/github_banner.png" alt="Banner" width="1024" height="256">
+  <img src="https://github.com/haider-sama/Haideron-LMS/blob/master/devlog/github_banner.png" alt="Banner" width="512" height="128">
 </p>
 
 # 📚 HaideronOS-LMS
