@@ -215,7 +215,6 @@ Costs vary by provider (AWS, DigitalOcean, Render, Supabase), so these are **app
 Social layer (forums, media uploads) adds storage & Redis cost.  
 Heavy usage (video hosting, high-frequency API calls) may require more resources.*
 
----
 
 ### 🧠 Key Notes:
 - **Supabase Free Tier** covers up to ~500MB DB + 50,000 monthly requests — ideal for small institutions or testing.  
