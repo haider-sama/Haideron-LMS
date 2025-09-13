@@ -24,7 +24,6 @@
   - Session logout management  
   - **Dark Mode** (academic layer only – social layer coming soon)
 
----
 
 ### 📚 Core Academic Management
 - 🎓 **Program Management** – create & manage degree programs  
@@ -42,13 +41,11 @@
 - 👥 **Batch Management** – create/edit/delete batches (e.g., `2022-CS`), auto-enroll students  
 - 👩‍🏫 **Faculty Management** – add/edit/remove faculty (by department heads)  
 
----
 
 ### 🎓 Outcomes & Mapping
 - 🏆 **PEOs, PLOs, CLOs** – manage program, learning & course outcomes  
 - 🛠️ **Mapping Tools** – robust PEO↔PLO & PLO↔CLO mapping for accreditation readiness  
 
----
 
 ### 👩‍🏫 Teacher Dashboard
 - 📥 Auto-fetch assigned courses for the active semester  
@@ -57,7 +54,6 @@
 - 📊 **Custom Grading Schemes** per course offering  
 - ✅ **Result Finalization** – submit results to department heads for approval  
 
----
 
 ### 👨‍🎓 Student Dashboard
 - 📌 Automatically shows enrolled courses for the active semester  
@@ -67,7 +63,6 @@
   - Handles repeated/failed course scenarios automatically  
   - Generates a clean, accurate transcript view  
 
----
 
 ### 🌐 Social Layer (Community)
 - 💬 Forums, posts, comments with likes/upvotes/downvotes  
@@ -76,7 +71,6 @@
 - 📱 Clean, mobile-friendly UX  
 - ⚡ **Backed by Redis** for blazing-fast performance  
 
----
 
 ### ⚙️ Admin Features
 - 🛠️ **Admin Panel** – configure system settings with ease  
