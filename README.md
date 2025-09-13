@@ -140,7 +140,7 @@ npm run dev
 
 <br>
 
-🤝 Contributing
+## 🤝 Contributing
 
 We ❤️ contributions from developers!
 - Fork the repository
@@ -153,7 +153,7 @@ We ❤️ contributions from developers!
 
 <br>
 
-📄 License
+## 📄 License
 - This project is licensed under the Commercial License for institutions.
 - ✅ Free for personal, educational, and non-commercial research use
 - 💰 Commercial License required for universities, colleges, or organizations (500 USD/year)
