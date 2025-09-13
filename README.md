@@ -136,6 +136,37 @@ cd client/
 npm run dev
 cd server/
 npm run dev
+
+# 🗄️ 1. Setup PostgreSQL on Supabase
+# - Go to https://supabase.com/ → Create a free project
+# - Copy the database connection string from:
+#   Settings → Database → Connection Info → URI
+# - Add it to your .env file as:
+# DATABASE_URL=postgres://username:password@db.supabase.co:5432/postgres
+
+# 🐳 2. Setup with Docker (Optional)
+# If you want a full local environment:
+docker compose up --build
+
+# This will:
+# - Run client & server containers
+# - Optionally start Postgres & Redis locally
+# - Expose ports for development
+
+# 📧 3. Configure Nodemailer for Email
+# Add these to your .env file:
+# SMTP_HOST=smtp.yourprovider.com
+# SMTP_PORT=587
+# SMTP_USER=your-username
+# SMTP_PASS=your-password
+# SMTP_FROM="Haideron-LMS <no-reply@yourdomain.com>"
+
+# ⚡ 4. Enable Redis (Optional – Social Layer)
+# Start Redis locally (or use a managed service)
+docker run -d -p 6379:6379 redis
+
+# Add to your .env:
+# REDIS_URL=redis://localhost:6379
 ```
 
 <br>
@@ -159,3 +190,37 @@ We ❤️ contributions from developers!
 - 💰 Commercial License required for universities, colleges, or organizations (500 USD/year)
 
 📜 [See LICENSE](./LICENSE) for details or [contact us](vegeta.khan2000@gmail.com) for commercial usage.
+
+
+## 💰 Estimated Self-Hosting Costs
+
+If you choose to host Haideron-LMS yourself, here’s a detailed cost breakdown based on different scales of deployment.  
+Costs vary by provider (AWS, DigitalOcean, Render, Supabase), so these are **approximate monthly estimates**.
+
+| Component             | 1,000 Students (Small Dept) | 100,000 Students (Medium Uni) | 200,000 Students (Large Uni) | Notes |
+|----------------------|---------------------------|------------------------------|-----------------------------|-------|
+| 🌐 **Server (App + API)** | 2 vCPU, 4GB RAM VM<br>(e.g. EC2 t3.medium / DO 4GB Droplet) | 4–8 vCPU, 16GB RAM cluster | 8–16 vCPU, 32GB+ cluster w/ load balancing | Horizontal scaling recommended after 50k users |
+| 🗄️ **Database (PostgreSQL / Supabase)** | ~1GB–2GB storage<br>Basic managed instance | 50GB+ managed instance w/ connection pooling | 100GB+ managed cluster w/ read replicas | Supabase Pro or RDS recommended beyond 10k users |
+| ⚡ **Redis (Optional)** | Shared free tier or small container | Dedicated 2GB instance | 4–8GB dedicated Redis cluster | Only required for social layer & caching |
+| ☁️ **Storage (Media Uploads)** | ~5–10GB<br>($5/month) | 500GB+ S3 bucket or Spaces | 1TB+ S3 bucket | Costs scale with file uploads & student activity |
+| 📧 **Email Service** (Nodemailer + SMTP provider) | Free tier (10k–50k emails) | Paid plan (~$50–100/month) | Paid plan (~$100–200/month) | SendGrid/Resend/SES recommended |
+| 📈 **Monitoring & Backups** | Free/basic monitoring | Paid monitoring & automated backups | Enterprise-level monitoring & DR strategy | Consider Grafana/Prometheus or SaaS |
+
+**Estimated Total Monthly Cost**  
+- 🟢 **Small Setup (1,000 Students):** ~$50 – $100/month  
+- 🟡 **Medium Setup (100,000 Students):** ~$800 – $1,500/month  
+- 🔴 **Large Setup (200,000 Students):** ~$1,500 – $3,000/month  
+
+> 📝 *Estimates assume moderate course activity (attendance, assessments, social features).  
+Heavy usage (video hosting, high-frequency API calls) may require higher resources.*
+
+<br>
+
+### 🧠 Key Notes:
+- **Supabase Free Tier** covers up to ~500MB DB and 50,000 monthly requests — perfect for testing or small institutions.  
+- **Redis is optional** — only needed for the social layer (forums, likes, infinite scroll performance).  
+- **Email costs scale** with volume (password resets, bulk notifications). Consider using **AWS SES** or **Resend** for cheaper large-scale email delivery.  
+- For **very large deployments (100k+ users)**, use:
+  - **Load balancing** (NGINX/HAProxy) for API servers  
+  - **Connection pooling** (PgBouncer) for PostgreSQL  
+  - **Scheduled backups** and possibly **read replicas**  
