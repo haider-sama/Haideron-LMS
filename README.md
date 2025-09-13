@@ -3,11 +3,13 @@
 </p>
 
 <h1 align="center">Haideron-LMS</h1>
-<p>
-  A <strong>scalable, modern outcome-based Learning Management System (LMS)</strong> built for institutions that value performance, reliability, and ease of use.
+
+<p align="center">
+  A <strong>scalable, modern outcome-based Learning Management System (LMS)</strong> built for institutions that value performance, reliability, and ease of use.<br>
   Designed with <strong>Node.js, TypeScript, PostgreSQL (via Drizzle ORM)</strong>, and <strong>Redis (for the social layer)</strong> — Haideron-LMS delivers a smooth, secure, and intuitive learning experience for administrators, faculty, and students.
 </p>
 
+<br>
 
 ## ✨ Features
 
@@ -24,6 +26,7 @@
   - Session logout management  
   - **Dark Mode** (academic layer only – social layer coming soon)
 
+<br>
 
 ### 📚 Core Academic Management
 - 🎓 **Program Management** – create & manage degree programs  
@@ -41,11 +44,13 @@
 - 👥 **Batch Management** – create/edit/delete batches (e.g., `2022-CS`), auto-enroll students  
 - 👩‍🏫 **Faculty Management** – add/edit/remove faculty (by department heads)  
 
+<br>
 
 ### 🎓 Outcomes & Mapping
 - 🏆 **PEOs, PLOs, CLOs** – manage program, learning & course outcomes  
 - 🛠️ **Mapping Tools** – robust PEO↔PLO & PLO↔CLO mapping for accreditation readiness  
 
+<br>
 
 ### 👩‍🏫 Teacher Dashboard
 - 📥 Auto-fetch assigned courses for the active semester  
@@ -54,6 +59,7 @@
 - 📊 **Custom Grading Schemes** per course offering  
 - ✅ **Result Finalization** – submit results to department heads for approval  
 
+<br>
 
 ### 👨‍🎓 Student Dashboard
 - 📌 Automatically shows enrolled courses for the active semester  
@@ -63,6 +69,7 @@
   - Handles repeated/failed course scenarios automatically  
   - Generates a clean, accurate transcript view  
 
+<br>
 
 ### 🌐 Social Layer (Community)
 - 💬 Forums, posts, comments with likes/upvotes/downvotes  
@@ -71,15 +78,17 @@
 - 📱 Clean, mobile-friendly UX  
 - ⚡ **Backed by Redis** for blazing-fast performance  
 
+<br>
 
 ### ⚙️ Admin Features
 - 🛠️ **Admin Panel** – configure system settings with ease  
 - 👤 **User Management** – bulk user creation, password reset, avatar changes, user deletion  
 - 📜 **Logging System** – track & audit critical operations  
-- 🧠 **Minimal Training Required** – optimized for usability by non-technical staff
+- 🧠 **Minimal Training Required** – optimized for usability by non-technical staff  
 
+<br>
 
-## 🔧 Installation & Setup
+## 🛠️ Installation & Setup
 
 ```bash
 # Clone the repo
