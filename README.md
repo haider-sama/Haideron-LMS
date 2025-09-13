@@ -11,6 +11,27 @@
 
 <br>
 
+<p align="center">
+  ⭐ <b>If you find this project helpful, consider giving it a star on GitHub — it motivates us to keep improving!</b> ⭐
+</p>
+
+<br>
+
+## 📑 Table of Contents
+- [✨ Features](#-features)
+  - [🔑 Authentication & Security](#-authentication--security)
+  - [📚 Core Academic Management](#-core-academic-management)
+  - [🎓 Outcomes & Mapping](#-outcomes--mapping)
+  - [👩‍🏫 Teacher Dashboard](#-teacher-dashboard)
+  - [👨‍🎓 Student Dashboard](#-student-dashboard)
+  - [🌐 Social Layer (Community)](#-social-layer-community)
+  - [⚙️ Admin Features](#-admin-features)
+- [🛠️ Installation & Setup](#️-installation--setup)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+
+<br>
+
 ## ✨ Features
 
 ### 🔑 Authentication & Security
