@@ -12,7 +12,7 @@
 <br>
 
 <p>
-  ⭐ <b>If you find this project helpful, consider giving it a star on GitHub — it motivates us to keep improving!</b> ⭐
+  ⭐ <b>If you find this project helpful, consider giving it a star on GitHub — it motivates me to keep improving!</b> ⭐
 </p>
 
 <br>
