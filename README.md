@@ -14,9 +14,10 @@
 <p>
   ⭐ <b>If you find this project helpful, consider giving it a star on GitHub — it motivates me to keep improving!</b> ⭐
 </p>
+<p>
+  🎥 <b>Demo: Watch the demo here:</b> https://youtu.be/Gh8xX-oWxnM
+</p>
 
-## 🎥 Demo
-[![Watch the video](https://i9.ytimg.com/vi_webp/Gh8xX-oWxnM/mqdefault.webp?v=68d409db&sqp=CMiT0MYG&rs=AOn4CLCkMVLkJUdzjVHvjwZklKVMOQ1Skw)](https://youtu.be/Gh8xX-oWxnM)
 
 <br>
 
