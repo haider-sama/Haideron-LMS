@@ -186,7 +186,7 @@ We ❤️ contributions from developers!
 <br>
 
 ## 💰 Estimated Self-Hosting Costs
-If you choose to host Haideron-LMS yourself, here’s a detailed cost breakdown based on different scales of deployment.  
+If you choose to host OASIS-LMS yourself, here’s a detailed cost breakdown based on different scales of deployment.  
 Costs vary by provider (AWS, DigitalOcean, Render, Supabase), so these are **approximate monthly estimates**.
 
 | Component             | 1,000 Students (Small Dept) | 100,000 Students (Medium Uni) | 200,000 Students (Large Uni) | Notes |
