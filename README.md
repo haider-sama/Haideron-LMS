@@ -144,14 +144,6 @@ npm run dev
 # - Add it to your .env file as:
 # DATABASE_URL=postgres://username:password@db.supabase.co:5432/postgres
 
-# 🐳 2. Setup with Docker (Optional)
-# If you want a full local environment:
-docker compose up --build
-
-# This will:
-# - Run client & server containers
-# - Optionally start Postgres & Redis locally
-# - Expose ports for development
 
 # 📧 3. Configure Nodemailer for Email
 # Add these to your .env file:
@@ -187,7 +179,7 @@ We ❤️ contributions from developers!
 ## 📄 License
 - This project is licensed under the Commercial License for institutions.
 - ✅ Free for personal, educational, and non-commercial research use
-- 💰 Commercial License required for universities, colleges, or organizations (500 USD/year)
+- 💰 Commercial License required for universities, colleges, or organizations.
 
 📜 [See LICENSE](./LICENSE) for details or [contact us](vegeta.khan2000@gmail.com) for commercial usage.
 
