@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="https://github.com/haider-sama/OASIS-LMS/blob/master/devlog/github_banner.png" alt="Banner" width="512" height="128">
+  <img src="https://github.com/haider-sama/Haideron-LMS/blob/master/devlog/github_banner.png" alt="Banner" width="512" height="128">
 </p>
 
-<h1 align="center">OASIS-LMS</h1>
+<h1 align="center">Haideron-LMS</h1>
 
 <p align="center">
   A <strong>scalable, modern outcome-based Learning Management System (LMS)</strong> built for institutions that value performance, reliability, and ease of use.
-  Designed with <strong>Node.js, TypeScript, PostgreSQL (via Drizzle ORM)</strong>, and <strong>Redis (for the social layer)</strong> — OASIS-LMS delivers a smooth, secure, and intuitive learning experience for administrators, faculty, and students.
+  Designed with <strong>Node.js, TypeScript, PostgreSQL (via Drizzle ORM)</strong>, and <strong>Redis (for the social layer)</strong> — Haideron-LMS delivers a smooth, secure, and intuitive learning experience for administrators, faculty, and students.
 </p>
 
 <br>
@@ -113,10 +113,10 @@
 
 ```bash
 # Clone the repo
-git clone https://github.com/haider-sama/OASIS-LMS.git
+git clone https://github.com/haider-sama/Haideron-LMS.git
 
 # Install dependencies
-cd OASIS-LMS
+cd Haideron-LMS
 cd client/
 npm install
 cd server/
@@ -151,7 +151,7 @@ npm run dev
 # SMTP_PORT=587
 # SMTP_USER=your-username
 # SMTP_PASS=your-password
-# SMTP_FROM="OASIS-LMS <no-reply@yourdomain.com>"
+# SMTP_FROM="Haideron-LMS <no-reply@yourdomain.com>"
 
 # ⚡ 4. Enable Redis (Optional – Social Layer)
 # Start Redis locally (or use a managed service)
@@ -186,7 +186,7 @@ We ❤️ contributions from developers!
 <br>
 
 ## 💰 Estimated Self-Hosting Costs
-If you choose to host OASIS-LMS yourself, here’s a detailed cost breakdown based on different scales of deployment.  
+If you choose to host Haideron-LMS yourself, here’s a detailed cost breakdown based on different scales of deployment.  
 Costs vary by provider (AWS, DigitalOcean, Render, Supabase), so these are **approximate monthly estimates**.
 
 | Component             | 1,000 Students (Small Dept) | 100,000 Students (Medium Uni) | 200,000 Students (Large Uni) | Notes |
