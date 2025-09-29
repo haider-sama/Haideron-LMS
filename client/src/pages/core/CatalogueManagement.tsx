@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { usePermissions } from "../../hooks/usePermissions";
-import { useDashboards } from "../../hooks/auth/useDashboards";
-import { useToast } from "../../context/ToastContext";
+import { usePermissions } from "../../features/auth/hooks/usePermissions";
+import { useDashboards } from "../../features/auth/hooks/useDashboards";
+import { useToast } from "../../shared/context/ToastContext";
 import { useQuery } from "@tanstack/react-query";
 import { getCatalogueById, getCataloguesByProgram, updateCatalogueById } from "../../api/core/catalogue-api";
 import { getPrograms } from "../../api/core/program-api";
 import { Helmet } from "react-helmet-async";
-import { GLOBAL_TITLE, MAX_PAGE_LIMIT } from "../../constants";
+import { GLOBAL_TITLE, MAX_PAGE_LIMIT } from "../../shared/constants";
 import Breadcrumbs, { generateBreadcrumbs } from "../../components/ui/Breadcrumbs";
 import PageHeading from "../../components/ui/PageHeading";
 import { SelectInput } from "../../components/ui/Input";
@@ -17,7 +17,7 @@ import { Program, ProgramCatalogue } from "../../../../server/src/shared/interfa
 import Modal from "../../components/ui/Modal";
 import CreateCatalogueForm from "../../components/pages/core/catalogue/CreateCatalogueForm";
 import CatalogueProfile from "../../components/pages/core/catalogue/CatalogueProfile";
-import { truncateName } from "../../utils/truncate-name";
+import { truncateName } from "../../shared/utils/truncate-name";
 import { AudienceEnum } from "../../../../server/src/shared/enums";
 import { useUserManagement } from "../../hooks/admin/useUserManagement";
 import { Button } from "../../components/ui/Button";

@@ -1,6 +1,5 @@
 import { pgTable, text, varchar, integer, boolean, timestamp, pgEnum, date, jsonb, uuid, index } from "drizzle-orm/pg-core";
 import { AudienceEnum, DegreeEnum, DepartmentEnum, FacultyTypeEnum, TeacherDesignationEnum } from "../../../shared/enums";
-import { ForumBadgeEnum, VisibilityEnum } from "../../../shared/social.enums";
 import { relations, sql, SQL } from "drizzle-orm";
 import { tsvector } from "../core/tsvector";
 
@@ -9,8 +8,6 @@ export const departmentEnum = pgEnum("department_enum", Object.values(Department
 export const degreeEnum = pgEnum("degree_enum", Object.values(DegreeEnum) as [string, ...string[]]);
 export const facultyTypeEnum = pgEnum("faculty_type_enum", Object.values(FacultyTypeEnum) as [string, ...string[]]);
 export const teacherDesignationEnum = pgEnum("teacher_designation_enum", Object.values(TeacherDesignationEnum) as [string, ...string[]]);
-export const forumBadgeEnum = pgEnum("forum_badge_enum", Object.values(ForumBadgeEnum) as [string, ...string[]]);
-export const visibilityEnum = pgEnum("visibility_enum", Object.values(VisibilityEnum) as [string, ...string[]]);
 
 export const users = pgTable("users", {
     id: uuid("id").defaultRandom().primaryKey(),
@@ -33,6 +30,11 @@ export const users = pgTable("users", {
     resetPasswordToken: text("reset_password_token"),
     resetPasswordExpiresAt: timestamp("reset_password_expires_at", { withTimezone: false }),
     tokenVersion: integer("token_version").default(0).notNull(),
+
+    // 2FA fields
+    twoFASecret: text("two_fa_secret"), // base32 secret
+    isTwoFAEnabled: boolean("is_two_fa_enabled").default(false).notNull(),
+
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
 
@@ -81,34 +83,12 @@ export const teacherQualifications = pgTable("teacher_qualifications", {
     teacherInfoIdIdx: index("idx_teacher_qualifications_teacher_info_id").on(table.teacherInfoId),
 }));
 
-export const forumProfiles = pgTable("forum_profiles", {
-    id: uuid("id").defaultRandom().primaryKey(), // Changed to UUID
-    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }), // Changed to UUID
-    username: varchar("username", { length: 255 }).notNull().unique(),
-    displayName: text("display_name"),
-    bio: text("bio").default(""),
-    signature: text("signature").default(""),
-    interests: jsonb("interests").$type<string[]>(),
-    badges: jsonb("badges").$type<ForumBadgeEnum[]>(),
-    reputation: integer("reputation").default(0),
-    visibility: visibilityEnum("visibility").default("public"),
-    postCount: integer("post_count").default(0),
-    commentCount: integer("comment_count").default(0),
-    joinedAt: timestamp("joined_at").defaultNow(),
-}, (table) => ({
-    userIdIdx: index("idx_forum_profiles_user_id").on(table.userId),
-}));
-
 // Users -> TeacherInfo & ForumProfiles
 export const usersRelations = relations(users, ({ one, many }) => ({
     teacherInfo: one(teacherInfo, {
         fields: [users.id],
         references: [teacherInfo.userId],
-    }),
-    forumProfiles: one(forumProfiles, {
-        fields: [users.id],
-        references: [forumProfiles.userId],
-    }),
+    })
 }));
 
 // TeacherInfo -> User & TeacherQualifications
@@ -125,13 +105,5 @@ export const teacherQualificationsRelations = relations(teacherQualifications, (
     teacherInfo: one(teacherInfo, {
         fields: [teacherQualifications.teacherInfoId],
         references: [teacherInfo.id],
-    }),
-}));
-
-// ForumProfiles -> User
-export const forumProfilesRelations = relations(forumProfiles, ({ one }) => ({
-    user: one(users, {
-        fields: [forumProfiles.userId],
-        references: [users.id],
     }),
 }));

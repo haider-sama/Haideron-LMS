@@ -3,14 +3,14 @@ import { fetchEnrolledStudentsForCourse } from "../../../../api/core/teacher/tea
 import { getAttendanceRecords, getAttendanceSessions, markAttendanceRecords } from "../../../../api/core/teacher/attendance-api";
 import { Input, SelectInput } from "../../../ui/Input";
 import { Pagination } from "../../../ui/Pagination";
-import { useToast } from "../../../../context/ToastContext";
+import { useToast } from "../../../../shared/context/ToastContext";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../../../ui/Button";
 import ErrorStatus from "../../../ui/ErrorStatus";
 import TopCenterLoader from "../../../ui/TopCenterLoader";
 import { AudienceEnum } from "../../../../../../server/src/shared/enums";
 import { useUserManagement } from "../../../../hooks/admin/useUserManagement";
-import { usePermissions } from "../../../../hooks/usePermissions";
+import { usePermissions } from "../../../../features/auth/hooks/usePermissions";
 import Modal from "../../../ui/Modal";
 import CreateAttendanceSessionForm from "./CreateAttendanceSessionForm";
 

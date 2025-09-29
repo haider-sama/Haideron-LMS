@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
-import { useToast } from "../../../../context/ToastContext";
-import { usePermissions } from "../../../../hooks/usePermissions";
-import { useDashboards } from "../../../../hooks/auth/useDashboards";
+import { useToast } from "../../../../shared/context/ToastContext";
+import { usePermissions } from "../../../../features/auth/hooks/usePermissions";
+import { useDashboards } from "../../../../features/auth/hooks/useDashboards";
 import { getCourseById, updateCourseById } from "../../../../api/core/course-api";
 import { getPLOsForProgram } from "../../../../api/core/program-api";
 import { DomainEnum, KnowledgeAreaEnum, StrengthEnum, SubjectLevelEnum, SubjectTypeEnum } from "../../../../../../server/src/shared/enums";
-import { CLO, EditableCourse, PLOMapping, UpdateCoursePayload } from "../../../../constants/core/interfaces";
+import { CLO, EditableCourse, PLOMapping, UpdateCoursePayload } from "../../../../shared/constants/core/interfaces";
 import ErrorStatus from "../../../ui/ErrorStatus";
 import { Input, SelectInput, TextAreaInput } from "../../../ui/Input";
 import { Button } from "../../../ui/Button";

@@ -115,9 +115,6 @@ export async function updateAdminSettings(req: Request, res: Response) {
             .set(finalUpdate)
             .where(eq(adminSettings.id, existing[0].id));
 
-        // Invalidate cache
-        await SettingsService.invalidateCache();
-
         // Return fresh settings
         const updated = await SettingsService.getSettings(true);
 

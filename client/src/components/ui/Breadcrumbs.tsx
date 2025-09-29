@@ -1,6 +1,6 @@
 // components/ui/Breadcrumbs.tsx
 import { FiChevronRight } from "react-icons/fi";
-import { NavLink, navLinks } from "../../constants";
+import { NavLink, navLinks } from "../../shared/constants";
 
 export function generateBreadcrumbs(
     path: string,

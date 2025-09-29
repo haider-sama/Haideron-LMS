@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import TopCenterLoader from "../../../../ui/TopCenterLoader";
-import { Assessment, CLO } from "../../../../../constants/core/interfaces";
+import { Assessment, CLO } from "../../../../../shared/constants/core/interfaces";
 import { deleteAssessmentById, getCourseAssessments } from "../../../../../api/core/teacher/assessment-api";
-import { useToast } from "../../../../../context/ToastContext";
+import { useToast } from "../../../../../shared/context/ToastContext";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../../../../ui/Button";
 import Modal from "../../../../ui/Modal";

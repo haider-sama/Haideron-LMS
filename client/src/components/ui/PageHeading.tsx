@@ -11,11 +11,11 @@ const PageHeading: React.FC<PageHeadingProps> = ({ title, subtitle, className = 
   return (
     <div className={`flex flex-col md:flex-row md:items-center justify-between gap-2 ${className}`}>
       <div>
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-darkTextPrimary">
+        <h2 className="text-2xl font-bold text-gray-800">
           {title}
         </h2>
         {subtitle && (
-          <p className="text-md text-gray-600 dark:text-darkTextMuted mt-2">
+          <p className="text-md text-gray-600 mt-2">
             {subtitle}
           </p>
         )}

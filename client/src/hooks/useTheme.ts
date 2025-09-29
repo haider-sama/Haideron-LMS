@@ -1,7 +1,7 @@
 // src/hooks/useTheme.ts
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../store/authStore";
-import { hydrateTheme, setTheme } from "../store/themeSlice";
+import { AppDispatch, RootState } from "../app/store/authStore";
+import { hydrateTheme, setTheme } from "../app/store/themeSlice";
 
 
 export function useTheme() {

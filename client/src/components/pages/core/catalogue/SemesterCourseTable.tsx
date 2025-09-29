@@ -2,14 +2,14 @@ import { useState } from "react";
 import { FiChevronUp, FiTrash2, FiEdit3 } from "react-icons/fi";
 import { MultiSelectOption } from "../../../ui/Input";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "../../../../context/ToastContext";
+import { useToast } from "../../../../shared/context/ToastContext";
 import TopCenterLoader from "../../../ui/TopCenterLoader";
 import { getCourses } from "../../../../api/core/course-api";
 import CourseList from "./CourseList";
 import { deleteSemester, getSemestersByCatalogue } from "../../../../api/core/semester-api";
-import { MAX_PAGE_LIMIT } from "../../../../constants";
+import { MAX_PAGE_LIMIT } from "../../../../shared/constants";
 import React from "react";
-import { Semester } from "../../../../constants/core/interfaces";
+import { Semester } from "../../../../shared/constants/core/interfaces";
 
 interface SemesterCourseTableProps {
     catalogueId: string;

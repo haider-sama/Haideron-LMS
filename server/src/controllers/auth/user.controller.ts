@@ -4,10 +4,9 @@ import { BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } from "..
 import { updateUserProfileSchema } from "../../utils/validators/lms-schemas/authSchemas";
 import { AudienceEnum, DegreeEnum } from "../../shared/enums";
 import { db } from "../../db/db";
-import { forumProfiles, teacherInfo, teacherQualifications, users } from "../../db/schema";
+import { teacherInfo, teacherQualifications, users } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import { TeacherQualification } from "../../shared/interfaces";
-import { VisibilityEnum } from "../../shared/social.enums";
 import { isValidUUID } from "../../utils/validators/lms-schemas/isValidUUID";
 import { SettingsService } from "../../utils/settings/SettingsService";
 
@@ -65,14 +64,7 @@ export async function updateUserProfile(req: Request, res: Response) {
         const data = parsed.data;
         const disallowedFields: string[] = [];
 
-        // 2. Load existing forumProfile and teacherInfo once
-        const forumProfile = await db
-            .select()
-            .from(forumProfiles)
-            .where(eq(forumProfiles.userId, userId))
-            .limit(1)
-            .execute()
-            .then(rows => rows[0]);
+        // 2. Load existing teacherInfo once
 
         const teacherInfoRow = await db
             .select()
@@ -84,39 +76,8 @@ export async function updateUserProfile(req: Request, res: Response) {
 
         // 3. Prepare update objects
         const userUpdates: Partial<typeof users.$inferSelect> = {};
-        const forumProfileUpdates: Partial<typeof forumProfiles.$inferSelect> = {};
         const teacherInfoUpdates: Partial<typeof teacherInfo.$inferSelect> = {};
         let qualificationsToUpdate: any[] | null = null;
-
-        // 4. Handle forumProfile updates for all roles
-        if ('forumProfile' in data && data.forumProfile) {
-            if (!(await SettingsService.isForumsEnabled())) {
-                return res.status(FORBIDDEN).json({
-                    message: "Forums are disabled by admin. You can't update your forum profile"
-                });
-            }
-
-            const mergedForumProfile = {
-                ...forumProfile,
-                ...data.forumProfile,
-            };
-
-            if (!mergedForumProfile.username?.trim()) {
-                return res.status(BAD_REQUEST).json({ message: "forumProfile.username is required" });
-            }
-
-            forumProfileUpdates.username = mergedForumProfile.username;
-            forumProfileUpdates.displayName = mergedForumProfile.displayName ?? null;
-            forumProfileUpdates.bio = mergedForumProfile.bio ?? '';
-            forumProfileUpdates.signature = mergedForumProfile.signature ?? '';
-            forumProfileUpdates.interests = mergedForumProfile.interests ?? null;
-            forumProfileUpdates.badges = mergedForumProfile.badges ?? null;
-            forumProfileUpdates.reputation = mergedForumProfile.reputation ?? 0;
-            forumProfileUpdates.visibility = mergedForumProfile.visibility ?? 'public';
-            forumProfileUpdates.postCount = mergedForumProfile.postCount ?? 0;
-            forumProfileUpdates.commentCount = mergedForumProfile.commentCount ?? 0;
-            forumProfileUpdates.joinedAt = mergedForumProfile.joinedAt ?? new Date();
-        }
 
         // 5. Handle teacherInfo and qualifications for DepartmentTeacher
         if ('teacherInfo' in data && data.teacherInfo) {
@@ -173,37 +134,7 @@ export async function updateUserProfile(req: Request, res: Response) {
                     .set(userUpdates)
                     .where(eq(users.id, userId))
                     .execute();
-            }
-
-            // Update or insert forumProfile
-            if (Object.keys(forumProfileUpdates).length > 0) {
-                if (forumProfile) {
-                    await tx
-                        .update(forumProfiles)
-                        .set(forumProfileUpdates)
-                        .where(eq(forumProfiles.userId, userId))
-                        .execute();
-                } else {
-                    if (!forumProfileUpdates.username) {
-                        throw new Error("forumProfile.username is required for new profile");
-                    }
-                    await tx.insert(forumProfiles).values({
-                        id: crypto.randomUUID(),
-                        userId,
-                        username: forumProfileUpdates.username,
-                        displayName: forumProfileUpdates.displayName,
-                        bio: forumProfileUpdates.bio,
-                        signature: forumProfileUpdates.signature,
-                        interests: forumProfileUpdates.interests,
-                        badges: forumProfileUpdates.badges,
-                        reputation: forumProfileUpdates.reputation,
-                        visibility: forumProfileUpdates.visibility,
-                        postCount: forumProfileUpdates.postCount,
-                        commentCount: forumProfileUpdates.commentCount,
-                        joinedAt: forumProfileUpdates.joinedAt,
-                    }).execute();
-                }
-            }
+            } 
 
             // Update or insert teacherInfo
             if (Object.keys(teacherInfoUpdates).length > 0) {
@@ -273,21 +204,6 @@ export async function updateUserProfile(req: Request, res: Response) {
                 createdAt: users.createdAt,
                 updatedAt: users.updatedAt,
 
-                // forumProfiles columns (nullable if no profile)
-                forumProfileId: forumProfiles.id,
-                forumUserId: forumProfiles.userId,
-                forumUsername: forumProfiles.username,
-                forumDisplayName: forumProfiles.displayName,
-                forumBio: forumProfiles.bio,
-                forumSignature: forumProfiles.signature,
-                forumInterests: forumProfiles.interests,
-                forumBadges: forumProfiles.badges,
-                forumReputation: forumProfiles.reputation,
-                forumVisibility: forumProfiles.visibility,
-                forumPostCount: forumProfiles.postCount,
-                forumCommentCount: forumProfiles.commentCount,
-                forumJoinedAt: forumProfiles.joinedAt,
-
                 // teacherInfo columns (nullable if no teacherInfo)
                 teacherInfoId: teacherInfo.id,
                 teacherUserId: teacherInfo.userId,
@@ -297,7 +213,6 @@ export async function updateUserProfile(req: Request, res: Response) {
                 teacherSubjectOwner: teacherInfo.subjectOwner,
             })
             .from(users)
-            .leftJoin(forumProfiles, eq(forumProfiles.userId, users.id))
             .leftJoin(teacherInfo, eq(teacherInfo.userId, users.id))
             .where(eq(users.id, userId))
             .limit(1)
@@ -324,22 +239,6 @@ export async function updateUserProfile(req: Request, res: Response) {
             role: updatedUser.role,
             department: updatedUser.department,
             createdAt: updatedUser.createdAt,
-
-            forumProfile: updatedUser.forumProfileId ? {
-                id: updatedUser.forumProfileId,
-                userId: updatedUser.forumUserId,
-                username: updatedUser.forumUsername,
-                displayName: updatedUser.forumDisplayName,
-                bio: updatedUser.forumBio,
-                signature: updatedUser.forumSignature,
-                interests: updatedUser.forumInterests,
-                badges: updatedUser.forumBadges,
-                reputation: updatedUser.forumReputation,
-                visibility: updatedUser.forumVisibility,
-                postCount: updatedUser.forumPostCount,
-                commentCount: updatedUser.forumCommentCount,
-                joinedAt: updatedUser.forumJoinedAt,
-            } : null,
 
             teacherInfo: updatedUser.teacherInfoId ? {
                 id: updatedUser.teacherInfoId,
@@ -384,20 +283,6 @@ export async function getUserProfile(req: Request, res: Response) {
                 isEmailVerified: users.isEmailVerified,
                 role: users.role,
 
-                // forumProfile fields (nullable)
-                forumProfileId: forumProfiles.id,
-                forumUsername: forumProfiles.username,
-                forumDisplayName: forumProfiles.displayName,
-                forumBio: forumProfiles.bio,
-                forumSignature: forumProfiles.signature,
-                forumInterests: forumProfiles.interests,
-                forumBadges: forumProfiles.badges,
-                forumReputation: forumProfiles.reputation,
-                forumVisibility: forumProfiles.visibility,
-                forumPostCount: forumProfiles.postCount,
-                forumCommentCount: forumProfiles.commentCount,
-                forumJoinedAt: forumProfiles.joinedAt,
-
                 // teacherInfo fields (nullable)
                 teacherInfoId: teacherInfo.id,
                 teacherDesignation: teacherInfo.designation,
@@ -406,7 +291,6 @@ export async function getUserProfile(req: Request, res: Response) {
                 teacherSubjectOwner: teacherInfo.subjectOwner,
             })
             .from(users)
-            .leftJoin(forumProfiles, eq(forumProfiles.userId, users.id))
             .leftJoin(teacherInfo, eq(teacherInfo.userId, users.id))
             .where(eq(users.id, userId))
             .limit(1)
@@ -456,22 +340,6 @@ export async function getUserProfile(req: Request, res: Response) {
             isEmailVerified: user.isEmailVerified,
             role: user.role,
 
-            forumProfile: user.forumProfileId
-                ? {
-                    username: user.forumUsername,
-                    displayName: user.forumDisplayName,
-                    bio: user.forumBio,
-                    signature: user.forumSignature,
-                    interests: user.forumInterests,
-                    badges: user.forumBadges,
-                    reputation: user.forumReputation,
-                    visibility: user.forumVisibility,
-                    postCount: user.forumPostCount,
-                    commentCount: user.forumCommentCount,
-                    joinedAt: user.forumJoinedAt,
-                }
-                : undefined,
-
             teacherInfo: user.teacherInfoId
                 ? {
                     designation: user.teacherDesignation,
@@ -494,107 +362,5 @@ export async function getUserProfile(req: Request, res: Response) {
         res.status(INTERNAL_SERVER_ERROR).json({
             message: "Cannot get user profile. Please try again.",
         });
-    }
-}
-
-export async function getUserForumProfile(req: Request, res: Response) {
-    if (!(await SettingsService.isForumsEnabled())) {
-        return res.status(FORBIDDEN).json({ message: "Forums are disabled by admin" });
-    }
-
-    const { userIdOrUsername } = req.params;
-
-    try {
-        let user;
-
-
-        const isUUIDv4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userIdOrUsername);
-
-        const selectColumns = {
-            userId: users.id,
-            role: users.role,
-            firstName: users.firstName,
-            lastName: users.lastName,
-            lastOnline: users.lastOnline,
-            avatarURL: users.avatarURL,
-
-            forumProfileId: forumProfiles.id,
-            forumUsername: forumProfiles.username,
-            forumDisplayName: forumProfiles.displayName,
-            forumBio: forumProfiles.bio,
-            forumSignature: forumProfiles.signature,
-            forumInterests: forumProfiles.interests,
-            forumBadges: forumProfiles.badges,
-            forumReputation: forumProfiles.reputation,
-            forumVisibility: forumProfiles.visibility,
-            forumPostCount: forumProfiles.postCount,
-            forumCommentCount: forumProfiles.commentCount,
-            forumJoinedAt: forumProfiles.joinedAt,
-        };
-
-        if (isUUIDv4) {
-            user = await db
-                .select(selectColumns)
-                .from(users)
-                .leftJoin(forumProfiles, eq(forumProfiles.userId, users.id))
-                .where(eq(users.id, userIdOrUsername))
-                .limit(1)
-                .execute()
-                .then(rows => rows[0]);
-        } else {
-            user = await db
-                .select(selectColumns)
-                .from(users)
-                .leftJoin(forumProfiles, eq(forumProfiles.userId, users.id))
-                .where(eq(forumProfiles.username, userIdOrUsername))
-                .limit(1)
-                .execute()
-                .then(rows => rows[0]);
-        }
-
-        if (!user || !user.forumProfileId) {
-            return res.status(404).json({ message: "Forum profile not found." });
-        }
-
-        // Minimal info for private profile
-        if (user.forumVisibility === VisibilityEnum.private) {
-            return res.json({
-                id: user.userId,
-                role: user.role,
-                avatarURL: user.avatarURL,
-                forumProfile: {
-                    username: user.forumUsername,
-                    visibility: user.forumVisibility,
-                },
-            });
-        }
-
-        // Full info for public profile
-        const publicProfile = {
-            id: user.userId,
-            role: user.role,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            lastOnline: user.lastOnline,
-            avatarURL: user.avatarURL,
-            forumProfile: {
-                username: user.forumUsername,
-                displayName: user.forumDisplayName,
-                bio: user.forumBio,
-                signature: user.forumSignature,
-                interests: user.forumInterests,
-                badges: user.forumBadges,
-                reputation: user.forumReputation,
-                postCount: user.forumPostCount,
-                commentCount: user.forumCommentCount,
-                joinedAt: user.forumJoinedAt,
-                visibility: user.forumVisibility,
-            },
-        };
-
-        return res.json(publicProfile);
-    } catch (err) {
-        console.error("Error fetching forum profile:", err);
-        return res.status(INTERNAL_SERVER_ERROR).json({ message: "Failed to fetch forum profile." });
     }
 }

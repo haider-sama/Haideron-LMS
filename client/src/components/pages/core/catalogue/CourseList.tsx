@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { FiTrash2 } from "react-icons/fi";
 import { Course } from "../../../../../../server/src/shared/interfaces";
-import { useToast } from "../../../../context/ToastContext";
+import { useToast } from "../../../../shared/context/ToastContext";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MultiSelectInput, MultiSelectOption } from "../../../ui/Input";
 import { Button } from "../../../ui/Button";
 import TopCenterLoader from "../../../ui/TopCenterLoader";
 import { getCourses } from "../../../../api/core/course-api";
 import { updateSemester } from "../../../../api/core/semester-api";
-import { Semester } from "../../../../constants/core/interfaces";
+import { Semester } from "../../../../shared/constants/core/interfaces";
 
 interface CourseListProps {
     semester: Semester;

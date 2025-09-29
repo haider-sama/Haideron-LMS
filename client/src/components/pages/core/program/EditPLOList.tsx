@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { FiEdit3, FiChevronUp } from "react-icons/fi";
-import { PLOFrontend } from "../../../../constants/core/interfaces";
-import { useToast } from "../../../../context/ToastContext";
+import { PLOFrontend } from "../../../../shared/constants/core/interfaces";
+import { useToast } from "../../../../shared/context/ToastContext";
 import { Input, TextAreaInput } from "../../../ui/Input";
 import TopCenterLoader from "../../../ui/TopCenterLoader";
 import { deletePLO, getPLOsForProgram, updatePLO } from "../../../../api/core/program-api";

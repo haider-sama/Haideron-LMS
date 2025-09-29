@@ -1,8 +1,8 @@
 import { User } from "../../../../server/src/shared/interfaces";
-import { API_BASE_URL } from "../../constants";
-import { AdminSettings, PublicSettings } from "../../constants/admin/interfaces";
-import { BulkRegisterError, BulkRegisterResult, FetchUsersFilters, PublicUser } from "../../constants/core/interfaces";
-import { BulkUser, PaginatedUserResponse } from "../../constants/core/interfaces";
+import { API_BASE_URL } from "../../shared/constants";
+import { AdminSettings, PublicSettings } from "../../shared/constants/admin/interfaces";
+import { BulkRegisterError, BulkRegisterResult, FetchUsersFilters, PublicUser } from "../../shared/constants/core/interfaces";
+import { BulkUser, PaginatedUserResponse } from "../../shared/constants/core/interfaces";
 
 const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/admin`;
 

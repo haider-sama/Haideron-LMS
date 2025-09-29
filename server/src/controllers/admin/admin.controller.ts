@@ -10,7 +10,7 @@ import { BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED } from 
 import { adminUpdateUserSchema, bulkRegisterSchema, passwordOnlySchema } from "../../utils/validators/lms-schemas/authSchemas";
 import { and, eq, ilike, or, sql } from "drizzle-orm";
 import { db } from "../../db/db";
-import { forumProfiles, teacherInfo, users } from "../../db/schema";
+import { teacherInfo, users } from "../../db/schema";
 
 dotenv.config();
 

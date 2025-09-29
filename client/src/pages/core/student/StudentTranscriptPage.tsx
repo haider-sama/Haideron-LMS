@@ -5,10 +5,10 @@ import { IoMdStats } from "react-icons/io";
 import Breadcrumbs, { generateBreadcrumbs } from "../../../components/ui/Breadcrumbs";
 import TopCenterLoader from "../../../components/ui/TopCenterLoader";
 import { getTranscript } from "../../../api/core/student-api";
-import { TranscriptResponse } from "../../../constants/core/interfaces";
+import { TranscriptResponse } from "../../../shared/constants/core/interfaces";
 import { useQuery } from "@tanstack/react-query";
 import ErrorStatus from "../../../components/ui/ErrorStatus";
-import { useToast } from "../../../context/ToastContext";
+import { useToast } from "../../../shared/context/ToastContext";
 
 const statusColors: Record<string, string> = {
     Confirmed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",

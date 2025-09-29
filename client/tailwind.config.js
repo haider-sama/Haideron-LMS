@@ -31,6 +31,7 @@ export default {
 
       fontFamily: {
         atkinson: ['"Atkinson Hyperlegible"', 'sans-serif'],
+        custom: ['Cubic', 'sans-serif'], // fallback is sans
       },
 
       container: {

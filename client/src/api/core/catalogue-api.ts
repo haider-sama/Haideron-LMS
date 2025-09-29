@@ -1,6 +1,6 @@
 import { ProgramCatalogue } from "../../../../server/src/shared/interfaces";
-import { API_BASE_URL } from "../../constants";
-import { GetCataloguesListResponse } from "../../constants/core/interfaces";
+import { API_BASE_URL } from "../../shared/constants";
+import { GetCataloguesListResponse } from "../../shared/constants/core/interfaces";
 
 const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/catalogue`;
 

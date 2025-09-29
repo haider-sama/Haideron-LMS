@@ -5,7 +5,7 @@ import { db } from "../../db/db";
 import { users } from "../../db/schema";
 import { eq } from "drizzle-orm";
 
-const generateToken = async (res: Response, userId: string) => {
+const generateToken = async (res: Response, userId: string, sessionId: string) => {
     const user = await db
         .select({
             tokenVersion: users.tokenVersion,
@@ -16,8 +16,8 @@ const generateToken = async (res: Response, userId: string) => {
         .limit(1)
         .then(rows => rows[0]);
 
-    const accessToken = generateAccessToken(userId, user.tokenVersion, user.role);
-    const refreshToken = generateRefreshToken(userId, user.tokenVersion, user.role);
+    const accessToken = generateAccessToken(userId, user.tokenVersion, user.role, sessionId);
+    const refreshToken = generateRefreshToken(userId, user.tokenVersion, user.role, sessionId);
 
     setAuthCookies({ res, accessToken, refreshToken });
 

@@ -1,6 +1,6 @@
 import { FiEdit3, FiTrash2 } from "react-icons/fi";
 import React from "react";
-import { CourseOffering, ScheduleSlot } from "../../../../constants/core/interfaces";
+import { CourseOffering, ScheduleSlot } from "../../../../shared/constants/core/interfaces";
 
 interface SemesterCourseOfferingsProps {
     semesterId: string;

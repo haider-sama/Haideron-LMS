@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useToast } from '../../../../context/ToastContext';
+import { useToast } from '../../../../shared/context/ToastContext';
 import { finalizeAssessmentResults, saveGradingScheme, withdrawFinalizedResult } from '../../../../api/core/teacher/result-api';
 import { ReadOnlyInput } from '../../../ui/Input';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { GradingRule } from '../../../../constants/core/interfaces';
+import { GradingRule } from '../../../../shared/constants/core/interfaces';
 import { Button } from '../../../ui/Button';
 
 interface GradingFinalizationFormProps {

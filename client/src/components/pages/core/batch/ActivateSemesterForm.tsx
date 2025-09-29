@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import DatePicker from "react-datepicker";
-import { useToast } from "../../../../context/ToastContext";
+import { useToast } from "../../../../shared/context/ToastContext";
 import { TermEnum } from "../../../../../../server/src/shared/enums";
 import { activateSemester } from "../../../../api/core/batch/batch-semester-api";
 import { SelectInput } from "../../../ui/Input";

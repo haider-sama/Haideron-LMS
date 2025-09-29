@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ActivatedSemester, CourseOfferingCreateInput, CourseOfferingUpdateInput, ScheduleSlot } from "../../constants/core/interfaces";
-import { useToast } from "../../context/ToastContext";
+import { ActivatedSemester, CourseOfferingCreateInput, CourseOfferingUpdateInput, ScheduleSlot } from "../../shared/constants/core/interfaces";
+import { useToast } from "../../shared/context/ToastContext";
 import { useEffect, useState } from "react";
 import { completeBatchSemester, deleteBatchSemester, getCatalogueCoursesForActivatedSemester, getSemestersByBatch, updateBatchSemester } from "../../api/core/batch/batch-semester-api";
 import { createCourseOfferings, deleteCourseOffering, getCourseOfferings, updateCourseOffering } from "../../api/core/batch/course-offering-api";

@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 import { AssessmentTypeEnum } from "../../../../../../../server/src/shared/enums";
-import { useToast } from "../../../../../context/ToastContext";
+import { useToast } from "../../../../../shared/context/ToastContext";
 import { Button } from "../../../../ui/Button";
-import { Assessment, AssessmentPayload, CLO } from "../../../../../constants/core/interfaces";
+import { Assessment, AssessmentPayload, CLO } from "../../../../../shared/constants/core/interfaces";
 import { updateAssessment } from "../../../../../api/core/teacher/assessment-api";
 import { Input, SelectInput } from "../../../../ui/Input";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

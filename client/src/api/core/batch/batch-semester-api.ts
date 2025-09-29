@@ -1,7 +1,7 @@
 import { TermEnum } from "../../../../../server/src/shared/enums";
 import { Course } from "../../../../../server/src/shared/interfaces";
-import { API_BASE_URL } from "../../../constants";
-import { ActivatedSemester, GetActivatedSemestersResponse } from "../../../constants/core/interfaces";
+import { API_BASE_URL } from "../../../shared/constants";
+import { ActivatedSemester, GetActivatedSemestersResponse } from "../../../shared/constants/core/interfaces";
 
 const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/batch/semesters`;
 

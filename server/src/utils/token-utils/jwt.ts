@@ -6,16 +6,18 @@ export interface DecodedToken {
     userId: string;
     tokenVersion: number;
     role: string;
+    sessionId: string;
     type: "access" | "refresh";
 }
 
 export const generateAccessToken = (
     userId: string,
     tokenVersion: number,
-    role: string
+    role: string,
+    sessionId: string
 ): string => {
     return jwt.sign(
-        { userId, tokenVersion, role, type: "access" },
+        { userId, tokenVersion, role, sessionId, type: "access" },
         JWT_SECRET! as string,
         { expiresIn: "15m" }
     );
@@ -24,10 +26,11 @@ export const generateAccessToken = (
 export const generateRefreshToken = (
     userId: string,
     tokenVersion: number,
-    role: string
+    role: string,
+    sessionId: string
 ): string => {
     return jwt.sign(
-        { userId, tokenVersion, role, type: "refresh" },
+        { userId, tokenVersion, role, sessionId, type: "refresh" },
         JWT_REFRESH_SECRET! as string,
         { expiresIn: "7d" }
     );

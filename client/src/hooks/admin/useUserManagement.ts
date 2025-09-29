@@ -8,12 +8,12 @@ import {
     bulkRegisterUsers,
     updateUserById
 } from "../../api/admin/admin-api";
-import { useToast } from "../../context/ToastContext";
+import { useToast } from "../../shared/context/ToastContext";
 import { AudienceEnum, DepartmentEnum } from "../../../../server/src/shared/enums";
-import { getAvailableRoles, restrictedRoles } from "../../constants";
-import { MAX_PAGE_LIMIT } from "../../constants";
+import { getAvailableRoles, restrictedRoles } from "../../shared/constants";
+import { MAX_PAGE_LIMIT } from "../../shared/constants";
 import { User } from "../../../../server/src/shared/interfaces";
-import { BulkUser } from "../../constants/core/interfaces";
+import { BulkUser } from "../../shared/constants/core/interfaces";
 import { useDebounce } from "../../components/ui/SearchBar";
 
 const INITIAL_USER: BulkUser = {
@@ -47,7 +47,6 @@ export function useUserManagement(currentUserRole: AudienceEnum) {
     const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
 
     /** ====== FORM STATE ====== */
-    const [viewMode, setViewMode] = useState<"form" | "table">("table");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [usersFormData, setUsersFormData] = useState<BulkUser[]>([INITIAL_USER]);
     const formRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -174,10 +173,8 @@ export function useUserManagement(currentUserRole: AudienceEnum) {
         if (selectedUserId) updateUserMutation.mutate(editFields);
     };
 
-    const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleCSVUpload = (file: File) => {
         if (isSubmitting) return;
-        const file = e.target.files?.[0];
-        if (!file) return;
 
         Papa.parse(file, {
             header: true,
@@ -187,12 +184,14 @@ export function useUserManagement(currentUserRole: AudienceEnum) {
                     let role = Object.values(AudienceEnum).includes(row.role)
                         ? row.role
                         : AudienceEnum.Guest;
+
                     if (
                         currentUserRole !== AudienceEnum.Admin &&
                         restrictedRoles.includes(role)
                     ) {
                         role = AudienceEnum.Guest;
                     }
+
                     let department = Object.values(DepartmentEnum).includes(row.department)
                         ? row.department
                         : DepartmentEnum.NA;
@@ -211,9 +210,8 @@ export function useUserManagement(currentUserRole: AudienceEnum) {
             error: (error) =>
                 toast.error("Error parsing CSV: " + error.message),
         });
-
-        e.target.value = "";
     };
+
 
     const handleChangeForm = <K extends keyof typeof INITIAL_USER>(
         index: number,
@@ -329,8 +327,6 @@ export function useUserManagement(currentUserRole: AudienceEnum) {
         isSavingEdit: updateUserMutation.isPending,
 
         /** Form data */
-        viewMode,
-        setViewMode,
         usersFormData,
         handleChangeForm,
         validateUser,

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { FiEye } from "react-icons/fi";
 import { Helmet } from "react-helmet-async";
-import { FetchPendingFinalizedResultsResponse, FinalizedResultWithRelations } from "../../../constants/core/interfaces";
-import { GLOBAL_TITLE, MAX_PAGE_LIMIT } from "../../../constants";
+import { FetchPendingFinalizedResultsResponse, FinalizedResultWithRelations } from "../../../shared/constants/core/interfaces";
+import { GLOBAL_TITLE, MAX_PAGE_LIMIT } from "../../../shared/constants";
 import { fetchPendingFinalizedResults } from "../../../api/core/teacher/result-api";
 import { useQuery } from "@tanstack/react-query";
 import Breadcrumbs, { generateBreadcrumbs } from "../../../components/ui/Breadcrumbs";
@@ -11,7 +11,7 @@ import TopCenterLoader from "../../../components/ui/TopCenterLoader";
 import { Pagination } from "../../../components/ui/Pagination";
 import Modal from "../../../components/ui/Modal";
 import FinalizedResultReview from "./FinalizedResultReview";
-import { useToast } from "../../../context/ToastContext";
+import { useToast } from "../../../shared/context/ToastContext";
 
 const PendingFinalizedResultsList: React.FC = () => {
     const [page, setPage] = useState(1);

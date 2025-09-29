@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FiTrash2 } from "react-icons/fi";
-import { AddPLOPayload } from "../../../../constants/core/interfaces";
-import { useToast } from "../../../../context/ToastContext";
+import { AddPLOPayload } from "../../../../shared/constants/core/interfaces";
+import { useToast } from "../../../../shared/context/ToastContext";
 import { addPLOsToProgram } from "../../../../api/core/program-api";
 import { Input, SelectInput } from "../../../ui/Input";
 import { Button } from "../../../ui/Button";

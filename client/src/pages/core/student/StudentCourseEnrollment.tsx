@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { usePermissions } from "../../../hooks/usePermissions";
-import { useDashboards } from "../../../hooks/auth/useDashboards";
-import { useToast } from "../../../context/ToastContext";
-import { ActivatedSemester, CourseOffering, EnrollInCoursePayload, SectionTeacher } from "../../../constants/core/interfaces";
+import { usePermissions } from "../../../features/auth/hooks/usePermissions";
+import { useDashboards } from "../../../features/auth/hooks/useDashboards";
+import { useToast } from "../../../shared/context/ToastContext";
+import { ActivatedSemester, CourseOffering, EnrollInCoursePayload, SectionTeacher } from "../../../shared/constants/core/interfaces";
 import { getCourseOfferings } from "../../../api/core/batch/course-offering-api";
 import { deEnrollFromCourse, enrollInCourse, getEnrolledCourses } from "../../../api/core/student-api";
 import InternalError from "../../forbidden/InternalError";

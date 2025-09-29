@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { FiEye } from "react-icons/fi";
-import { useToast } from "../../context/ToastContext";
+import { useToast } from "../../shared/context/ToastContext";
 import { useQuery } from "@tanstack/react-query";
 import { getFacultyMemberById, getFacultyMembers, updateFacultyMember } from "../../api/core/faculty-api";
-import { GLOBAL_TITLE, MAX_PAGE_LIMIT } from "../../constants";
+import { GLOBAL_TITLE, MAX_PAGE_LIMIT } from "../../shared/constants";
 import { Helmet } from "react-helmet-async";
 import Breadcrumbs, { generateBreadcrumbs } from "../../components/ui/Breadcrumbs";
 import PageHeading from "../../components/ui/PageHeading";
 import TopCenterLoader from "../../components/ui/TopCenterLoader";
-import { truncateName } from "../../utils/truncate-name";
+import { truncateName } from "../../shared/utils/truncate-name";
 import { Pagination } from "../../components/ui/Pagination";
 import Modal from "../../components/ui/Modal";
 import FacultyProfile from "../../components/pages/core/faculty/FacultyProfile";
 import RegisterFacultyForm from "../../components/pages/core/faculty/RegisterFacultyForm";
-import { PaginatedFacultyResponse } from "../../constants/core/interfaces";
+import { PaginatedFacultyResponse } from "../../shared/constants/core/interfaces";
 import { AudienceEnum, FacultyTypeEnum, TeacherDesignationEnum } from "../../../../server/src/shared/enums";
 import { useUserManagement } from "../../hooks/admin/useUserManagement";
-import { usePermissions } from "../../hooks/usePermissions";
+import { usePermissions } from "../../features/auth/hooks/usePermissions";
 import { SelectInput } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
 

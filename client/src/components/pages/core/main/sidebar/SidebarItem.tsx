@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { FaChevronDown } from 'react-icons/fa';
 
 interface SubLink {
@@ -31,13 +31,22 @@ const SidebarItem = ({
     isVisible,
     setCollapsed,
 }: SidebarItemProps) => {
+    const location = useLocation();
+    // Check if active (main link or one of its sublinks)
+    const isActive =
+        (href && location.pathname === href) ||
+        (subLinks && subLinks.some((sub) => location.pathname === sub.href));
+
     // Renders an item with subLinks
     if (subLinks) {
         return (
             <>
                 <button
                     onClick={() => collapsed ? setCollapsed(false) : toggleSubMenu(label)}
-                    className="flex items-center w-full text-sm px-4 h-10 rounded hover:bg-gray-100 dark:hover:bg-darkSurface text-gray-800 dark:text-gray-200"
+                    className={`flex items-center w-full text-sm px-4 h-10 rounded transition-colors
+                    ${isActive
+                            ? "bg-blue-100 text-blue-600 border-r-4 border-blue-500"
+                            : "text-gray-800 hover:bg-gray-100"}`}
                     data-tooltip-id="sidebar-tooltip"
                     data-tooltip-content={collapsed ? label : ''}
                 >
@@ -66,7 +75,11 @@ const SidebarItem = ({
                                 <li key={idx}>
                                     <Link
                                         to={sub.href}
-                                        className="flex items-center px-2 py-1 text-sm rounded hover:bg-gray-100 dark:hover:bg-darkSurface text-gray-800 dark:text-gray-200"
+                                        className={`flex items-center px-2 py-1 text-sm rounded transition-colors
+                                        ${location.pathname === sub.href
+                                                ? "bg-blue-100 text-blue-600 border-r-4 border-blue-500"
+                                                : "text-gray-800 hover:bg-gray-100"}`}
+
                                         data-tooltip-id="sidebar-tooltip"
                                         data-tooltip-content={collapsed ? sub.label : ''}
                                     >
@@ -85,7 +98,10 @@ const SidebarItem = ({
     return (
         <Link
             to={href!}
-            className="flex items-center px-4 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-darkSurface text-gray-800 dark:text-gray-200"
+            className={`flex items-center px-4 py-2 text-sm rounded transition-colors
+            ${isActive
+                    ? "bg-blue-100 text-blue-600 border-r-4 border-blue-500"
+                    : "text-gray-800 hover:bg-gray-100"}`}
             data-tooltip-id="sidebar-tooltip"
             data-tooltip-content={collapsed ? label : ''}
         >

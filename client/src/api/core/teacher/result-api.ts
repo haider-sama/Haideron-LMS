@@ -1,6 +1,6 @@
 import { FinalizedResultStatusEnum } from "../../../../../server/src/shared/enums";
-import { API_BASE_URL } from "../../../constants";
-import { FetchPendingFinalizedResultsResponse, FinalizeResultsResponse, GradingRule, SaveGradingSchemeResponse, WithdrawFinalizedResultResponse } from "../../../constants/core/interfaces";
+import { API_BASE_URL } from "../../../shared/constants";
+import { FetchPendingFinalizedResultsResponse, FinalizeResultsResponse, GradingRule, SaveGradingSchemeResponse, WithdrawFinalizedResultResponse } from "../../../shared/constants/core/interfaces";
 
 const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/results`;
 

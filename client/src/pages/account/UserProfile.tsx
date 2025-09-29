@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { User } from '../../../../server/src/shared/interfaces';
-import AvatarUpload from '../../components/account/AvatarUpload';
+import AvatarUpload from '../../features/auth/components/account/AvatarUpload';
 import { AudienceEnum, DepartmentEnum } from '../../../../server/src/shared/enums';
 import { getButtonClass } from '../../components/ui/ButtonClass';
 import InternalError from '../forbidden/InternalError';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '../../shared/context/ToastContext';
 import { Input, ReadOnlyInput, SelectInput } from '../../components/ui/Input';
 import TopCenterLoader from '../../components/ui/TopCenterLoader';
-import { PublicUser } from '../../constants/core/interfaces';
+import { PublicUser } from '../../shared/constants/core/interfaces';
 
 interface UserProfileProps {
     userId: string;

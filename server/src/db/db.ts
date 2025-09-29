@@ -11,8 +11,8 @@ const retryDelay = 5000;
 const pool = new Pool({
     connectionString: DATABASE_URL,
     max: 20,                  // maximum concurrent connections
-    idleTimeoutMillis: 30000, // close idle clients after 30s
-    connectionTimeoutMillis: 5000, // fail if can't connect in 5s
+    // idleTimeoutMillis: 30000, // close idle clients after 30s
+    // connectionTimeoutMillis: 5000, // fail if can't connect in 5s
 });
 
 export const db = drizzle(pool, { schema });

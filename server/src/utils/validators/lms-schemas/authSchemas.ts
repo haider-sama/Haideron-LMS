@@ -246,3 +246,22 @@ export const adminUpdateUserSchema = z.object({
             message: "Role 'Admin' is not allowed",
         }),
 });
+
+export const TwoFATokenSchema = z.object({
+    token: z.string().length(6).regex(/^\d+$/, "Token must be 6 digits"),
+});
+
+export const TwoFALoginSchema = z.object({
+    email: z.string().email("Invalid email format").trim().toLowerCase(),
+    password: z.string()
+        .min(1, "Password is required")
+        .max(128, "Password must be less than 128 characters").trim(),
+    twoFAToken: z.string().length(6).regex(/^\d+$/, "Token must be 6 digits").optional(),
+}).strict();
+
+export const Disable2FASchema = z.object({
+    password: z.string()
+        .min(1, "Password is required")
+        .max(128, "Password must be less than 128 characters").trim(),
+    twoFAToken: z.string().length(6).regex(/^\d+$/, "Token must be 6 digits"),
+}).strict();

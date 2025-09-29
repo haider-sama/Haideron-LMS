@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FiCheckCircle, FiEdit, FiXCircle } from "react-icons/fi";
-import { usePermissions } from "../../../hooks/usePermissions";
-import { useDashboards } from "../../../hooks/auth/useDashboards";
+import { usePermissions } from "../../../features/auth/hooks/usePermissions";
+import { useDashboards } from "../../../features/auth/hooks/useDashboards";
 import { getBatchById, getBatchesByProgram, updateBatchById } from "../../../api/core/batch/batch-api";
 import { getPrograms } from "../../../api/core/program-api";
 import { Helmet } from "react-helmet-async";
@@ -11,7 +11,7 @@ import TopCenterLoader from "../../../components/ui/TopCenterLoader";
 import { Pagination } from "../../../components/ui/Pagination";
 import Modal from "../../../components/ui/Modal";
 import CreateBatchForm from "../../../components/pages/core/batch/CreateBatchForm";
-import { GLOBAL_TITLE, MAX_PAGE_LIMIT } from "../../../constants";
+import { GLOBAL_TITLE, MAX_PAGE_LIMIT } from "../../../shared/constants";
 import { useQuery } from "@tanstack/react-query";
 import { useUserManagement } from "../../../hooks/admin/useUserManagement";
 import { AudienceEnum } from "../../../../../server/src/shared/enums";

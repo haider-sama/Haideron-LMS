@@ -1,6 +1,5 @@
 import { db } from "../../db/db";
 import { adminSettings } from "../../db/models/logs/admin.settings.model";
-import { redisClient } from "../../lib/redis";
 
 // Infer type from schema
 type AdminSettings = typeof adminSettings.$inferSelect;
@@ -9,7 +8,6 @@ export class SettingsService {
     private static cachedSettings: AdminSettings | null = null;
     private static lastFetch = 0;
     private static ttl = 60 * 1000; // 60s in-memory
-    private static readonly REDIS_KEY = "admin:settings";
 
     static async getSettings(forceRefresh = false): Promise<AdminSettings> {
         const now = Date.now();
@@ -17,20 +15,6 @@ export class SettingsService {
         // 1. In-memory cache
         if (!forceRefresh && this.cachedSettings && now - this.lastFetch < this.ttl) {
             return this.cachedSettings;
-        }
-
-        // 2. Redis cache
-        if (!forceRefresh) {
-            try {
-                const cached = await redisClient.get(this.REDIS_KEY);
-                if (cached) {
-                    this.cachedSettings = JSON.parse(cached) as AdminSettings;
-                    this.lastFetch = now;
-                    return this.cachedSettings;
-                }
-            } catch (err: any) {
-                console.warn("Redis unavailable, skipping cache:", err.message);
-            }
         }
 
         // 3. DB fallback
@@ -88,28 +72,7 @@ export class SettingsService {
         this.cachedSettings = rows[0];
         this.lastFetch = now;
 
-        // Save to Redis (5 min TTL + jitter)
-        try {
-            const ttlSeconds = 300 + Math.floor(Math.random() * 30); // 5min ±30s
-            await redisClient.set(this.REDIS_KEY, JSON.stringify(this.cachedSettings), {
-                EX: ttlSeconds,
-            });
-        } catch (err: any) {
-            console.warn("Failed to write to Redis:", err.message);
-        }
-
         return this.cachedSettings;
-    }
-
-    // Invalidate cache (after UPDATE in admin panel)
-    static async invalidateCache() {
-        this.cachedSettings = null;
-        this.lastFetch = 0;
-        try {
-            await redisClient.del(this.REDIS_KEY);
-        } catch (err: any) {
-            console.warn("Failed to invalidate Redis cache:", err.message);
-        }
     }
 
     // Generic checker

@@ -1,7 +1,7 @@
 import { StrengthEnum } from "../../../../server/src/shared/enums";
 import { PLO, Program } from "../../../../server/src/shared/interfaces";
-import { API_BASE_URL } from "../../constants";
-import { AddPLOPayload, AddPLOsResponse, GetProgramResponse, GetProgramsListResponse, GetProgramsParams, PEOUpdatePayload, PEOWithMappings, RegisterProgramPayload } from "../../constants/core/interfaces";
+import { API_BASE_URL } from "../../shared/constants";
+import { AddPLOPayload, AddPLOsResponse, GetProgramResponse, GetProgramsListResponse, GetProgramsParams, PEOUpdatePayload, PEOWithMappings, RegisterProgramPayload } from "../../shared/constants/core/interfaces";
 
 const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/program`;
 

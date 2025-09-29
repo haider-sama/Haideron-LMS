@@ -2,7 +2,7 @@ import React from "react";
 import { FiChevronUp, FiEdit3, FiTrash2 } from "react-icons/fi";
 import { Input, SelectInput, TextAreaInput } from "../../../ui/Input";
 import { StrengthEnum } from "../../../../../../server/src/shared/enums";
-import { CLO, PLOMapping } from "../../../../constants/core/interfaces";
+import { CLO, PLOMapping } from "../../../../shared/constants/core/interfaces";
 
 interface CLOEditorProps {
     clos: CLO[];

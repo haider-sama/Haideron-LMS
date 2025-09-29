@@ -25,22 +25,17 @@ import assessmentRouter from './routes/core/teacher/assessment.routes';
 import resultRouter from './routes/core/teacher/result.routes';
 import { catchMissedJobs, startCronJobs } from './cron';
 import auditLogRouter from './routes/audit.log.routes';
-import { connectRedis, redisClient } from './lib/redis';
 import { SettingsService } from './utils/settings/SettingsService';
 import client from "prom-client";
 import { authorizeRoles } from './middleware/auth';
 import { AudienceEnum } from './shared/enums';
-import forumRouter from './routes/social/forum/forum.routes';
-import forumUserRouter from './routes/social/forum/forum.user.routes';
-import postRouter from './routes/social/post/post.routes';
-import postUserRouter from './routes/social/post/post.user.routes';
-import commentRouter from './routes/social/comment/comment.routes';
-import commentUserRouter from './routes/social/comment/comment.user.routes';
-import { initRabbitMQ } from './lib/rabbitMQ';
-
+import morgan from "morgan";
 dotenv.config();
 
 const app = express();
+
+// Setup morgan for logging
+app.use(morgan(":method :url :status :response-time ms"));
 
 app.use(cookieParser());
 app.use(helmet());
@@ -57,6 +52,8 @@ cloudinary.config({
     api_key: CLOUDINARY_API_KEY,
     api_secret: CLOUDINARY_API_SECRET,
 });
+
+const API_VERSION = "/api/v1";
 
 app.use('/api/v1/auth/', authRouter);
 app.use('/api/v1/admin/', adminRouter);
@@ -80,24 +77,11 @@ app.use('/api/v1/results/', resultRouter);
 
 app.use('/api/v1/audit-logs/', auditLogRouter);
 
-
-app.use('/api/v1/forums/', forumRouter);
-app.use('/api/v1/forums/public/', forumUserRouter);
-app.use('/api/v1/posts/', postRouter);
-app.use('/api/v1/posts/public/', postUserRouter);
-app.use('/api/v1/comments/', commentRouter);
-app.use('/api/v1/comments/public/', commentUserRouter);
-
 app.get("/healthz", authorizeRoles(AudienceEnum.Admin), (req, res) => res.status(200).send("ok"));
 app.get("/readyz", authorizeRoles(AudienceEnum.Admin), async (req, res) => {
     try {
         // DB check
         await db.execute("SELECT 1");
-
-        // Redis check
-        if (!redisClient.isOpen) {
-            throw new Error("Redis not connected");
-        }
 
         res.status(200).send("ready");
     } catch (err: any) {
@@ -122,10 +106,6 @@ const startServer = async () => {
 
     try {
         await connectToDatabase();
-        await connectRedis();
-        // await redisClient.flushDb();
-        // await initRabbitMQ();
-        SettingsService.invalidateCache();  // whenever admin updates settings in DB
 
         // Example: test DB query
         // const firstUser = await db.select().from(users).limit(1);

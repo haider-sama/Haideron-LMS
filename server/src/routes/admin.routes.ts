@@ -70,9 +70,7 @@ adminRouter.route("/settings")
 adminRouter.get(
     "/settings/public",
     normalLimiter,
-    verifyToken,
-    authorizeRoles(AudienceEnum.Admin),
-    adminSettingsController.fetchAdminSettings
+    adminSettingsController.fetchPublicSettings
 );
 
 export default adminRouter;

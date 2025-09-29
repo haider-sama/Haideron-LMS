@@ -8,10 +8,6 @@ export enum AudienceEnum {
     DepartmentTeacher = "DepartmentTeacher",
     DepartmentHead = "DepartmentHead",
     Admin = "Admin",  // @root
-
-    ForumModerator = "ForumModerator",      // assigned per forum
-    ForumCurator = "ForumCurator",          // can create new forums
-    CommunityAdmin = "CommunityAdmin",      // can manage all forums + assign mods
 };
 
 export enum DepartmentEnum {

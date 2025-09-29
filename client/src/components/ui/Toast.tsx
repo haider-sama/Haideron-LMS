@@ -8,12 +8,20 @@ import {
 } from 'react-icons/fi';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'neutral';
+export type ToastPosition =
+    | 'top-left'
+    | 'top-right'
+    | 'bottom-left'
+    | 'bottom-right'
+    | 'top-center'
+    | 'bottom-center';
 
 interface ToastProps {
     type: ToastType;
     message: string;
     onClose?: () => void;
     duration?: number; // in ms
+    position?: ToastPosition;
     show: boolean;
 }
 
@@ -44,7 +52,23 @@ const typeStyles: Record<ToastType, {
     },
 };
 
-const Toast: React.FC<ToastProps> = ({ type, message, onClose, duration = 4000, show }) => {
+const positionClasses: Record<ToastPosition, string> = {
+    'top-left': 'top-4 left-4',
+    'top-right': 'top-4 right-4',
+    'bottom-left': 'bottom-4 left-4',
+    'bottom-right': 'bottom-4 right-4',
+    'top-center': 'top-4 left-1/2 transform -translate-x-1/2',
+    'bottom-center': 'bottom-4 left-1/2 transform -translate-x-1/2',
+};
+
+const Toast: React.FC<ToastProps> = ({ 
+    type, 
+    message, 
+    onClose, 
+    duration = 4000, 
+    show,
+    position = 'bottom-left', // default
+}) => {
     const { icon, iconBg } = typeStyles[type];
 
     useEffect(() => {
@@ -58,7 +82,7 @@ const Toast: React.FC<ToastProps> = ({ type, message, onClose, duration = 4000, 
 
     return (
         <div
-            className="flex items-center w-full max-w-lg p-4 text-sm text-gray-600 dark:text-darkTextSecondary bg-white dark:bg-darkSurface rounded-lg shadow-sm border border-gray-200 dark:border-darkBorderLight"
+            className={`fixed z-[1000] ${positionClasses[position]} flex items-center w-full max-w-sm p-4 text-sm text-gray-600 dark:text-darkTextSecondary bg-white dark:bg-darkSurface rounded-lg shadow-sm border border-gray-200 dark:border-darkBorderLight`}
             role="alert"
         >
             <div className={`inline-flex items-center justify-center shrink-0 w-8 h-8 rounded-lg ${iconBg}`}>

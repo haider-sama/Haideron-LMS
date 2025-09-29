@@ -7,6 +7,7 @@ import * as oauthController from './oauth.controller';
 import * as passwordControler from './password.controller';
 import * as userController from './user.controller';
 import * as userSessionController from './user.session.controller';
+import * as twoFAController from './twoFA.controller';
 
 export const authController = {
   ...authControl,
@@ -16,4 +17,5 @@ export const authController = {
   ...passwordControler,
   ...userController,
   ...userSessionController,
+  ...twoFAController,
 };

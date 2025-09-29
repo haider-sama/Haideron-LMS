@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { usePermissions } from "../../../../hooks/usePermissions";
-import { useToast } from "../../../../context/ToastContext";
+import { usePermissions } from "../../../../features/auth/hooks/usePermissions";
+import { useToast } from "../../../../shared/context/ToastContext";
 import { createProgramCatalogue } from "../../../../api/core/catalogue-api";
 import { SelectInput } from "../../../ui/Input";
 import { Button } from "../../../ui/Button";

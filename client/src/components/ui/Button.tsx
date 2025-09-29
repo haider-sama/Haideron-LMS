@@ -1,5 +1,6 @@
 import React from "react";
 import clsx from "clsx";
+import { FiLoader } from "react-icons/fi";
 
 type Variant = "primary" | "secondary" | "tiny" | "light" | "gray" | "green" | "yellow" | "red" | "blue";
 type Size = "sm" | "md" | "lg";
@@ -13,6 +14,9 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     fullWidth?: boolean;
     extra?: string;
     // Override classes if needed
+
+    icon?: React.ReactNode;
+
     bg?: string;
     hoverBg?: string;
     text?: string;
@@ -139,6 +143,7 @@ export const Button: React.FC<ButtonProps> = ({
     size = "md",
     fullWidth = true,
     extra = "",
+    icon,
     bg,
     hoverBg,
     text,
@@ -159,7 +164,7 @@ export const Button: React.FC<ButtonProps> = ({
                 : variantStyle.mdPadding;
 
     const className = clsx(
-        "font-medium focus:outline-none transition-all duration-200 border",
+        "flex items-center justify-center font-medium focus:outline-none transition-all duration-200 border",
         disabled || isLoading
             ? "cursor-not-allowed opacity-60"
             : [bg ?? variantStyle.base, hoverBg, text, hoverText, focusRing],
@@ -170,7 +175,17 @@ export const Button: React.FC<ButtonProps> = ({
 
     return (
         <button disabled={isLoading || disabled} className={className} {...rest}>
-            {isLoading ? loadingText ?? "Loading..." : children}
+            {isLoading ? (
+                <>
+                    <FiLoader className="animate-spin mr-2" />
+                    {loadingText ?? "Loading..."}
+                </>
+            ) : (
+                <>
+                    {icon && <span className="mr-2">{icon}</span>}
+                    {children}
+                </>
+            )}
         </button>
     );
 };

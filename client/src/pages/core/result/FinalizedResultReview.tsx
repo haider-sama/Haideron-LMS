@@ -1,8 +1,8 @@
 import React from "react";
-import { useToast } from "../../../context/ToastContext";
+import { useToast } from "../../../shared/context/ToastContext";
 import { reviewFinalizedResult } from "../../../api/core/teacher/result-api";
 import { FinalizedResultStatusEnum } from "../../../../../server/src/shared/enums";
-import { FinalizedResultWithRelations } from "../../../constants/core/interfaces";
+import { FinalizedResultWithRelations } from "../../../shared/constants/core/interfaces";
 import { Button } from "../../../components/ui/Button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

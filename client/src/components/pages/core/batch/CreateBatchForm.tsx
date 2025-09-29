@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { usePermissions } from "../../../../hooks/usePermissions";
-import { useToast } from "../../../../context/ToastContext";
+import { usePermissions } from "../../../../features/auth/hooks/usePermissions";
+import { useToast } from "../../../../shared/context/ToastContext";
 import { getCataloguesByProgram } from "../../../../api/core/catalogue-api";
-import { MAX_PAGE_LIMIT } from "../../../../constants";
+import { MAX_PAGE_LIMIT } from "../../../../shared/constants";
 import { createProgramBatch } from "../../../../api/core/batch/batch-api";
 import { SelectInput } from "../../../ui/Input";
 import { Button } from "../../../ui/Button";

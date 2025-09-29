@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { usePermissions } from "../../../../hooks/usePermissions";
-import { useDashboards } from "../../../../hooks/auth/useDashboards";
-import { useToast } from "../../../../context/ToastContext";
+import { usePermissions } from "../../../../features/auth/hooks/usePermissions";
+import { useDashboards } from "../../../../features/auth/hooks/useDashboards";
+import { useToast } from "../../../../shared/context/ToastContext";
 import { Input, SelectInput, TextAreaInput } from "../../../ui/Input";
 import { DomainEnum, KnowledgeAreaEnum, SubjectLevelEnum, SubjectTypeEnum } from "../../../../../../server/src/shared/enums";
-import { CreateCoursePayload } from "../../../../constants/core/interfaces";
+import { CreateCoursePayload } from "../../../../shared/constants/core/interfaces";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCataloguesByProgram } from "../../../../api/core/catalogue-api";
 import { getPrograms } from "../../../../api/core/program-api";

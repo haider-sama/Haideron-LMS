@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { usePermissions } from "../../../hooks/usePermissions";
-import { useToast } from "../../../context/ToastContext";
+import { usePermissions } from "../../../features/auth/hooks/usePermissions";
+import { useToast } from "../../../shared/context/ToastContext";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getPrograms } from "../../../api/core/program-api";
 import { getBatchesByProgram } from "../../../api/core/batch/batch-api";
@@ -8,7 +8,7 @@ import { createStudentBatchEnrollment, listStudentsInBatch, reinstateStudentInBa
 import { BatchEnrollmentStatus } from "../../../../../server/src/shared/enums";
 import { Helmet } from "react-helmet-async";
 import Breadcrumbs, { generateBreadcrumbs } from "../../../components/ui/Breadcrumbs";
-import { GLOBAL_TITLE, MAX_PAGE_LIMIT } from "../../../constants";
+import { GLOBAL_TITLE, MAX_PAGE_LIMIT } from "../../../shared/constants";
 import PageHeading from "../../../components/ui/PageHeading";
 import { SelectInput } from "../../../components/ui/Input";
 import TopCenterLoader from "../../../components/ui/TopCenterLoader";

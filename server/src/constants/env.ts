@@ -33,7 +33,7 @@ export const REDIS_PASS = getEnv("REDIS_PASS");
 export const REDIS_USERNAME = getEnv("REDIS_USERNAME");
 export const REDIS_PORT = Number(process.env.REDIS_PORT);
 
-// export const RABBITMQ_URL = getEnv("RABBITMQ_URL");
+export const RABBITMQ_URL = getEnv("RABBITMQ_URL");
 
 export const ALLOW_EMAIL_MIGRATION = getEnv("ALLOW_EMAIL_MIGRATION");
 export const ALLOW_PUBLIC_REGISTRATION = getEnv("ALLOW_PUBLIC_REGISTRATION");

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { usePermissions } from "../../../hooks/usePermissions";
-import { useDashboards } from "../../../hooks/auth/useDashboards";
-import { useToast } from "../../../context/ToastContext";
+import { usePermissions } from "../../../features/auth/hooks/usePermissions";
+import { useDashboards } from "../../../features/auth/hooks/useDashboards";
+import { useToast } from "../../../shared/context/ToastContext";
 import { getAllAssignedCourseOfferings } from "../../../api/core/teacher/teacher-course-api";
-import { GetAssignedCourseOfferingsResponse } from "../../../constants/core/interfaces";
+import { GetAssignedCourseOfferingsResponse } from "../../../shared/constants/core/interfaces";
 import { useQuery } from "@tanstack/react-query";
 import TopCenterLoader from "../../../components/ui/TopCenterLoader";
 import Breadcrumbs, { generateBreadcrumbs } from "../../../components/ui/Breadcrumbs";

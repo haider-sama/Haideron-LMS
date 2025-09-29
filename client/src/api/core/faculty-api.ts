@@ -1,5 +1,5 @@
-import { API_BASE_URL } from "../../constants";
-import { FacultyFilterParams, FacultyRegisterPayload, FacultyUpdatePayload, FacultyUser, PaginatedFacultyResponse } from "../../constants/core/interfaces";
+import { API_BASE_URL } from "../../shared/constants";
+import { FacultyFilterParams, FacultyRegisterPayload, FacultyUpdatePayload, FacultyUser, PaginatedFacultyResponse } from "../../shared/constants/core/interfaces";
 
 const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/faculty`;
 

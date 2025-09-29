@@ -38,11 +38,15 @@ authRouter.route("/users/:targetUserId/delete/avatar").delete(normalLimiter, ver
 // User Profile Routes
 authRouter.route("/profile").get(safeLimiter, verifyToken, authController.getUserProfile)
 authRouter.route('/update/profile').put(normalLimiter, verifyToken, authController.updateUserProfile);
-authRouter.route("/profile/:userIdOrUsername").get(normalLimiter, authController.getUserForumProfile);
 
 authRouter.route("/login/google").post(safeLimiter, loginWithGoogle)
 
 authRouter.route("/request-email-change").post(strictLimiter, verifyToken, authController.requestEmailChange);
 authRouter.route("/verify-email-change").post(strictLimiter, authController.verifyEmailChange);
+
+authRouter.route("/2fa/setup").post(strictLimiter, verifyToken, authController.setup2FA);
+authRouter.route("/2fa/verify").post(strictLimiter, verifyToken, authController.verify2FA);
+authRouter.route("/2fa/login").post(normalLimiter, authController.loginWith2FA);
+authRouter.route("/2fa/disable").post(strictLimiter, verifyToken, authController.disable2FA);
 
 export default authRouter;

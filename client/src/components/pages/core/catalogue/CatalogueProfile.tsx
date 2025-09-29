@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Program, ProgramCatalogue } from "../../../../../../server/src/shared/interfaces";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { usePermissions } from "../../../../hooks/usePermissions";
-import { useDashboards } from "../../../../hooks/auth/useDashboards";
-import { useToast } from "../../../../context/ToastContext";
+import { usePermissions } from "../../../../features/auth/hooks/usePermissions";
+import { useDashboards } from "../../../../features/auth/hooks/useDashboards";
+import { useToast } from "../../../../shared/context/ToastContext";
 import { AudienceEnum } from "../../../../../../server/src/shared/enums";
 import { deleteCatalogueById } from "../../../../api/core/catalogue-api";
 import TopCenterLoader from "../../../ui/TopCenterLoader";

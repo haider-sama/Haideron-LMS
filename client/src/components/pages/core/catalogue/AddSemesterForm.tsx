@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { usePermissions } from "../../../../hooks/usePermissions";
-import { useToast } from "../../../../context/ToastContext";
+import { usePermissions } from "../../../../features/auth/hooks/usePermissions";
+import { useToast } from "../../../../shared/context/ToastContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addSemesterToCatalogue } from "../../../../api/core/semester-api";
 import { SelectInput } from "../../../ui/Input";
 import { Button } from "../../../ui/Button";
-import { AddSemesterPayload } from "../../../../constants/core/interfaces";
+import { AddSemesterPayload } from "../../../../shared/constants/core/interfaces";
 
 
 const semesterNumbers = Array.from({ length: 8 }, (_, i) => ({

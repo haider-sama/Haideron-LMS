@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { usePermissions } from "../../../../hooks/usePermissions";
-import { useToast } from "../../../../context/ToastContext";
+import { usePermissions } from "../../../../features/auth/hooks/usePermissions";
+import { useToast } from "../../../../shared/context/ToastContext";
 import { DepartmentEnum, FacultyTypeEnum, TeacherDesignationEnum } from "../../../../../../server/src/shared/enums";
 import { registerFacultyMember } from "../../../../api/core/faculty-api";
 import { Helmet } from "react-helmet-async";
-import { GLOBAL_TITLE } from "../../../../constants";
+import { GLOBAL_TITLE } from "../../../../shared/constants";
 import { Input, ReadOnlyInput, SelectInput } from "../../../ui/Input";
 
 import DatePicker from "react-datepicker";
 import { Button } from "../../../ui/Button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { FacultyRegisterPayload } from "../../../../constants/core/interfaces";
+import { FacultyRegisterPayload } from "../../../../shared/constants/core/interfaces";
 
 type RegisterFacultyFormProps = {
     onSuccess?: () => void;

@@ -5,7 +5,7 @@ import {
     sendVerificationEmail,
 } from "../../utils/email/emailService";
 import dotenv from "dotenv";
-import { AudienceEnum, DegreeEnum, FacultyTypeEnum, TeacherDesignationEnum, VerificationCodeType } from "../../shared/enums";
+import { AudienceEnum, DegreeEnum, DepartmentEnum, FacultyTypeEnum, TeacherDesignationEnum, VerificationCodeType } from "../../shared/enums";
 import { fifteenMinutesFromNow, oneHourFromNow } from "../../utils/date";
 import { BAD_REQUEST, CONFLICT, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED } from "../../constants/http";
 import { clearAuthCookies } from "../../utils/token-utils/cookies";
@@ -13,14 +13,15 @@ import { loginSchema, registerSchema } from "../../utils/validators/lms-schemas/
 import { ZodError } from "zod";
 import * as UAParser from "ua-parser-js";
 import { db } from "../../db/db";
-import { TeacherInfoWithQualifications } from "../../shared/interfaces";
-import { VisibilityEnum } from "../../shared/social.enums";
+import { TeacherInfoWithQualifications, UserWithRelations } from "../../shared/interfaces";
 import { users } from "../../db/schema";
 import { compareValue, hashValue } from "../../utils/bcrypt";
 import { verificationCodes } from "../../db/models/auth/verificationCode.model";
 import { userSessions } from "../../db/models/auth/userSession.model";
 import { and, eq, sql } from "drizzle-orm";
 import { SettingsService } from "../../utils/settings/SettingsService";
+import crypto from "crypto";
+import { verifyAccessToken } from "../../utils/token-utils/jwt";
 
 dotenv.config();
 
@@ -28,88 +29,101 @@ export async function validateToken(req: Request, res: Response) {
     const userId = req.userId;
 
     try {
-        const user = await db.query.users.findFirst({
-            where: (users, { eq }) => eq(users.id, req.userId),
+        // Fetch user with teacherInfo + qualifications
+        const user: any = await db.query.users.findFirst({
+            where: eq(users.id, userId),
+            columns: {
+                id: true,
+                email: true,
+                fatherName: true,
+                firstName: true,
+                lastName: true,
+                city: true,
+                country: true,
+                avatarURL: true,
+                lastOnline: true,
+                address: true,
+                isEmailVerified: true,
+                department: true,
+                role: true,
+                isTwoFAEnabled: true,
+            },
+            with: {
+                teacherInfo: {
+                    columns: {
+                        id: true,
+                        userId: true,
+                        designation: true,
+                        facultyType: true,
+                        joiningDate: true,
+                        subjectOwner: true,
+                    },
+                    with: {
+                        qualifications: {
+                            columns: {
+                                id: true,
+                                teacherInfoId: true,
+                                degree: true,
+                                passingYear: true,
+                                institutionName: true,
+                                majorSubjects: true,
+                            },
+                        },
+                    },
+                },
+            },
         });
 
         if (!user) {
-            return res.status(NOT_FOUND).json({ message: "User not found" });
+            return res.status(NOT_FOUND).json({ message: "User not found." });
         }
 
-        // Fetch teacherInfo + qualifications
-        const teacherInfoData = await db.query.teacherInfo.findFirst({
-            where: (ti, { eq }) => eq(ti.userId, userId),
-        });
+        // Directly return user + teacherInfo + qualifications as-is
+        return res.status(OK).json(user);
 
-        // Declare a variable for teacherInfo + qualifications
-        let teacherInfoWithQualifications: TeacherInfoWithQualifications | null = null;
-
-        if (teacherInfoData) {
-            const qualificationsRaw = await db.query.teacherQualifications.findMany({
-                where: (q, { eq }) => eq(q.teacherInfoId, teacherInfoData.id),
-            });
-
-            const qualifications = qualificationsRaw.map(q => ({
-                ...q,
-                degree: q.degree as DegreeEnum,
-            }));
-
-            teacherInfoWithQualifications = {
-                ...teacherInfoData,
-                designation: teacherInfoData.designation as TeacherDesignationEnum,
-                facultyType: teacherInfoData.facultyType as FacultyTypeEnum,
-                // convert joiningDate string to Date object or null
-                joiningDate: teacherInfoData.joiningDate ? new Date(teacherInfoData.joiningDate) : null,
-                qualifications,
-            };
-        }
-
-        // Fetch forumProfile
-        let forumProfileData = await db.query.forumProfiles.findFirst({
-            where: (fp, { eq }) => eq(fp.userId, req.userId),
-        });
-
-        // Provide default forumProfile if missing
-        if (!forumProfileData) {
-            forumProfileData = {
-                id: "", // default id, or empty string, if you prefer
-                userId: "", // default userId, must exist because type requires it
-                username: "",
-                displayName: null,
-                bio: null,
-                signature: null,
-                interests: [],
-                badges: [],
-                reputation: 0,
-                visibility: VisibilityEnum.public,
-                postCount: 0,
-                commentCount: 0,
-                joinedAt: new Date(),
-            };
-        }
-
-        res.status(OK).json({
-            id: user.id,
-            role: user.role,
-            email: user.email,
-            fatherName: user.fatherName,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            city: user.city,
-            country: user.country,
-            avatarURL: user.avatarURL,
-            lastOnline: user.lastOnline,
-            address: user.address,
-            isEmailVerified: user.isEmailVerified,
-            department: user.department,
-            teacherInfo: teacherInfoData,
-            forumProfile: forumProfileData,
-        });
     } catch (err) {
-        console.error("Token Validation Error", err);
-        res.status(INTERNAL_SERVER_ERROR).json({ message: "Token Validation failed." });
+        console.error("Validate Token Error", err);
+        return res.status(INTERNAL_SERVER_ERROR).json({ message: "Validate token failed." });
     }
 }
+
+// export async function validateToken(req: Request, res: Response) {
+//     const userId = req.userId;
+
+//     try {
+//         // Fetch only user details
+//         const user: any = await db.query.users.findFirst({
+//             where: eq(users.id, userId),
+//             columns: {
+//                 id: true,
+//                 email: true,
+//                 fatherName: true,
+//                 firstName: true,
+//                 lastName: true,
+//                 city: true,
+//                 country: true,
+//                 avatarURL: true,
+//                 lastOnline: true,
+//                 address: true,
+//                 isEmailVerified: true,
+//                 department: true,
+//                 role: true,
+//                 isTwoFAEnabled: true,
+//             },
+//         });
+
+//         if (!user) {
+//             return res.status(NOT_FOUND).json({ message: "User not found." });
+//         }
+
+//         // Return only user details
+//         res.status(OK).json(user);
+//     } catch (err) {
+//         console.error("Validate Token Error", err);
+//         res.status(INTERNAL_SERVER_ERROR).json({ message: "Validate token failed." });
+//     }
+// }
+
 
 export async function register(req: Request, res: Response) {
     if (!(await SettingsService.isUserRegistrationAllowed())) {
@@ -207,8 +221,11 @@ export async function login(req: Request, res: Response) {
         const parser = new UAParser.UAParser(req.headers["user-agent"] || "");
         const ua = parser.getResult();
 
+        const sessionId = crypto.randomUUID();
+
         // Store session
         await db.insert(userSessions).values({
+            id: sessionId,
             userId: user.id, // UUID string
             ip: (req.headers["x-forwarded-for"] as string) || req.socket.remoteAddress || "",
             userAgent: {
@@ -221,7 +238,7 @@ export async function login(req: Request, res: Response) {
             updatedAt: new Date(),
         });
 
-        const accessToken = await generateToken(res, user.id);
+        const accessToken = await generateToken(res, user.id, sessionId);
 
         res.status(OK).json({
             id: user.id,
@@ -246,27 +263,11 @@ export async function login(req: Request, res: Response) {
 
 export async function logout(req: Request, res: Response) {
     try {
-        const userId = req.userId;
-        const userAgent = (req.headers["user-agent"] ?? "") as string;
-        const ipHeader = req.headers["x-forwarded-for"];
-        const ip =
-            typeof ipHeader === "string"
-                ? ipHeader.split(",")[0].trim()
-                : req.socket.remoteAddress ?? "";
-
-        // Delete session matching userId, ip, and userAgent.raw (we stored userAgent as JSONB)
-        await db.delete(userSessions).where(
-            and(
-                eq(userSessions.userId, userId),
-                eq(userSessions.ip, ip),
-                eq(
-                    sql`(${userSessions.userAgent} ->> 'raw')`,
-                    userAgent
-                )
-            )
-        );
-
+        const decoded = verifyAccessToken(req.cookies.auth_token);
+        const sessionId = decoded.sessionId;
+        await db.delete(userSessions).where(eq(userSessions.id, sessionId));
         clearAuthCookies(res);
+
         res.status(OK).json({ message: "Logged out successfully." });
     } catch (err) {
         console.error("Logout error:", err);
@@ -279,7 +280,7 @@ export const logoutFromAllDevices = async (req: Request, res: Response) => {
         const userId = req.userId;
 
         await db.update(users)
-            .set({ tokenVersion: sql`tokenVersion + 1` })
+            .set({ tokenVersion: sql`token_version + 1` })
             .where(eq(users.id, userId));
 
         // Delete all sessions for userId:

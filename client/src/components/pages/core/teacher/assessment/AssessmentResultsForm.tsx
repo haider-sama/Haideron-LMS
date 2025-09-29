@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useToast } from "../../../../../context/ToastContext";
+import { useToast } from "../../../../../shared/context/ToastContext";
 import TopCenterLoader from "../../../../ui/TopCenterLoader";
-import { AssessmentResultEntry } from "../../../../../constants/core/interfaces";
+import { AssessmentResultEntry } from "../../../../../shared/constants/core/interfaces";
 import { fetchEnrolledStudentsForCourse } from "../../../../../api/core/teacher/teacher-course-api";
 import { getAssessmentResults, submitBulkAssessmentResults } from "../../../../../api/core/teacher/assessment-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,7 +9,7 @@ import ErrorStatus from "../../../../ui/ErrorStatus";
 import { Button } from "../../../../ui/Button";
 import { useUserManagement } from "../../../../../hooks/admin/useUserManagement";
 import { AudienceEnum } from "../../../../../../../server/src/shared/enums";
-import { usePermissions } from "../../../../../hooks/usePermissions";
+import { usePermissions } from "../../../../../features/auth/hooks/usePermissions";
 import { Pagination } from "../../../../ui/Pagination";
 import { DropdownEditor } from "../../../../ui/DropdownEditor";
 import { SelectInput } from "../../../../ui/Input";

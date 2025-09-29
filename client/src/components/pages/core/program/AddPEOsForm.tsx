@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { FiTrash2 } from "react-icons/fi";
 import { StrengthEnum } from "../../../../../../server/src/shared/enums";
-import { useToast } from "../../../../context/ToastContext";
+import { useToast } from "../../../../shared/context/ToastContext";
 import { addPEOsToProgram, getPLOsForProgram } from "../../../../api/core/program-api";
 import { SelectInput, TextAreaInput } from "../../../ui/Input";
-import { PEOFrontend, PEOUpdatePayload, PLOFrontend } from "../../../../constants/core/interfaces";
+import { PEOFrontend, PEOUpdatePayload, PLOFrontend } from "../../../../shared/constants/core/interfaces";
 import { Button } from "../../../ui/Button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

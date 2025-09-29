@@ -5,17 +5,17 @@ import { deleteCourseById, getCourses } from "../../../../api/core/course-api";
 import { getFacultyMembers } from "../../../../api/core/faculty-api";
 import { getCataloguesByProgram } from "../../../../api/core/catalogue-api";
 import { getPLOsForProgram, getPrograms } from "../../../../api/core/program-api";
-import { useToast } from "../../../../context/ToastContext";
+import { useToast } from "../../../../shared/context/ToastContext";
 import TopCenterLoader from "../../../ui/TopCenterLoader";
 import { Input, MultiSelectInput, SelectInput, TextAreaInput } from "../../../ui/Input";
 import { ClassSectionEnum, DomainEnum, KnowledgeAreaEnum, StrengthEnum, SubjectLevelEnum, SubjectTypeEnum } from "../../../../../../server/src/shared/enums";
 import React from "react";
-import { CLO, EditableCourse, PLOMapping, ProgramWithCreator, UpdateCoursePayload } from "../../../../constants/core/interfaces";
+import { CLO, EditableCourse, PLOMapping, ProgramWithCreator, UpdateCoursePayload } from "../../../../shared/constants/core/interfaces";
 import CLOEditor from "./CLOEditor";
 import ErrorStatus from "../../../ui/ErrorStatus";
 import { Button } from "../../../ui/Button";
 import Select from "react-select";
-import { MAX_PAGE_LIMIT } from "../../../../constants";
+import { MAX_PAGE_LIMIT } from "../../../../shared/constants";
 
 interface CourseProfileProps {
     courseId: string;

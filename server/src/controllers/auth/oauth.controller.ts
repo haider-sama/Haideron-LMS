@@ -5,11 +5,12 @@ import generateToken from '../../utils/token-utils/generateToken';
 import crypto from 'crypto';
 import { GOOGLE_CLIENT_ID } from '../../constants/env';
 import { db } from '../../db/db';
-import { users } from '../../db/schema';
+import { users, userSessions } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 import { hashValue } from '../../utils/bcrypt';
 import { AudienceEnum } from '../../shared/enums';
 import { SettingsService } from '../../utils/settings/SettingsService';
+import * as UAParser from "ua-parser-js";
 
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -67,7 +68,28 @@ export const loginWithGoogle = async (req: Request, res: Response) => {
             user = insertedUsers[0];
         }
 
-        const accessToken = await generateToken(res, user.id);
+        // Generate a new session ID for this login
+        const sessionId = crypto.randomUUID();
+
+        // Store the session in DB
+        const uaParser = new UAParser.UAParser(req.headers["user-agent"] || "");
+        const ua = uaParser.getResult();
+
+        await db.insert(userSessions).values({
+            id: sessionId,
+            userId: user.id,
+            ip: (req.headers["x-forwarded-for"] as string) || req.socket.remoteAddress || "",
+            userAgent: {
+                browser: ua.browser.name + " " + ua.browser.version,
+                os: ua.os.name + " " + ua.os.version,
+                device: ua.device.type || "Desktop",
+                raw: req.headers["user-agent"] || "",
+            },
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
+
+        const accessToken = await generateToken(res, user.id, sessionId);
 
         return res.status(OK).json({
             success: true,

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { usePermissions } from "../../hooks/usePermissions";
-import { useDashboards } from "../../hooks/auth/useDashboards";
+import { usePermissions } from "../../features/auth/hooks/usePermissions";
+import { useDashboards } from "../../features/auth/hooks/useDashboards";
 import { Program } from "../../../../server/src/shared/interfaces";
 import { Helmet } from "react-helmet-async";
-import { GLOBAL_TITLE, MAX_PAGE_LIMIT } from "../../constants";
+import { GLOBAL_TITLE, MAX_PAGE_LIMIT } from "../../shared/constants";
 import Breadcrumbs, { generateBreadcrumbs } from "../../components/ui/Breadcrumbs";
 import PageHeading from "../../components/ui/PageHeading";
 import TopCenterLoader from "../../components/ui/TopCenterLoader";
@@ -14,11 +14,11 @@ import { getProgramById, getPrograms, updateProgramById } from "../../api/core/p
 import RegisterProgramForm from "../../components/pages/core/program/RegisterProgramForm";
 import { Pagination } from "../../components/ui/Pagination";
 import { useQuery } from "@tanstack/react-query";
-import { truncateName } from "../../utils/truncate-name";
+import { truncateName } from "../../shared/utils/truncate-name";
 import { useUserManagement } from "../../hooks/admin/useUserManagement";
 import { AudienceEnum } from "../../../../server/src/shared/enums";
 import OutcomeManagement from "../../components/pages/core/program/OutcomeManagement";
-import { ProgramWithCreator } from "../../constants/core/interfaces";
+import { ProgramWithCreator } from "../../shared/constants/core/interfaces";
 import { Button } from "../../components/ui/Button";
 
 

@@ -1,5 +1,5 @@
-import { API_BASE_URL } from "../../../constants";
-import { AssessmentPayload, AssessmentResultEntry, GetAssessmentResultsResponse, GetCourseAssessmentsResponse } from "../../../constants/core/interfaces";
+import { API_BASE_URL } from "../../../shared/constants";
+import { AssessmentPayload, AssessmentResultEntry, GetAssessmentResultsResponse, GetCourseAssessmentsResponse } from "../../../shared/constants/core/interfaces";
 
 const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/assessment`;
 

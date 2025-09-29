@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useToast } from "../../../../context/ToastContext";
-import { ProgramBatch } from "../../../../constants/core/interfaces";
+import { useToast } from "../../../../shared/context/ToastContext";
+import { ProgramBatch } from "../../../../shared/constants/core/interfaces";
 import { Program } from "../../../../../../server/src/shared/interfaces";
 import TopCenterLoader from "../../../ui/TopCenterLoader";
 import InternalError from "../../../../pages/forbidden/InternalError";

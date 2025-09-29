@@ -10,6 +10,20 @@ body {
     font-family: 'Atkinson Hyperlegible', sans-serif;
 }
 
+@font-face {
+    font-family: 'Cubic';
+    src: url('/src/assets/fonts/cubic.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Orbitron';
+    src: url('/src/assets/fonts/Orbitron-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 @keyframes spin-slow {
     from {
         transform: rotate(0deg);
@@ -102,6 +116,5 @@ body.dark ::-webkit-scrollbar-thumb {
 
 .staff-text {
     color: #212121;
-
     text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
 }

@@ -9,7 +9,6 @@ import {
     SubjectLevelEnum,
     StrengthEnum,
 } from "./enums";
-import { ForumBadgeEnum, VisibilityEnum } from "./social.enums";
 
 export interface User {
     id: string;
@@ -32,6 +31,10 @@ export interface User {
     resetPasswordToken?: string | null;
     resetPasswordExpiresAt?: Date | null;
     tokenVersion: number;
+
+    isTwoFAEnabled: boolean | null;
+    twoFASecret: string;
+    
     createdAt: Date;
     updatedAt: Date;
 }
@@ -56,26 +59,9 @@ export interface TeacherQualification {
     majorSubjects: string[];
 }
 
-// ForumProfile row type
-export interface ForumProfile {
-    id: string;
-    userId: string;
-    username: string;
-    displayName?: string | null;
-    bio: string;
-    signature: string;
-    interests?: string[] | null;
-    badges?: ForumBadgeEnum[] | null;
-    reputation: number;
-    visibility: VisibilityEnum;
-    postCount: number;
-    commentCount: number;
-    joinedAt: Date;
-}
 
 export interface UserWithRelations extends User {
     teacherInfo?: TeacherInfoWithQualifications | null;
-    forumProfile?: ForumProfile | null;
 }
 
 export interface TeacherInfoWithQualifications extends TeacherInfo {

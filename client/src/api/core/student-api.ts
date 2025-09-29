@@ -1,5 +1,5 @@
-import { API_BASE_URL } from "../../constants";
-import { EnrolledCourse, EnrollInCoursePayload, StudentDashboardContextResponse, TranscriptResponse } from "../../constants/core/interfaces";
+import { API_BASE_URL } from "../../shared/constants";
+import { EnrolledCourse, EnrollInCoursePayload, StudentDashboardContextResponse, TranscriptResponse } from "../../shared/constants/core/interfaces";
 
 const LOCAL_BASE_URL = `${API_BASE_URL}/api/v1/student`;
 

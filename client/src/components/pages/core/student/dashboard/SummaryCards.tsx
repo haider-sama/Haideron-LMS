@@ -1,6 +1,6 @@
 import { HiAcademicCap, HiLightBulb } from "react-icons/hi";
 import { FaBullseye } from "react-icons/fa";
-import { StudentPerformanceResponse } from "../../../../../constants/lms/intelligence-inter-types";
+import { StudentPerformanceResponse } from "../../../../../shared/constants/lms/intelligence-inter-types";
 import { Badge, BadgeVariant } from "../../../../ui/Badge";
 
 interface SummaryCardsProps {

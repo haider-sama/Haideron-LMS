@@ -67,12 +67,18 @@ export const ReadOnlyInput = ({
     </div>
 );
 
+interface SelectInputOption {
+    label: string;
+    value: string | number;
+    action?: () => void; // 👈 optional action for each option
+}
+
 interface SelectInputProps {
     label?: string;
     name?: string;
-    value: string | number | null;
-    onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-    options: string[] | { label: string; value: string | number }[];
+    value?: string | number | null;
+    onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+    options: string[] | SelectInputOption[];
     className?: string;
     placeholder?: string;
     disabled?: boolean;
@@ -86,26 +92,44 @@ export const SelectInput: React.FC<SelectInputProps> = ({
     options,
     className = "",
     placeholder = "Select an option",
+    disabled = false,
 }) => {
-    // Normalize string array to array of { label, value }
-    const renderedOptions =
+    // Normalize options
+    const renderedOptions: SelectInputOption[] =
         typeof options[0] === "string"
             ? (options as string[]).map((val) => ({ label: val, value: val }))
-            : (options as { label: string; value: string | number }[]);
+            : (options as SelectInputOption[]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedValue = e.target.value;
+        const selectedOption = renderedOptions.find((opt) => String(opt.value) === selectedValue);
+
+        // Call the global onChange handler if provided
+        if (onChange) {
+            onChange(e);
+        }
+
+        // Trigger option-specific action if available
+        if (selectedOption?.action) {
+            selectedOption.action();
+        }
+    };
 
     return (
         <div className={className}>
-            <label className="block mb-1 text-sm font-medium text-gray-800 dark:text-darkTextSecondary">
-                {label}
-            </label>
+            {label && (
+                <label className="block mb-1 text-sm font-medium text-gray-800 dark:text-darkTextSecondary">
+                    {label}
+                </label>
+            )}
             <select
                 name={name}
                 value={value ?? ""}
-                onChange={onChange}
-                disabled={false}
+                onChange={handleChange}
+                disabled={disabled}
                 className="w-full px-2 py-1.5 rounded-md
-      bg-white text-gray-800 border border-gray-300
-      dark:bg-darkMuted dark:text-darkTextSecondary dark:border-darkBorderLight"
+                bg-white text-gray-800 border border-gray-300
+                dark:bg-darkMuted dark:text-darkTextSecondary dark:border-darkBorderLight"
             >
                 <option value="" disabled>
                     {placeholder}
