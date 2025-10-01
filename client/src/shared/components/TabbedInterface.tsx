@@ -39,8 +39,8 @@ const TabbedInterface: React.FC<TabbedInterfaceProps> = ({
                     <button
                         key={index}
                         onClick={() => setActiveIndex(index)}
-                        className={`flex-1 text-center px-4 py-3 -mb-px text-sm font-medium border-b-2 transition-colors
-              ${activeIndex === index
+                        className={`flex-1 text-center p-4 -mb-px text-sm font-medium border-b-2 transition-colors
+                        ${activeIndex === index
                                 ? "border-blue-400 text-blue-400"
                                 : "border-transparent text-gray-500 hover:text-gray-700"
                             }`}
@@ -51,7 +51,7 @@ const TabbedInterface: React.FC<TabbedInterfaceProps> = ({
             </div>
 
             {/* Tab Content */}
-            <div className="p-8">{tabs[activeIndex].content}</div>
+            <div className="py-8">{tabs[activeIndex].content}</div>
         </div>
     );
 };

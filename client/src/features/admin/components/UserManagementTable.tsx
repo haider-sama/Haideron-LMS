@@ -10,7 +10,7 @@ import Modal from "../../../components/ui/Modal";
 import UserProfile from "../../../pages/account/UserProfile";
 import TopCenterLoader from "../../../components/ui/TopCenterLoader";
 import { Helmet } from "react-helmet-async";
-import { useUserManagement } from "../../../hooks/admin/useUserManagement";
+import { useUserManagement } from "../hooks/useUserManagement";
 import { usePermissions } from "../../auth/hooks/usePermissions";
 import { AudienceEnum } from "../../../../../server/src/shared/enums";
 import { Pagination } from "../../../components/ui/Pagination";

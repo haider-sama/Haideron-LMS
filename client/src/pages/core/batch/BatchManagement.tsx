@@ -13,7 +13,7 @@ import Modal from "../../../components/ui/Modal";
 import CreateBatchForm from "../../../components/pages/core/batch/CreateBatchForm";
 import { GLOBAL_TITLE, MAX_PAGE_LIMIT } from "../../../shared/constants";
 import { useQuery } from "@tanstack/react-query";
-import { useUserManagement } from "../../../hooks/admin/useUserManagement";
+import { useUserManagement } from "../../../features/admin/hooks/useUserManagement";
 import { AudienceEnum } from "../../../../../server/src/shared/enums";
 import { Button } from "../../../components/ui/Button";
 import AsyncSelect from "react-select/async";

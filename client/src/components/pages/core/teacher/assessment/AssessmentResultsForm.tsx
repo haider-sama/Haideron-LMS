@@ -7,7 +7,7 @@ import { getAssessmentResults, submitBulkAssessmentResults } from "../../../../.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ErrorStatus from "../../../../ui/ErrorStatus";
 import { Button } from "../../../../ui/Button";
-import { useUserManagement } from "../../../../../hooks/admin/useUserManagement";
+import { useUserManagement } from "../../../../../features/admin/hooks/useUserManagement";
 import { AudienceEnum } from "../../../../../../../server/src/shared/enums";
 import { usePermissions } from "../../../../../features/auth/hooks/usePermissions";
 import { Pagination } from "../../../../ui/Pagination";

@@ -1,5 +1,7 @@
 import Select, { MultiValue, ActionMeta, StylesConfig } from "react-select";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { FaCheck } from "react-icons/fa";
+import { BsChevronDown } from "react-icons/bs";
 
 export const Input = ({
     label,
@@ -70,14 +72,14 @@ export const ReadOnlyInput = ({
 interface SelectInputOption {
     label: string;
     value: string | number;
-    action?: () => void; // 👈 optional action for each option
+    action?: () => void; // optional action for each option
 }
 
 interface SelectInputProps {
     label?: string;
     name?: string;
-    value?: string | number | null;
-    onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+    value: string | number | null;
+    onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
     options: string[] | SelectInputOption[];
     className?: string;
     placeholder?: string;
@@ -94,52 +96,56 @@ export const SelectInput: React.FC<SelectInputProps> = ({
     placeholder = "Select an option",
     disabled = false,
 }) => {
-    // Normalize options
     const renderedOptions: SelectInputOption[] =
         typeof options[0] === "string"
             ? (options as string[]).map((val) => ({ label: val, value: val }))
             : (options as SelectInputOption[]);
 
     const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedValue = e.target.value;
-        const selectedOption = renderedOptions.find((opt) => String(opt.value) === selectedValue);
-
-        // Call the global onChange handler if provided
-        if (onChange) {
-            onChange(e);
-        }
-
-        // Trigger option-specific action if available
-        if (selectedOption?.action) {
-            selectedOption.action();
+        onChange(e); // still pass to parent
+        const selected = renderedOptions.find(
+            (opt) => opt.value.toString() === e.target.value
+        );
+        if (selected?.action) {
+            selected.action();
         }
     };
 
     return (
-        <div className={className}>
+        <div className={`w-full ${className}`}>
             {label && (
-                <label className="block mb-1 text-sm font-medium text-gray-800 dark:text-darkTextSecondary">
+                <label className="block mb-1 text-sm font-medium text-gray-800">
                     {label}
                 </label>
             )}
-            <select
-                name={name}
-                value={value ?? ""}
-                onChange={handleChange}
-                disabled={disabled}
-                className="w-full px-2 py-1.5 rounded-md
-                bg-white text-gray-800 border border-gray-300
-                dark:bg-darkMuted dark:text-darkTextSecondary dark:border-darkBorderLight"
-            >
-                <option value="" disabled>
-                    {placeholder}
-                </option>
-                {renderedOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                        {opt.label}
+
+            <div className="relative">
+                <select
+                    name={name}
+                    value={value ?? ""}
+                    onChange={handleChange}
+                    disabled={disabled}
+                    className="
+                        w-full appearance-none px-4 py-2 pr-8 rounded-md
+                        bg-white text-gray-800 border border-gray-300
+                        focus:outline-none focus:ring-1 focus:ring-gray-200
+                        disabled:bg-gray-100 disabled:text-gray-400" 
+                    >
+                    <option value="" disabled>
+                        {placeholder}
                     </option>
-                ))}
-            </select>
+                    {renderedOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                        </option>
+                    ))}
+                </select>
+
+                {/* Chevron */}
+                <span className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                    <BsChevronDown className="h-4 w-4 text-gray-400" />
+                </span>
+            </div>
         </div>
     );
 };

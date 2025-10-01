@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '../../shared/context/ToastContext';
-import { AdminSettings } from '../../shared/constants/admin/interfaces';
-import { fetchAdminSettingsFrontend, fetchPublicSettingsFrontend, updateAdminSettings } from '../../api/admin/admin-api';
+import { useToast } from '../../../shared/context/ToastContext';
+import { AdminSettings } from '../../../shared/constants/admin/interfaces';
+import { fetchAdminSettingsFrontend, fetchPublicSettingsFrontend, updateAdminSettings } from '../../../api/admin/admin-api';
 
 export const useSettings = (isAdminMode = false) => {
     const toast = useToast();

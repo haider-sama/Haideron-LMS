@@ -18,7 +18,7 @@ import { FiEdit } from "react-icons/fi";
 import CourseProfile from "../../components/pages/core/course/CourseProfile";
 import { Course } from "../../../../server/src/shared/interfaces";
 import { Button } from "../../components/ui/Button";
-import { useUserManagement } from "../../hooks/admin/useUserManagement";
+import { useUserManagement } from "../../features/admin/hooks/useUserManagement";
 import { AudienceEnum, DomainEnum, KnowledgeAreaEnum, SubjectLevelEnum, SubjectTypeEnum } from "../../../../server/src/shared/enums";
 import { SelectInput } from "../../components/ui/Input";
 

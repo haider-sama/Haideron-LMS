@@ -7,14 +7,14 @@ import {
     resetUserPasswordByAdmin,
     bulkRegisterUsers,
     updateUserById
-} from "../../api/admin/admin-api";
-import { useToast } from "../../shared/context/ToastContext";
-import { AudienceEnum, DepartmentEnum } from "../../../../server/src/shared/enums";
-import { getAvailableRoles, restrictedRoles } from "../../shared/constants";
-import { MAX_PAGE_LIMIT } from "../../shared/constants";
-import { User } from "../../../../server/src/shared/interfaces";
-import { BulkUser } from "../../shared/constants/core/interfaces";
-import { useDebounce } from "../../components/ui/SearchBar";
+} from "../../../api/admin/admin-api";
+import { useToast } from "../../../shared/context/ToastContext";
+import { AudienceEnum, DepartmentEnum } from "../../../../../server/src/shared/enums";
+import { getAvailableRoles, restrictedRoles } from "../../../shared/constants";
+import { MAX_PAGE_LIMIT } from "../../../shared/constants";
+import { User } from "../../../../../server/src/shared/interfaces";
+import { BulkUser } from "../../../shared/constants/core/interfaces";
+import { useDebounce } from "../../../components/ui/SearchBar";
 
 const INITIAL_USER: BulkUser = {
     email: "",

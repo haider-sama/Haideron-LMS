@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import Sidebar from "../../../components/pages/core/main/sidebar/Sidebar";
-import { useSettings } from "../../../hooks/admin/useSettings";
+import { useSettings } from "../../admin/hooks/useSettings";
 import MaintenanceBanner from "../../../components/permissions/MaintenanceBanner";
 import Header from "./Header";
 import BreadcrumbHeader from "../../../components/ui/BreadcrumbHeader";

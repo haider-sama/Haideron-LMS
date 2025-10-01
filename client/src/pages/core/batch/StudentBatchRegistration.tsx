@@ -13,7 +13,7 @@ import { SelectInput } from "../../../components/ui/Input";
 import TopCenterLoader from "../../../components/ui/TopCenterLoader";
 import { Pagination } from "../../../components/ui/Pagination";
 import { getPrograms } from "../../../api/core/program-api";
-import { useUserManagement } from "../../../hooks/admin/useUserManagement";
+import { useUserManagement } from "../../../features/admin/hooks/useUserManagement";
 import { FiCheckCircle, FiUserPlus } from "react-icons/fi";
 import { Button } from "../../../components/ui/Button";
 import { User } from "../../../../../server/src/shared/interfaces";

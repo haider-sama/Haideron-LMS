@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AdminSettings } from '../../../shared/constants/admin/interfaces';
 // import { Button } from '../../components/ui/Button';
 import TopCenterLoader from '../../../components/ui/TopCenterLoader';
-import { useSettings } from '../../../hooks/admin/useSettings';
+import { useSettings } from '../hooks/useSettings';
 import ErrorStatus from '../../../components/ui/ErrorStatus';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { Helmet } from 'react-helmet-async';

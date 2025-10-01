@@ -15,7 +15,7 @@ import RegisterProgramForm from "../../components/pages/core/program/RegisterPro
 import { Pagination } from "../../components/ui/Pagination";
 import { useQuery } from "@tanstack/react-query";
 import { truncateName } from "../../shared/utils/truncate-name";
-import { useUserManagement } from "../../hooks/admin/useUserManagement";
+import { useUserManagement } from "../../features/admin/hooks/useUserManagement";
 import { AudienceEnum } from "../../../../server/src/shared/enums";
 import OutcomeManagement from "../../components/pages/core/program/OutcomeManagement";
 import { ProgramWithCreator } from "../../shared/constants/core/interfaces";

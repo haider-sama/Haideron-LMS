@@ -9,7 +9,7 @@ import { Button } from "../../../ui/Button";
 import ErrorStatus from "../../../ui/ErrorStatus";
 import TopCenterLoader from "../../../ui/TopCenterLoader";
 import { AudienceEnum } from "../../../../../../server/src/shared/enums";
-import { useUserManagement } from "../../../../hooks/admin/useUserManagement";
+import { useUserManagement } from "../../../../features/admin/hooks/useUserManagement";
 import { usePermissions } from "../../../../features/auth/hooks/usePermissions";
 import Modal from "../../../ui/Modal";
 import CreateAttendanceSessionForm from "./CreateAttendanceSessionForm";

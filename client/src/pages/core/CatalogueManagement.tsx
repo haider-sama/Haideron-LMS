@@ -19,7 +19,7 @@ import CreateCatalogueForm from "../../components/pages/core/catalogue/CreateCat
 import CatalogueProfile from "../../components/pages/core/catalogue/CatalogueProfile";
 import { truncateName } from "../../shared/utils/truncate-name";
 import { AudienceEnum } from "../../../../server/src/shared/enums";
-import { useUserManagement } from "../../hooks/admin/useUserManagement";
+import { useUserManagement } from "../../features/admin/hooks/useUserManagement";
 import { Button } from "../../components/ui/Button";
 
 

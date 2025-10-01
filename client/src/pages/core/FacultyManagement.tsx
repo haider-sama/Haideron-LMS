@@ -15,7 +15,7 @@ import FacultyProfile from "../../components/pages/core/faculty/FacultyProfile";
 import RegisterFacultyForm from "../../components/pages/core/faculty/RegisterFacultyForm";
 import { PaginatedFacultyResponse } from "../../shared/constants/core/interfaces";
 import { AudienceEnum, FacultyTypeEnum, TeacherDesignationEnum } from "../../../../server/src/shared/enums";
-import { useUserManagement } from "../../hooks/admin/useUserManagement";
+import { useUserManagement } from "../../features/admin/hooks/useUserManagement";
 import { usePermissions } from "../../features/auth/hooks/usePermissions";
 import { SelectInput } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";

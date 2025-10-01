@@ -1,9 +1,8 @@
 import { AudienceEnum, DepartmentEnum } from "../../../../../server/src/shared/enums";
 import { BulkUser } from "../../../shared/constants/core/interfaces";
-import PageHeading from "../../../components/ui/PageHeading";
 import { FiTrash2 } from "react-icons/fi";
 import { usePermissions } from "../../auth/hooks/usePermissions";
-import { useUserManagement } from "../../../hooks/admin/useUserManagement";
+import { useUserManagement } from "../hooks/useUserManagement";
 import { useEffect, useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { AnimatePresence } from "framer-motion";
@@ -58,27 +57,27 @@ const UserRegistration = () => {
     }, [editableCell]);
 
     return (
-        <div className="max-w-6xl mx-auto">
-            <PageHeading title="User Registration" />
-
+        <div>
             <div className="space-y-6">
-                <div className="flex items-center space-x-3">
-                    <Button onClick={handleAddUser}
+                <div className="flex items-center space-x-2">
+                    <Button 
+                        onClick={handleAddUser}
                         disabled={isSubmitting}
-                        size="sm" fullWidth={false} variant="blue"
+                        size="md" fullWidth={false} variant="blue"
                     >
                         Add User
                     </Button>
 
                     {/* Actions Dropdown */}
-                    <div className="w-44">
+                    <div className="w-40">
                         <SelectInput
                             name="user-actions"
                             placeholder="Actions"
+                            onChange={() => { } } // still required
                             options={[
                                 { label: "Upload CSV", value: "upload", action: () => setIsCSVOpen(true) },
                                 { label: "Download Template", value: "template", action: () => (window.location.href = "/files/list.csv") },
-                            ]} />
+                            ]} value={null} />
                     </div>
                 </div>
 
@@ -102,8 +101,8 @@ const UserRegistration = () => {
             </div>
 
             <div className="">
-                <table className="w-full text-sm mt-6 border border-gray-300 rounded-lg shadow-sm bg-white dark:bg-darkSurface dark:border-darkBorderLight overflow-x-auto">
-                    <thead className="text-left dark:bg-darkMuted dark:text-darkTextSecondary">
+                <table className="w-full text-sm mt-8 border border-gray-300 rounded-md shadow-sm bg-gray-100 overflow-x-auto">
+                    <thead className="text-left">
                         <tr>
                             {[
                                 "email", "password", "role", "department",
@@ -111,8 +110,8 @@ const UserRegistration = () => {
                             ].map((header) => (
                                 <th
                                     key={header}
-                                    className={`p-2 border dark:border-darkBorderLight cursor-pointer select-none 
-                                            text-gray-800 uppercase text-xs dark:text-darkTextPrimary
+                                    className={`p-2 border border-gray-300 cursor-pointer select-none 
+                                            text-gray-800 uppercase text-xs
                                             }`}
                                     title="Double click a cell in this column to edit entire column"
                                 >
@@ -127,9 +126,9 @@ const UserRegistration = () => {
                         {usersFormData.map((user, rowIndex) => (
                             <tr
                                 key={rowIndex}
-                                className={`even:bg-gray-50 dark:even:bg-darkSurface ${!validateUser(user as BulkUser)
-                                    ? "bg-gray-100 dark:bg-darkMuted/50"
-                                    : "bg-white dark:bg-darkPrimary"
+                                className={`even:bg-gray-50 ${!validateUser(user as BulkUser)
+                                    ? "bg-gray-100"
+                                    : "bg-white"
                                     }`}
                             >
                                 {Object.entries(user).map(([field, value]) => {
@@ -142,7 +141,7 @@ const UserRegistration = () => {
 
                                     const cellClass = `
                                             p-2
-                                            ${isEditing ? "bg-blue-50 dark:bg-blue-800 border-0" : "border dark:border-darkBorderLight"}
+                                            ${isEditing ? "bg-blue-50 border-0" : "border border-gray-300"}
                                             cursor-pointer
                                             relative
                                         `;
@@ -190,7 +189,7 @@ const UserRegistration = () => {
                                                                 onChange={(e) => setTempValue(e.target.value)}
                                                                 rows={4}
                                                                 autoFocus
-                                                                className="w-full h-full p-2 text-xs bg-transparent text-gray-800 dark:text-darkTextPrimary border-0 focus:outline-none focus:ring-0 align-bottom"
+                                                                className="w-full h-full p-2 text-xs bg-transparent text-gray-800 border-0 focus:outline-none focus:ring-0 align-bottom"
                                                             />
                                                         ) : field === "role" ? (
                                                             <select
@@ -198,7 +197,7 @@ const UserRegistration = () => {
                                                                 onChange={(e) => setTempValue(e.target.value)}
                                                                 disabled={isSubmitting}
                                                                 autoFocus
-                                                                className="w-full p-2 text-sm border rounded-md dark:bg-darkPrimary dark:text-darkTextPrimary"
+                                                                className="w-full p-2 text-sm border rounded-md"
                                                             >
                                                                 {availableRoles.map((role) => (
                                                                     <option key={role.value} value={role.value}>
@@ -212,7 +211,7 @@ const UserRegistration = () => {
                                                                 onChange={(e) => setTempValue(e.target.value)}
                                                                 disabled={isSubmitting}
                                                                 autoFocus
-                                                                className="w-full p-2 text-sm border rounded-md dark:bg-darkPrimary dark:text-darkTextPrimary"
+                                                                className="w-full p-2 text-sm border rounded-md"
                                                             >
                                                                 {Object.values(DepartmentEnum).map((d) => (
                                                                     <option key={d} value={d}>
@@ -226,7 +225,7 @@ const UserRegistration = () => {
                                                                 value={tempValue}
                                                                 onChange={(e) => setTempValue(e.target.value)}
                                                                 autoFocus
-                                                                className="w-full h-full p-2 text-xs bg-transparent text-gray-800 dark:text-darkTextPrimary border-0 focus:outline-none focus:ring-0 align-bottom"
+                                                                className="w-full h-full p-2 text-xs bg-transparent text-gray-800 border-0 focus:outline-none focus:ring-0 align-bottom"
                                                             />
                                                         )}
                                                     </DropdownEditor>
@@ -238,10 +237,10 @@ const UserRegistration = () => {
                                 })}
 
                                 {/* Action cell */}
-                                <td className="border dark:border-darkBorderLight p-2 text-center">
+                                <td className="border border-gray-300 p-2 text-center">
                                     <button
                                         onClick={() => handleRemoveUser(rowIndex)}
-                                        className="text-red-400 hover:underline hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-xs"
+                                        className="text-red-400 hover:underline hover:text-red-600 text-xs"
                                         disabled={isSubmitting}
                                         title="Delete user"
                                     >
@@ -255,13 +254,7 @@ const UserRegistration = () => {
             </div>
 
 
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mt-6">
-                <Button onClick={handleAddUser}
-                    disabled={isSubmitting}
-                    size="md" fullWidth={false} variant="blue"
-                >
-                    Add Another User
-                </Button>
+            <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4">
                 <Button onClick={handleSubmit} isLoading={isSubmitting}
                     disabled={isSubmitting} loadingText="Submitting..."
                     size="md" fullWidth={false}

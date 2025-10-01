@@ -30,7 +30,7 @@ import OfferedCoursesList from "../../pages/core/teacher/OfferedCoursesList";
 import PendingFinalizedResultsList from "../../pages/core/result/PendingFinalizedResultsList";
 import AuditLogPage from "../../features/admin/components/AuditLogPage";
 import AdminSettingsPanel from "../../features/admin/components/AdminSettingsPanel";
-import { useSettings } from "../../hooks/admin/useSettings";
+import { useSettings } from "../../features/admin/hooks/useSettings";
 import Enable2FA from "../../features/auth/components/verification/Enable2FA";
 import Disable2FA from "../../features/auth/components/verification/Disable2FA";
 import { useAuth } from "../../features/auth/hooks/useAuth";

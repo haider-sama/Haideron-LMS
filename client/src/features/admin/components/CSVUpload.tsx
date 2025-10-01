@@ -40,66 +40,64 @@ export const CSVUpload: React.FC<CSVUploadProps> = ({
     };
 
     return (
-        <>
-            <Modal isOpen={isOpen} onClose={onClose}>
-                <div className="space-y-6">
-                    {/* Title */}
-                    <h2 className="text-lg font-semibold text-gray-800">
-                        {modalTitle}
-                    </h2>
+        <Modal isOpen={isOpen} onClose={onClose}>
+            <div className="flex flex-col space-y-4">
+                {/* Title */}
+                <h2 className="text-lg font-semibold text-gray-800">{modalTitle}</h2>
 
-                    {/* Description */}
-                    {modalDescription && (
-                        <p className="text-sm text-gray-500">
-                            {modalDescription}
-                        </p>
-                    )}
+                {/* Description */}
+                {modalDescription && (
+                    <p className="text-sm text-gray-500">{modalDescription}</p>
+                )}
 
-                    {/* File Input */}
-                    <div>
-                        <label
-                            htmlFor="csv-upload"
-                            className="block mb-2 text-sm font-medium text-gray-700"
-                        >
-                            CSV File
-                        </label>
-                        <input
-                            type="file"
-                            id="csv-upload"
-                            accept=".csv,text/csv"
-                            onChange={handleFileChange}
-                            disabled={isSubmitting}
-                            className="w-full px-4 py-2 border rounded-md text-sm 
-                         border-gray-300 bg-white"
-                        />
-                    </div>
-
-                    {/* Info List */}
-                    {infoList.length > 0 && (
-                        <ul className="text-gray-500 text-sm space-y-1 list-disc list-inside">
-                            {infoList.map((item, idx) => (
-                                <li key={idx}>{item}</li>
-                            ))}
-                        </ul>
-                    )}
-
-                    {/* Footer */}
-                    <div className="flex justify-center space-x-2 pt-4">
-                        <Button onClick={onClose} variant="light" size="md" fullWidth={false}>
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleConfirm}
-                            variant="green"
-                            size="md"
-                            fullWidth={false}
-                            disabled={isSubmitting}
-                        >
-                            {isSubmitting ? "Uploading..." : "Upload"}
-                        </Button>
-                    </div>
+                {/* File Input */}
+                <div>
+                    <label
+                        htmlFor="csv-upload"
+                        className="block mb-2 text-sm font-medium text-gray-700"
+                    >
+                        CSV File
+                    </label>
+                    <input
+                        type="file"
+                        id="csv-upload"
+                        accept=".csv,text/csv"
+                        onChange={handleFileChange}
+                        disabled={isSubmitting}
+                        className="w-full px-4 py-2 border rounded-md text-sm border-gray-300 bg-white"
+                    />
                 </div>
-            </Modal>
-        </>
+
+                {/* Info List */}
+                {infoList.length > 0 && (
+                    <ul className="text-gray-500 text-sm space-y-1 list-disc list-inside">
+                        {infoList.map((item, idx) => (
+                            <li key={idx}>{item}</li>
+                        ))}
+                    </ul>
+                )}
+
+                {/* Actions */}
+                <div className="flex justify-center space-x-2 pt-4">
+                    <Button
+                        onClick={onClose}
+                        variant="light"
+                        size="md"
+                        fullWidth={false}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleConfirm}
+                        variant="green"
+                        size="md"
+                        fullWidth={false}
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? "Uploading..." : "Upload"}
+                    </Button>
+                </div>
+            </div>
+        </Modal>
     );
 };
