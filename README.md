@@ -4,10 +4,13 @@
 
 <h1 align="center">Haideron-LMS</h1>
 
+i thought of working on the OBE problem for my uni, tried to push through it, but let’s just say any future addition is abandoned and the project’s stuck at a stalemate forever.  
+
 <p align="center">
-  A <strong>scalable, modern outcome-based Learning Management System (LMS)</strong> built for institutions that value performance, reliability, and ease of use.
-  Designed with <strong>Node.js, TypeScript, PostgreSQL (via Drizzle ORM)</strong>, and <strong>Redis (for the social layer)</strong> — Haideron-LMS delivers a smooth, secure, and intuitive learning experience for administrators, faculty, and students.
+  A <strong>scalable, modern outcome-based Learning Management System (LMS)</strong> built for institutions that value performance, reliability, and ease of use.  
+  Designed with <strong>Node.js, TypeScript, PostgreSQL (via Drizzle ORM)</strong>, and <strong>Redis (for the social layer)</strong>
 </p>
+
 
 <br>
 
@@ -96,7 +99,7 @@
 
 <br>
 
-### 🌐 Social Layer (Community)
+### 🌐 Social Layer (Community - Not available after stable-v1.0.0)
 - 💬 Forums, posts, comments with likes/upvotes/downvotes  
 - 🖼️ Multiple post formats (text, media, etc.)  
 - 🔄 **Infinite Scrolling + Pagination** (Reddit/Instagram style)  
@@ -181,43 +184,6 @@ We ❤️ contributions from developers!
 <br>
 
 ## 📄 License
-- This project is licensed under the Commercial License for institutions.
-- ✅ Free for personal, educational, and non-commercial research use
-- 💰 Commercial License required for universities, colleges, or organizations.
+- This project is licensed under the  AGPL-3.0 license.
 
-📜 [See LICENSE](./LICENSE) for details or [contact us](vegeta.khan2000@gmail.com) for commercial usage.
-
-<br>
-
-## 💰 Estimated Self-Hosting Costs
-If you choose to host Haideron-LMS yourself, here’s a detailed cost breakdown based on different scales of deployment.  
-Costs vary by provider (AWS, DigitalOcean, Render, Supabase), so these are **approximate monthly estimates**.
-
-| Component             | 1,000 Students (Small Dept) | 100,000 Students (Medium Uni) | 200,000 Students (Large Uni) | Notes |
-|----------------------|---------------------------|------------------------------|-----------------------------|-------|
-| 🌐 **Server (App + API)** | 2 vCPU, 4GB RAM VM<br>(e.g. EC2 t3.medium / DO 4GB Droplet) | 4–8 vCPU, 16GB RAM cluster | 8–16 vCPU, 32GB+ cluster w/ load balancing | Horizontal scaling recommended after ~50k users |
-| 🗄️ **Database (PostgreSQL / Supabase)** | ~1–2GB storage<br>Basic managed instance | 50GB+ managed instance w/ connection pooling | 100GB+ managed cluster w/ read replicas | Supabase Pro or AWS RDS recommended beyond 10k users |
-| ⚡ **Redis (Optional)** | Shared free tier or small container | Dedicated 2GB instance | 4–8GB dedicated Redis cluster | Only required for social layer & caching |
-| ☁️ **Storage (Media Uploads – Optional)** | ~5–10GB (~$5/month) | 500GB+ S3 bucket or Spaces | 1TB+ S3 bucket | **Only needed if Social Layer (forums/posts/media) is enabled** |
-| 📧 **Email Service** (Nodemailer + SMTP provider) | Free tier (10k–50k emails) | Paid plan (~$50–100/month) | Paid plan (~$100–200/month) | Use SendGrid, Resend, or AWS SES for cost efficiency |
-| 📈 **Monitoring & Backups** | Free/basic monitoring | Paid monitoring & automated backups | Enterprise-level monitoring & DR strategy | Grafana, Prometheus, or SaaS recommended |
-
-**Estimated Total Monthly Cost**  
-- 🟢 **Small Setup (1,000 Students):** ~$50 – $100/month  
-- 🟡 **Medium Setup (100,000 Students):** ~$800 – $1,500/month  
-- 🔴 **Large Setup (200,000 Students):** ~$1,500 – $3,000/month  
-
-> 📝 *Estimates assume moderate course activity (attendance, assessments).  
-Social layer (forums, media uploads) adds storage & Redis cost.  
-Heavy usage (video hosting, high-frequency API calls) may require more resources.*
-
-
-### 🧠 Key Notes:
-- **Supabase Free Tier** covers up to ~500MB DB + 50,000 monthly requests — ideal for small institutions or testing.  
-- **Redis is optional** — enable only if using Social Layer or caching heavy queries.  
-- **Media uploads are optional** — storage costs scale with number of posts and media content.  
-- **Email costs scale** with student count (for password resets, bulk notifications).  
-- For **very large deployments (100k+ users):**
-  - Add **load balancing** (NGINX/HAProxy) for API servers  
-  - Use **connection pooling** (PgBouncer) for PostgreSQL  
-  - Enable **scheduled backups** & consider **read replicas** for performance  
+📜 [See LICENSE](./LICENSE).
