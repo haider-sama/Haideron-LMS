@@ -1,0 +1,12 @@
+
+# API endpoint (backend server URL)
+VITE_BACKEND_URL=http://localhost:3000
+
+# Frontend environment
+VITE_ENV=development
+
+# JWT or Auth-related (only if needed in frontend — avoid exposing sensitive info!)
+VITE_JWT_PUBLIC_KEY=your_public_key_if_needed
+
+
+VITE_GOOGLE_CLIENT_ID=

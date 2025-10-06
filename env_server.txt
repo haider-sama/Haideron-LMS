@@ -1,0 +1,40 @@
+# Environment mode: development | production | test
+NODE_ENV=development
+
+# Server port
+PORT=3000
+
+# PostgreSQL connection string (local PostgreSQL example)
+# DATABASE_URL=
+DATABASE_URL="postgresql://haider:pass@localhost:5432/haideron"
+
+# Frontend URL (adjust as needed for dev/prod)
+FRONTEND_URL=http://localhost:5173
+
+# JWT secret keys (use strong, random values in production)
+JWT_SECRET_KEY=your_jwt_secret_here
+JWT_REFRESH_SECRET=your_jwt_refresh_secret_here
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+EMAIL_USER=
+EMAIL_PASS=
+
+GLOBAL_EMAIL_DOMAIN=example.com
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+ALLOW_EMAIL_MIGRATION=false
+ALLOW_PUBLIC_REGISTRATION=true
+
+FIREBASE_STORAGE_BUCKET=
+
+REDIS_HOSTNAME=
+REDIS_PASS=
+REDIS_USERNAME=
+REDIS_PORT=
+
+RABBITMQ_URL=amqp://default:
