@@ -25,7 +25,7 @@ i thought of working on the OBE problem for my uni, tried to push through it, bu
 <br>
 
 ## Table of Contents
-- [✨ Features](#-features)
+- [Features](#-features)
   - [Authentication & Security](#-authentication--security)
   - [Core Academic Management](#-core-academic-management)
   - [Outcomes & Mapping](#-outcomes--mapping)
@@ -35,7 +35,7 @@ i thought of working on the OBE problem for my uni, tried to push through it, bu
   - [Admin Features](#-admin-features)
 - [Installation & Setup](#️-installation--setup)
 - [Contributing](#-contributing)
-- [📄 License](#-license)
+- [License](#-license)
 
 <br>
 
@@ -183,7 +183,7 @@ We ❤️ contributions from developers!
 
 <br>
 
-## 📄 License
+## License
 - This project is licensed under the  AGPL-3.0 license.
 
-📜 [See LICENSE](./LICENSE).
+[See LICENSE](./LICENSE).
