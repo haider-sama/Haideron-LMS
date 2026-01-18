@@ -49,9 +49,9 @@ i thought of working on the OBE problem for my uni, tried to push through it, bu
 -  **Audit Logs** – all critical academic actions logged for compliance  
 -  **Google Login** for quick sign-in  
 -  **Advanced Registration/Login System**  
-  - Reset password flow  
-  - Email migration (if allowed by admin)  
-  - Session logout management  
+  -   Reset password flow  
+  -   Email migration (if allowed by admin)  
+  -   Session logout management  
   - **Dark Mode** (academic layer only – social layer coming soon)
 
 <br>
