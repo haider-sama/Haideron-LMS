@@ -4,7 +4,7 @@
 
 <h1 align="center">Haideron-LMS</h1>
 
-i thought of working on the OBE problem for my uni, tried to push through it, but let’s just say any future addition is abandoned and the project’s stuck at a stalemate forever.  
+i thought of working on the OBE problem for my uni, tried to push through it, but let’s just say any future addition is abandoned and the project’s stuck at a stalemate.  
 
 <p align="center">
   A <strong>scalable, modern outcome-based Learning Management System (LMS)</strong> built for institutions that value performance, reliability, and ease of use.  
